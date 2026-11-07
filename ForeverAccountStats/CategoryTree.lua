@@ -83,6 +83,19 @@ function CategoryTree.filtered(tree, text)
   return matching(tree, string.lower(term))
 end
 
+local function expandAll(expanded, nodes)
+  for _, node in ipairs(nodes) do
+    expanded[node.id] = true
+    expandAll(expanded, node.children)
+  end
+  return expanded
+end
+
+-- The set { [categoryID] = true } of every Category in the tree: for search results, which show expanded.
+function CategoryTree.allExpanded(tree)
+  return expandAll({}, tree)
+end
+
 local function addRows(rows, nodes, expanded, depth)
   for _, node in ipairs(nodes) do
     local isExpanded = expanded[node.id] == true
