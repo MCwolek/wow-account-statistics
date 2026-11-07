@@ -54,17 +54,12 @@ function CategoryTree.build(categories, statistics)
   return pruned(roots, isShown)
 end
 
--- The tree cut down to the Statistics whose name contains `text`, ignoring case and spaces around it, and the
--- Categories above them; nil when `text` is empty or only spaces, which is no search at all. Category names are not
--- matched. The tree given is left unchanged.
-function CategoryTree.filtered(tree, text)
-  local term = string.match(text, "^%s*(.-)%s*$")
-  if term == "" then
-    return nil
-  end
-  term = string.lower(term)
+-- The search results for `term`: the tree cut down to the Statistics whose name contains it, ignoring case, and the
+-- Categories above them. Category names are not searched. The tree given is left unchanged.
+function CategoryTree.searchResults(tree, term)
+  local lowered = string.lower(term)
   return pruned(tree, function(statistic)
-    return string.find(string.lower(statistic.name), term, 1, true) ~= nil
+    return string.find(string.lower(statistic.name), lowered, 1, true) ~= nil
   end)
 end
 

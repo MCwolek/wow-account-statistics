@@ -130,7 +130,7 @@ describe("CategoryTree.visibleRows", function()
   end)
 end)
 
-describe("CategoryTree.filtered", function()
+describe("CategoryTree.searchResults", function()
   local CategoryTree = loadCategoryTree()
 
   local tree = CategoryTree.build({
@@ -157,26 +157,21 @@ describe("CategoryTree.filtered", function()
           { id = 123, name = "Arenas", statistics = { { id = 838, name = "Deaths in 2v2" } }, children = {} },
         },
       },
-    }, CategoryTree.filtered(tree, "DEATH"))
-  end)
-
-  it("ignores spaces before and after the text", function()
-    assert.are.same(CategoryTree.filtered(tree, "total deaths"), CategoryTree.filtered(tree, "  total deaths "))
-    assert.are.equal(1, #CategoryTree.filtered(tree, " total deaths "))
+    }, CategoryTree.searchResults(tree, "DEATH"))
   end)
 
   it("does not match Category names", function()
-    assert.are.same({}, CategoryTree.filtered(tree, "wealth"))
+    assert.are.same({}, CategoryTree.searchResults(tree, "wealth"))
   end)
 
-  it("matches the text as it is, not as a pattern", function()
-    assert.are.same({}, CategoryTree.filtered(tree, "d."))
+  it("searches for the text as it is, not as a pattern", function()
+    assert.are.same({}, CategoryTree.searchResults(tree, "d."))
     assert.are.same({ {
       id = 122, name = "Deaths", statistics = {},
       children = {
         { id = 123, name = "Arenas", statistics = { { id = 838, name = "Deaths in 2v2" } }, children = {} },
       },
-    } }, CategoryTree.filtered(tree, "2v2"))
+    } }, CategoryTree.searchResults(tree, "2v2"))
   end)
 
   it("leaves the tree it was given unchanged", function()
@@ -191,13 +186,8 @@ describe("CategoryTree.filtered", function()
       return result
     end
     local before = copy(tree)
-    CategoryTree.filtered(tree, "death")
+    CategoryTree.searchResults(tree, "death")
     assert.are.same(before, tree)
-  end)
-
-  it("is no search at all when the text is empty or only spaces", function()
-    assert.is_nil(CategoryTree.filtered(tree, ""))
-    assert.is_nil(CategoryTree.filtered(tree, "   "))
   end)
 end)
 
@@ -214,13 +204,13 @@ describe("CategoryTree.allExpanded", function()
       [131] = { { id = 328, name = "Total gold acquired" } },
       [141] = { { id = 193, name = "Largest hit dealt" } },
     })
-    local matches = CategoryTree.filtered(tree, "gold")
+    local results = CategoryTree.searchResults(tree, "gold")
 
     assert.are.same({
       { kind = "category", id = 130, name = "Character", depth = 0, expanded = true },
       { kind = "category", id = 131, name = "Wealth", depth = 1, expanded = true },
       { kind = "statistic", id = 328, name = "Total gold acquired", depth = 2 },
-    }, CategoryTree.visibleRows(matches, CategoryTree.allExpanded(matches)))
+    }, CategoryTree.visibleRows(results, CategoryTree.allExpanded(results)))
   end)
 end)
 

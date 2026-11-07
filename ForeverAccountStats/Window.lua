@@ -1,8 +1,9 @@
 -- Thin adapter: the Statistics window and its button on the default Statistics tab. It draws what the pure modules
--- (CategoryTree, Rows, Characters, WindowPosition) compute and reads the game through GameAPI.
+-- (CategoryTree, ListState, Rows, Characters, WindowPosition) compute and reads the game through GameAPI.
 local _, ns = ...
 local L, GameAPI, Sync = ns.L, ns.GameAPI, ns.Sync
-local CategoryTree, Rows, Characters, WindowPosition = ns.CategoryTree, ns.Rows, ns.Characters, ns.WindowPosition
+local CategoryTree, ListState, Rows = ns.CategoryTree, ns.ListState, ns.Rows
+local Characters, WindowPosition = ns.Characters, ns.WindowPosition
 
 local Window = {}
 ns.Window = Window
@@ -31,9 +32,7 @@ local REREAD_DELAY = 0.5
 
 local frame          -- created on first open, once SavedVariables are loaded
 local tree           -- the Category tree, read on first open
-local expanded = {}  -- Categories expanded since the window opened, kept while a search shows
-local matches        -- the tree cut down to the search box's matches; nil when the box is empty
-local searchExpanded -- Categories expanded in the search results
+local list           -- the ListState: Categories expanded and the search since the window opened
 local selectedGUID   -- Character chosen in the dropdown since the window opened
 local liveValues     -- the logged-in Character's values, read while the window is shown; not saved
 local rereadPending = false
@@ -67,13 +66,7 @@ end
 local function redraw(keepScroll)
   local entry = Characters.selectedEntry(dropdownEntries(), selectedGUID)
   selectedGUID = entry and entry.guid
-  local visibleRows
-  if matches then
-    visibleRows = CategoryTree.visibleRows(matches, searchExpanded)
-  else
-    visibleRows = CategoryTree.visibleRows(tree, expanded)
-  end
-  local rows = Rows.build(visibleRows, {
+  local rows = Rows.build(ListState.visibleRows(list), {
     db = ForeverAccountStatsDB,
     selectedGUID = selectedGUID,
     currentGUID = GameAPI.playerGUID(),
@@ -141,11 +134,7 @@ local function createRegions(row)
 
   row:SetScript("OnClick", function(self)
     if self.data.kind == "category" then
-      if matches then
-        searchExpanded = CategoryTree.toggled(searchExpanded, self.data.id)
-      else
-        expanded = CategoryTree.toggled(expanded, self.data.id)
-      end
+      list = ListState.toggled(list, self.data.id)
       redraw(true)
     end
   end)
@@ -296,8 +285,7 @@ local function createSearchBox(parent, dropdown)
   searchBox:SetAutoFocus(false)
   searchBox.Instructions:SetText(L.SEARCH)
   searchBox:HookScript("OnTextChanged", function(self)
-    matches = CategoryTree.filtered(tree, self:GetText())
-    searchExpanded = matches and CategoryTree.allExpanded(matches)
+    list = ListState.searched(list, self:GetText())
     if parent:IsShown() then
       redraw(false)
     end
@@ -315,6 +303,7 @@ end
 local function create()
   local categories = GameAPI.readCategories()
   tree = CategoryTree.build(categories.categories, categories.statistics)
+  list = ListState.new(tree)
 
   frame = CreateFrame("Frame", FRAME_NAME, UIParent, "ButtonFrameTemplate")
   frame:SetSize(WIDTH, HEIGHT)
@@ -354,9 +343,9 @@ local function create()
   -- on the logged-in Character, with an empty search box.
   frame:SetScript("OnHide", function(self)
     self:UnregisterEvent("CRITERIA_UPDATE")
-    expanded = {}
     selectedGUID = nil
     self.SearchBox:SetText("")
+    list = ListState.new(tree)
   end)
   frame:SetScript("OnEvent", scheduleReread)
   frame:Hide()

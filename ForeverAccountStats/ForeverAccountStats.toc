@@ -11,6 +11,7 @@ AccountTotals.lua
 Sync.lua
 Characters.lua
 CategoryTree.lua
+ListState.lua
 Rows.lua
 Command.lua
 Listing.lua
