@@ -6,4 +6,7 @@
 ## SavedVariables: ForeverAccountStatsDB
 
 Locale.lua
+Sync.lua
+Listing.lua
+GameAPI.lua
 Core.lua
