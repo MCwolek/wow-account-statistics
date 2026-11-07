@@ -1,7 +1,8 @@
 local addon = require("addon")
 
 local function loadSync()
-  return addon.loadFile("Sync.lua", {}).Sync
+  local ns = addon.loadFile("Values.lua", {})
+  return addon.loadFile("Sync.lua", ns).Sync
 end
 
 describe("Sync.fullName", function()

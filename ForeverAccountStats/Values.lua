@@ -4,29 +4,38 @@ local _, ns = ...
 local Values = {}
 ns.Values = Values
 
+-- What GetStatistic returns for a Statistic that has never happened (zero). The game's sentinel, not the add-on's
+-- display marker: that is L.NEVER_HAPPENED and may differ.
+local NEVER_HAPPENED_RAW = "--"
+
+-- Whether a raw value from GetStatistic says the Statistic has never happened.
+function Values.isNeverHappened(raw)
+  return raw == NEVER_HAPPENED_RAW
+end
+
 local COPPER_PER_COIN = { Gold = 10000, Silver = 100, Copper = 1 }
 
--- Integer from a run of digits, or nil. Thousands separators are allowed in groups of three, as "," or "."
--- depending on the client locale; "1.5" is not an integer.
-local function toInteger(digits)
-  if digits:match("^%d+$") then
-    return tonumber(digits)
+-- Integer from digits with optional thousands separators, or nil. Separators come in groups of three, as "," or
+-- "." depending on the client locale; "1.5" is not an integer.
+local function parseGroupedInteger(text)
+  if text:match("^%d+$") then
+    return tonumber(text)
   end
-  local head = digits:match("^%d%d?%d?")
-  if head == nil or #digits == #head or digits:sub(#head + 1):gsub("[,.]%d%d%d", "") ~= "" then
+  local head = text:match("^%d%d?%d?")
+  if head == nil or #text == #head or text:sub(#head + 1):gsub("[,.]%d%d%d", "") ~= "" then
     return nil
   end
-  return tonumber((digits:gsub("[,.]", "")))
+  return tonumber((text:gsub("[,.]", "")))
 end
 
 -- One coin token: "<digits>|TInterface\MoneyFrame\UI-<Gold|Silver|Copper>Icon:<args>|t".
 local COIN_TOKEN = "([%d,.]+)|TInterface\\MoneyFrame\\UI%-(%a+)Icon:[^|]*|t"
 
 -- Copper in a coin string, or nil when the string holds anything besides coin tokens and spaces.
-local function parseMoney(display)
+local function parseMoney(raw)
   local copper, coins = 0, 0
-  local rest = display:gsub(COIN_TOKEN, function(digits, coin)
-    local value, count = COPPER_PER_COIN[coin], toInteger(digits)
+  local rest = raw:gsub(COIN_TOKEN, function(digits, coin)
+    local value, count = COPPER_PER_COIN[coin], parseGroupedInteger(digits)
     if value and count then
       copper = copper + count * value
       coins = coins + 1
@@ -39,24 +48,24 @@ local function parseMoney(display)
   return copper
 end
 
--- Parsed value of one display string: { kind, amount } for "number", "money" (in copper) and "never" ("--",
--- worth 0); { kind, text } for "text"; { kind = "missing" } when the Snapshot has no value (nil).
-function Values.parse(display)
-  if display == nil then
+-- Parsed value of one raw display string from GetStatistic: { kind, amount } for "number", "money" (in copper)
+-- and "never" ("--", worth 0); { kind, text } for "text"; { kind = "missing" } when the Snapshot has no value (nil).
+function Values.parse(raw)
+  if raw == nil then
     return { kind = "missing" }
   end
-  if display == "--" then
+  if Values.isNeverHappened(raw) then
     return { kind = "never", amount = 0 }
   end
-  local copper = parseMoney(display)
+  local copper = parseMoney(raw)
   if copper then
     return { kind = "money", amount = copper }
   end
-  local number = toInteger(display)
+  local number = parseGroupedInteger(raw)
   if number then
     return { kind = "number", amount = number }
   end
-  return { kind = "text", text = display }
+  return { kind = "text", text = raw }
 end
 
 -- Same token format as GetStatistic and Blizzard's GetMoneyString (GOLD_AMOUNT_TEXTURE and friends).
@@ -94,7 +103,11 @@ function Values.format(value)
   return value.text
 end
 
--- Display string of one Character's raw Statistic value (nil when missing from its Snapshot).
-function Values.display(display)
-  return Values.format(Values.parse(display))
+-- Display string of one Character's Statistic value: the game's own string unchanged, exactly as the default UI
+-- shows it, or MISSING_VALUE when `raw` is nil (missing from the Snapshot).
+function Values.display(raw)
+  if raw == nil then
+    return ns.L.MISSING_VALUE
+  end
+  return raw
 end

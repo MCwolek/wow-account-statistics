@@ -9,7 +9,7 @@ ns.L = {
   MINUTES_AGO = "%d min ago",
   -- Marker for a Statistic missing from a Character's Snapshot, e.g. one taken by an older version.
   MISSING_VALUE = "?",
-  -- Marker for a Statistic that has never happened (the game's own display for zero).
+  -- Account Total of a Statistic that has never happened on any Character, matching the game's own display for zero.
   NEVER_HAPPENED = "--",
   -- Account Total shown for Text and Average Statistics, which have none.
   NO_ACCOUNT_TOTAL = "—",

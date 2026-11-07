@@ -55,7 +55,7 @@ end
 -- At login the Statistics may not be loaded yet: then every value reads "--", or none can be read at all.
 local function isReadable(snapshot)
   for _, value in pairs(snapshot) do
-    if value ~= "--" then
+    if not ns.Values.isNeverHappened(value) then
       return true
     end
   end

@@ -4,8 +4,8 @@ local _, ns = ...
 local AccountTotals = {}
 ns.AccountTotals = AccountTotals
 
--- Peak Statistics, hand-picked by Statistic ID: records, skill levels and counts of one Character's current
--- standing, where a sum means nothing. The game's flags cannot tell them apart from counters.
+-- Peak Statistics, hand-picked by Statistic ID: largest single amounts, skill levels and counts of one
+-- Character's current standing, where a sum means nothing. The game's flags cannot tell them apart from counters.
 local PEAK_STATISTICS = {
   [189] = true, -- Largest heal cast
   [193] = true, -- Largest hit dealt
@@ -39,11 +39,21 @@ local PEAK_STATISTICS = {
   [339] = true, -- Mounts owned
 }
 
--- Average Statistics, hand-picked by Statistic ID. Each is a per-Character average per day, so a sum overstates
--- (a new Character's first day counts in full) and a highest value means little: no Account Total.
-local AVERAGE_STATISTICS = {
+-- Statistics without an Account Total, hand-picked by Statistic ID.
+local NO_ACCOUNT_TOTAL = {
+  -- Average Statistics: each is a per-Character average per day, so a sum overstates (a new Character's first day
+  -- counts in full) and a highest value means little.
   [95] = true, -- Average quests completed per day
   [753] = true, -- Average gold earned per day
+  -- Text Statistics (DB2 flag MAX_USED): a count with a label, e.g. "62 (Beasts)". They read "--" until the first
+  -- count, which must not show as an Account Total of "--".
+  [1125] = true, -- Bandage used most
+  [1336] = true, -- Creature type killed the most
+  [1339] = true, -- Mage portal taken most
+  [1458] = true, -- Continent with the most Honorable Kills
+  [1489] = true, -- Continent with the most Killing Blows
+  [1716] = true, -- Battleground with the most Killing Blows
+  [1719] = true, -- Battleground with the most Honorable Kills
 }
 
 -- Which kind a total takes when Characters' values differ: "--" says nothing about the kind (a zero money
@@ -52,16 +62,17 @@ local KIND_RANK = { never = 1, number = 2, money = 3 }
 
 -- Account Total of one Statistic over a list of Snapshots, as a parsed value (see Values.parse): the sum, or
 -- the highest value for a Peak Statistic. "--" counts as 0; a Snapshot without the Statistic is left out, and
--- the total is "missing" when no Snapshot has it. nil when the Statistic has no Account Total (Text or Average).
+-- the total is "missing" when no Snapshot has it. nil when the Statistic has no Account Total: a Text or Average
+-- Statistic, or any Snapshot reads a value shaped like text.
 function AccountTotals.compute(statisticID, snapshots)
-  if AVERAGE_STATISTICS[statisticID] then
+  if NO_ACCOUNT_TOTAL[statisticID] then
     return nil
   end
   local kind, total = nil, 0
   for _, snapshot in ipairs(snapshots) do
     local value = ns.Values.parse(snapshot[statisticID])
     if value.kind == "text" then
-      return nil
+      return nil -- a text value no hand-picked ID covers still has no total
     elseif value.kind ~= "missing" then
       if PEAK_STATISTICS[statisticID] then
         total = math.max(total, value.amount)

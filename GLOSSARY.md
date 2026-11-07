@@ -40,7 +40,7 @@ A named group of Statistics as shown in the game's Statistics panel (e.g. Charac
 _Avoid_: Section, group
 
 **Account Total**:
-The combined value of one Statistic across all Tracked Characters, whatever their Ruleset: a sum, except for Peak Statistics. Text Statistics and Average Statistics have none.
+The combined value of one Statistic across all Tracked Characters, whatever their Ruleset: a sum, except for Peak Statistics. Text Statistics and Average Statistics have none, and neither does any Statistic whose value reads as text.
 _Avoid_: Aggregate, overall, total stats
 
 **Peak Statistic**:
@@ -48,10 +48,11 @@ A Statistic whose Account Total is the highest value among Tracked Characters ra
 _Avoid_: Max stat, record
 
 **Text Statistic**:
-A Statistic whose value is a count with a label, such as "Creature type killed the most" reading "62 (Beasts)"; recognised by the shape of its value. It has no Account Total.
+A Statistic whose value is a count with a label, such as "Creature type killed the most" reading "62 (Beasts)"; hand-picked by Statistic ID (the "… most" Statistics), since each reads "--" until its first count. It has no Account Total.
+_Avoid_: Label stat, string stat
 
 **Average Statistic**:
-A Statistic that is one Character's daily average (e.g. "Average quests completed per day"); summing them overstates, so it has no Account Total.
+A Statistic that is one Character's daily average (e.g. "Average quests completed per day"), hand-picked by Statistic ID; summing them overstates, so it has no Account Total.
 _Avoid_: Rate, per-day stat
 
 ### Syncing

@@ -1,4 +1,6 @@
 local addon = require("addon")
+local coins = require("coins")
+local gold, silver, copper = coins.gold, coins.silver, coins.copper
 
 local function loadAccountTotals()
   local ns = addon.loadFile("Locale.lua", {})
@@ -6,28 +8,25 @@ local function loadAccountTotals()
   return addon.loadFile("AccountTotals.lua", ns).AccountTotals
 end
 
--- Values from real Snapshots of Schalgan Blackbeard and Keram (real-looking strings, single backslashes).
+-- Values from real Snapshots of Schalgan Blackbeard and Keram.
 local blackbeard = {
   [60] = "--",
   [98] = "27",
   [107] = "468",
-  [326] = "7|TInterface\\MoneyFrame\\UI-SilverIcon:0:0:2:0|t 27|TInterface\\MoneyFrame\\UI-CopperIcon:0:0:2:0|t",
+  [326] = silver(7) .. " " .. copper(27),
 }
 local keram = {
   [60] = "3",
   [98] = "84",
   [107] = "514",
-  [326] = "63|TInterface\\MoneyFrame\\UI-SilverIcon:0:0:2:0|t 10|TInterface\\MoneyFrame\\UI-CopperIcon:0:0:2:0|t",
+  [326] = silver(63) .. " " .. copper(10),
 }
 
 describe("AccountTotals.display", function()
   local AccountTotals = loadAccountTotals()
 
   it("shows a money total with coin icons like the default UI", function()
-    assert.are.equal(
-      "70|TInterface\\MoneyFrame\\UI-SilverIcon:0:0:2:0|t 37|TInterface\\MoneyFrame\\UI-CopperIcon:0:0:2:0|t",
-      AccountTotals.display(326, { blackbeard, keram })
-    )
+    assert.are.equal(silver(70) .. " " .. copper(37), AccountTotals.display(326, { blackbeard, keram }))
   end)
 
   it("shows a number total as plain digits", function()
@@ -36,6 +35,7 @@ describe("AccountTotals.display", function()
 
   it("shows — when there is no Account Total", function()
     assert.are.equal("—", AccountTotals.display(1336, { { [1336] = "62 (Beasts)" } }))
+    assert.are.equal("—", AccountTotals.display(1125, { { [1125] = "--" }, { [1125] = "--" } }))
     assert.are.equal("—", AccountTotals.display(95, { { [95] = "27" } }))
   end)
 
@@ -63,11 +63,20 @@ describe("AccountTotals.compute", function()
     assert.are.same({ kind = "money", amount = 7037 }, AccountTotals.compute(326, { blackbeard, keram }))
   end)
 
-  it("keeps money a money total when some Characters read --", function()
+  it("sums money when some Characters read --", function()
+    -- 328 Total gold acquired
+    local fresh = { [328] = "--" }
+    local earner = { [328] = gold(1) .. " " .. silver(64) .. " " .. copper(39) }
+    local saver = { [328] = silver(7) .. " " .. copper(27) }
+    assert.are.same({ kind = "money", amount = 17166 }, AccountTotals.compute(328, { fresh, earner, fresh, saver }))
+    local total = AccountTotals.display(328, { fresh, earner, saver })
+    assert.are.equal(gold(1) .. " " .. silver(71) .. " " .. copper(66), total)
+  end)
+
+  it("keeps the highest money of a Peak Statistic when some Characters read --", function()
+    -- 331 Most expensive bid on auction
     local spent = { [331] = "--" }
-    local sold = {
-      [331] = "2|TInterface\\MoneyFrame\\UI-SilverIcon:0:0:2:0|t 9|TInterface\\MoneyFrame\\UI-CopperIcon:0:0:2:0|t",
-    }
+    local sold = { [331] = silver(2) .. " " .. copper(9) }
     assert.are.same({ kind = "money", amount = 209 }, AccountTotals.compute(331, { spent, sold, spent }))
   end)
 
@@ -90,15 +99,27 @@ describe("AccountTotals.compute", function()
     assert.is_nil(AccountTotals.compute(1336, { none, humanoid, {} }))
   end)
 
+  it("has no Account Total for a Text Statistic even when every Character reads --", function()
+    -- Real Snapshots read -- for all of these, e.g. 1125 Bandage used most, 1458 Continent with the most
+    -- Honorable Kills.
+    local textStatistics = { 1125, 1336, 1339, 1458, 1489, 1716, 1719 }
+    for _, id in ipairs(textStatistics) do
+      assert.is_nil(AccountTotals.compute(id, { { [id] = "--" }, { [id] = "--" } }), "Statistic " .. id)
+    end
+  end)
+
+  it("has no Account Total for a value shaped like text, whatever the Statistic", function()
+    assert.is_nil(AccountTotals.compute(98, { { [98] = "27" }, { [98] = "62 (Beasts)" } }))
+  end)
+
   it("has no Account Total for an Average Statistic", function()
     local first = {
       [95] = "27",
-      [753] = "14|TInterface\\MoneyFrame\\UI-SilverIcon:0:0:2:0|t 56|TInterface\\MoneyFrame\\UI-CopperIcon:0:0:2:0|t",
+      [753] = silver(14) .. " " .. copper(56),
     }
     local second = {
       [95] = "84",
-      [753] = "1|TInterface\\MoneyFrame\\UI-GoldIcon:0:0:2:0|t 64|TInterface\\MoneyFrame\\UI-SilverIcon:0:0:2:0|t "
-        .. "39|TInterface\\MoneyFrame\\UI-CopperIcon:0:0:2:0|t",
+      [753] = gold(1) .. " " .. silver(64) .. " " .. copper(39),
     }
     assert.is_nil(AccountTotals.compute(95, { first, second }))
     assert.is_nil(AccountTotals.compute(753, { first, second }))
@@ -113,11 +134,10 @@ describe("AccountTotals.compute", function()
   it("takes the highest money of a Peak Statistic", function()
     -- 334 Most gold ever owned
     local poorer = {
-      [334] = "11|TInterface\\MoneyFrame\\UI-SilverIcon:0:0:2:0|t 46|TInterface\\MoneyFrame\\UI-CopperIcon:0:0:2:0|t",
+      [334] = silver(11) .. " " .. copper(46),
     }
     local richer = {
-      [334] = "1|TInterface\\MoneyFrame\\UI-GoldIcon:0:0:2:0|t 30|TInterface\\MoneyFrame\\UI-SilverIcon:0:0:2:0|t "
-        .. "39|TInterface\\MoneyFrame\\UI-CopperIcon:0:0:2:0|t",
+      [334] = gold(1) .. " " .. silver(30) .. " " .. copper(39),
     }
     assert.are.same({ kind = "money", amount = 13039 }, AccountTotals.compute(334, { poorer, richer }))
   end)

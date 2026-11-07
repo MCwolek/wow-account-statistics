@@ -1,15 +1,6 @@
 local addon = require("addon")
-
--- Coin tokens exactly as GetStatistic returns them (single backslashes at runtime).
-local function gold(n)
-  return n .. "|TInterface\\MoneyFrame\\UI-GoldIcon:0:0:2:0|t"
-end
-local function silver(n)
-  return n .. "|TInterface\\MoneyFrame\\UI-SilverIcon:0:0:2:0|t"
-end
-local function copper(n)
-  return n .. "|TInterface\\MoneyFrame\\UI-CopperIcon:0:0:2:0|t"
-end
+local coins = require("coins")
+local gold, silver, copper = coins.gold, coins.silver, coins.copper
 
 local function loadValues()
   local ns = addon.loadFile("Locale.lua", {})
@@ -28,6 +19,7 @@ describe("Values.parse", function()
   end)
 
   it("reads a coin string from a real Snapshot as copper", function()
+    -- Spelled out once, so the coin helpers stay tied to the real string.
     assert.are.same(
       { kind = "money", amount = 727 },
       Values.parse(
@@ -69,6 +61,26 @@ describe("Values.parse", function()
   end)
 end)
 
+describe("Values.isNeverHappened", function()
+  local Values = loadValues()
+
+  it("is true only for the game's -- sentinel", function()
+    assert.is_true(Values.isNeverHappened("--"))
+    assert.is_false(Values.isNeverHappened("0"))
+    assert.is_false(Values.isNeverHappened("27"))
+    assert.is_false(Values.isNeverHappened(nil))
+  end)
+
+  it("does not follow the add-on's own display marker", function()
+    local ns = addon.loadFile("Locale.lua", {})
+    ns.L.NEVER_HAPPENED = "never"
+    local relabelled = addon.loadFile("Values.lua", ns).Values
+    assert.is_true(relabelled.isNeverHappened("--"))
+    assert.is_false(relabelled.isNeverHappened("never"))
+    assert.are.same({ kind = "never", amount = 0 }, relabelled.parse("--"))
+  end)
+end)
+
 describe("Values.display", function()
   local Values = loadValues()
 
@@ -76,6 +88,13 @@ describe("Values.display", function()
     assert.are.equal("--", Values.display("--"))
     assert.are.equal("62 (Beasts)", Values.display("62 (Beasts)"))
     assert.are.equal(silver(7) .. " " .. copper(27), Values.display(silver(7) .. " " .. copper(27)))
+  end)
+
+  it("shows the game's display string unchanged, even where a total would be written differently", function()
+    assert.are.equal("1,234", Values.display("1,234"))
+    assert.are.equal(gold("1.234") .. " " .. copper(5), Values.display(gold("1.234") .. " " .. copper(5)))
+    local largeIcons = "3|TInterface\\MoneyFrame\\UI-GoldIcon:14:14:2:0|t"
+    assert.are.equal(largeIcons, Values.display(largeIcons))
   end)
 
   it("shows ? for a Statistic missing from the Character's Snapshot", function()
@@ -87,6 +106,7 @@ describe("Values.format", function()
   local Values = loadValues()
 
   it("writes money with coin icons exactly as GetStatistic does", function()
+    -- Spelled out once, so the coin helpers stay tied to the real string.
     assert.are.equal(
       "1|TInterface\\MoneyFrame\\UI-GoldIcon:0:0:2:0|t 64|TInterface\\MoneyFrame\\UI-SilverIcon:0:0:2:0|t "
         .. "39|TInterface\\MoneyFrame\\UI-CopperIcon:0:0:2:0|t",
@@ -127,7 +147,7 @@ describe("Values.format", function()
       "--",
       "115",
       "62 (Beasts)",
-      "14|TInterface\\MoneyFrame\\UI-SilverIcon:0:0:2:0|t 56|TInterface\\MoneyFrame\\UI-CopperIcon:0:0:2:0|t",
+      silver(14) .. " " .. copper(56),
       gold(1) .. " " .. silver(30) .. " " .. copper(39),
     }) do
       assert.are.equal(display, Values.format(Values.parse(display)))
