@@ -7,6 +7,12 @@ ns.L = {
   DAYS_AGO = "%d d ago",
   HOURS_AGO = "%d h ago",
   MINUTES_AGO = "%d min ago",
+  -- Marker for a Statistic missing from a Character's Snapshot, e.g. one taken by an older version.
+  MISSING_VALUE = "?",
+  -- Marker for a Statistic that has never happened (the game's own display for zero).
+  NEVER_HAPPENED = "--",
+  -- Account Total shown for Text and Average Statistics, which have none.
+  NO_ACCOUNT_TOTAL = "—",
   NOW = "now",
   TRACKED_CHARACTERS_HEADER = "%s: Tracked Characters (%d)",
   TRACKED_CHARACTER_LINE = "  %s - %s",
