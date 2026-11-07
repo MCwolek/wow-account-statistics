@@ -8,24 +8,24 @@ end
 local MINUTE, HOUR, DAY = 60, 3600, 86400
 local NOW = 1700000000
 
-describe("Listing.lastSynced", function()
+describe("Listing.relativeLastSynced", function()
   local Listing = loadListing()
 
   it("counts whole days", function()
-    assert.are.equal("5 d ago", Listing.lastSynced(NOW - 5 * DAY - 7 * HOUR, NOW))
+    assert.are.equal("5 d ago", Listing.relativeLastSynced(NOW - 5 * DAY - 7 * HOUR, NOW))
   end)
 
   it("counts whole hours under a day", function()
-    assert.are.equal("23 h ago", Listing.lastSynced(NOW - DAY + 1, NOW))
+    assert.are.equal("23 h ago", Listing.relativeLastSynced(NOW - DAY + 1, NOW))
   end)
 
   it("counts whole minutes under an hour", function()
-    assert.are.equal("1 min ago", Listing.lastSynced(NOW - MINUTE - 30, NOW))
+    assert.are.equal("1 min ago", Listing.relativeLastSynced(NOW - MINUTE - 30, NOW))
   end)
 
   it("is now under a minute", function()
-    assert.are.equal("now", Listing.lastSynced(NOW - 59, NOW))
-    assert.are.equal("now", Listing.lastSynced(NOW, NOW))
+    assert.are.equal("now", Listing.relativeLastSynced(NOW - 59, NOW))
+    assert.are.equal("now", Listing.relativeLastSynced(NOW, NOW))
   end)
 end)
 

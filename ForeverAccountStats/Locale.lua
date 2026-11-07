@@ -7,6 +7,6 @@ ns.L = {
   HOURS_AGO = "%d h ago",
   MINUTES_AGO = "%d min ago",
   NOW = "now",
-  TRACKED_CHARACTERS_HEADER = "Forever Account Stats: Tracked Characters (%d)",
+  TRACKED_CHARACTERS_HEADER = "%s: Tracked Characters (%d)",
   TRACKED_CHARACTER_LINE = "  %s - %s",
 }

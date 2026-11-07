@@ -11,7 +11,7 @@ One WoW game account, the scope within which characters are combined.
 _Avoid_: Battle.net account, Warband
 
 **Character**:
-A player character on the Account, identified by its Full Name.
+A player character on the Account, identified by its GUID and shown by its Full Name.
 _Avoid_: Alt, toon, char
 
 **Full Name**:
@@ -50,7 +50,7 @@ The saved Statistic values of one Tracked Character, taken at one moment.
 _Avoid_: Scan, cache, backup
 
 **Sync**:
-Taking a new Snapshot of the logged-in Character, on login, logout or UI reload.
+Taking a new Snapshot of the logged-in Character, on login, logout or UI reload. A Sync that reads no Statistic values (none at all, or every one "--") keeps the earlier Snapshot and Last Synced.
 _Avoid_: Scan, refresh, update
 
 **Last Synced**:

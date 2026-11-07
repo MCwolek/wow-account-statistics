@@ -1,8 +1,7 @@
 local addon = require("addon")
 
 local function loadSync()
-  local ns = addon.loadFile("Locale.lua", {})
-  return addon.loadFile("Sync.lua", ns).Sync
+  return addon.loadFile("Sync.lua", {}).Sync
 end
 
 describe("Sync.fullName", function()
@@ -15,6 +14,22 @@ describe("Sync.fullName", function()
   it("is the First Name alone when there is no Surname", function()
     assert.are.equal("Calgan", Sync.fullName("Calgan", nil))
     assert.are.equal("Calgan", Sync.fullName("Calgan", ""))
+  end)
+end)
+
+describe("Sync.character", function()
+  local Sync = loadSync()
+
+  it("builds the Character from the raw player reading", function()
+    assert.are.same(
+      { guid = "Player-1-0000AAAA", fullName = "Calgan Blackbeard", class = "WARRIOR" },
+      Sync.character({
+        guid = "Player-1-0000AAAA",
+        firstName = "Calgan",
+        surname = "Blackbeard",
+        classFile = "WARRIOR",
+      })
+    )
   end)
 end)
 
@@ -66,5 +81,41 @@ describe("Sync.record", function()
     db = Sync.record(db, calgan, {}, 1700000900)
     assert.are.same({ [60] = "250" }, db.characters["Player-1-0000AAAA"].snapshot)
     assert.are.equal(1700000000, db.characters["Player-1-0000AAAA"].lastSynced)
+  end)
+
+  it("keeps the previous Snapshot and Last Synced when every value is --", function()
+    local db = Sync.record(nil, calgan, { [60] = "250", [98] = "3" }, 1700000000)
+    db = Sync.record(db, calgan, { [60] = "--", [98] = "--" }, 1700000900)
+    assert.are.same({ [60] = "250", [98] = "3" }, db.characters["Player-1-0000AAAA"].snapshot)
+    assert.are.equal(1700000000, db.characters["Player-1-0000AAAA"].lastSynced)
+  end)
+
+  it("records an unreadable Snapshot when there is no earlier one", function()
+    local db = Sync.record(nil, calgan, {}, 1700000000)
+    assert.are.same({
+      fullName = "Calgan Blackbeard",
+      class = "WARRIOR",
+      lastSynced = 1700000000,
+      snapshot = {},
+    }, db.characters["Player-1-0000AAAA"])
+  end)
+
+  it("updates Full Name and class even when the Snapshot is unreadable", function()
+    local db = Sync.record(nil, calgan, { [60] = "250" }, 1700000000)
+    local renamed = { guid = "Player-1-0000AAAA", fullName = "Calgan Ironbeard", class = "PALADIN" }
+    db = Sync.record(db, renamed, { [60] = "--" }, 1700000900)
+    assert.are.same({
+      fullName = "Calgan Ironbeard",
+      class = "PALADIN",
+      lastSynced = 1700000000,
+      snapshot = { [60] = "250" },
+    }, db.characters["Player-1-0000AAAA"])
+  end)
+
+  it("replaces the Snapshot when some values are -- and others are readable", function()
+    local db = Sync.record(nil, calgan, { [60] = "250", [98] = "3" }, 1700000000)
+    db = Sync.record(db, calgan, { [60] = "251", [98] = "--" }, 1700000900)
+    assert.are.same({ [60] = "251", [98] = "--" }, db.characters["Player-1-0000AAAA"].snapshot)
+    assert.are.equal(1700000900, db.characters["Player-1-0000AAAA"].lastSynced)
   end)
 end)

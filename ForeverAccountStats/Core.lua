@@ -3,9 +3,9 @@ local addonName, ns = ...
 local Sync, Listing, GameAPI = ns.Sync, ns.Listing, ns.GameAPI
 
 local function sync()
-  local character = GameAPI.readCharacter()
+  local character = Sync.character(GameAPI.readPlayer())
   local snapshot = Sync.buildSnapshot(GameAPI.readStatistics())
-  ForeverAccountStatsDB = Sync.record(ForeverAccountStatsDB, character, snapshot, time())
+  ForeverAccountStatsDB = Sync.record(ForeverAccountStatsDB, character, snapshot, GameAPI.now())
 end
 
 local frame = CreateFrame("Frame")
@@ -20,10 +20,10 @@ frame:SetScript("OnEvent", function(_, event, arg1)
   end
 end)
 
+-- ForeverAccountStatsDB exists by now: ADDON_LOADED fires before the player can type a command.
 SLASH_FOREVERACCOUNTSTATS1 = "/fas"
 SlashCmdList.FOREVERACCOUNTSTATS = function()
-  ForeverAccountStatsDB = Sync.ensureDB(ForeverAccountStatsDB)
-  for _, line in ipairs(Listing.lines(ForeverAccountStatsDB, UnitGUID("player"), time())) do
+  for _, line in ipairs(Listing.lines(ForeverAccountStatsDB, GameAPI.playerGUID(), GameAPI.now())) do
     print(line)
   end
 end

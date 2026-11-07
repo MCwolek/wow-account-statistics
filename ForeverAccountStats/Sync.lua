@@ -12,6 +12,15 @@ function Sync.fullName(firstName, surname)
   return firstName .. " " .. surname
 end
 
+-- The Character ({ guid, fullName, class }) from a raw player reading ({ guid, firstName, surname, classFile }).
+function Sync.character(reading)
+  return {
+    guid = reading.guid,
+    fullName = Sync.fullName(reading.firstName, reading.surname),
+    class = reading.classFile,
+  }
+end
+
 -- Snapshot from a list of { id = statisticID, value = displayString } readings.
 -- Values stay the raw display strings GetStatistic returns; parsing them is a separate concern.
 function Sync.buildSnapshot(readings)
@@ -31,21 +40,31 @@ function Sync.ensureDB(db)
   return db
 end
 
+-- A Snapshot is readable when at least one Statistic has a value other than "--".
+-- At login the Statistics may not be loaded yet: then every value reads "--", or none can be read at all.
+local function isReadable(snapshot)
+  for _, value in pairs(snapshot) do
+    if value ~= "--" then
+      return true
+    end
+  end
+  return false
+end
+
 -- Stores a Sync of `character` ({ guid, fullName, class }) and returns the db.
--- An empty Snapshot (Statistics not readable at that moment) never replaces an earlier one.
+-- An unreadable Snapshot never replaces an earlier one, and then Last Synced stays as it was.
 function Sync.record(db, character, snapshot, now)
   db = Sync.ensureDB(db)
-  local previous = db.characters[character.guid]
-  if previous and next(snapshot) == nil then
-    previous.fullName = character.fullName
-    previous.class = character.class
-    return db
+  local entry = db.characters[character.guid]
+  if not entry then
+    entry = {}
+    db.characters[character.guid] = entry
   end
-  db.characters[character.guid] = {
-    fullName = character.fullName,
-    class = character.class,
-    lastSynced = now,
-    snapshot = snapshot,
-  }
+  entry.fullName = character.fullName
+  entry.class = character.class
+  if entry.snapshot == nil or isReadable(snapshot) then
+    entry.snapshot = snapshot
+    entry.lastSynced = now
+  end
   return db
 end
