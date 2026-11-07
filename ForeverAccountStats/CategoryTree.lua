@@ -4,27 +4,28 @@ local _, ns = ...
 local CategoryTree = {}
 ns.CategoryTree = CategoryTree
 
--- The Statistics of one Category the default Statistics panel shows: all but those marked `skip`.
-local function shown(statistics)
-  local result = {}
-  for _, statistic in ipairs(statistics or {}) do
-    if not statistic.skip then
-      result[#result + 1] = statistic
-    end
-  end
-  return result
-end
-
--- The nodes that have something to show: a Statistic of their own or a child Category kept in turn.
-local function withStatistics(nodes)
+-- Copies of the nodes that have something to show: each holds the Statistics `keep` picks of its own and the child
+-- Categories kept in turn, and is left out when neither remains. The nodes given are left unchanged.
+local function pruned(nodes, keep)
   local kept = {}
   for _, node in ipairs(nodes) do
-    node.children = withStatistics(node.children)
-    if #node.statistics > 0 or #node.children > 0 then
-      kept[#kept + 1] = node
+    local statistics = {}
+    for _, statistic in ipairs(node.statistics) do
+      if keep(statistic) then
+        statistics[#statistics + 1] = statistic
+      end
+    end
+    local children = pruned(node.children, keep)
+    if #statistics > 0 or #children > 0 then
+      kept[#kept + 1] = { id = node.id, name = node.name, statistics = statistics, children = children }
     end
   end
   return kept
+end
+
+-- Whether the default Statistics panel shows the Statistic: all but those marked `skip`.
+local function isShown(statistic)
+  return not statistic.skip
 end
 
 -- Root nodes { id, name, statistics, children } from `categories`, an ordered list of { id, name, parentID },
@@ -37,7 +38,7 @@ function CategoryTree.build(categories, statistics)
     nodes[category.id] = {
       id = category.id,
       name = category.name,
-      statistics = shown(statistics[category.id]),
+      statistics = statistics[category.id] or {},
       children = {},
     }
   end
@@ -50,26 +51,7 @@ function CategoryTree.build(categories, statistics)
       roots[#roots + 1] = nodes[category.id]
     end
   end
-  return withStatistics(roots)
-end
-
--- Copies of the nodes holding a Statistic whose lowercased name contains `term`, each with only those Statistics and
--- the child Categories kept in turn.
-local function matching(nodes, term)
-  local kept = {}
-  for _, node in ipairs(nodes) do
-    local statistics = {}
-    for _, statistic in ipairs(node.statistics) do
-      if string.find(string.lower(statistic.name), term, 1, true) then
-        statistics[#statistics + 1] = statistic
-      end
-    end
-    local children = matching(node.children, term)
-    if #statistics > 0 or #children > 0 then
-      kept[#kept + 1] = { id = node.id, name = node.name, statistics = statistics, children = children }
-    end
-  end
-  return kept
+  return pruned(roots, isShown)
 end
 
 -- The tree cut down to the Statistics whose name contains `text`, ignoring case and spaces around it, and the
@@ -80,7 +62,10 @@ function CategoryTree.filtered(tree, text)
   if term == "" then
     return nil
   end
-  return matching(tree, string.lower(term))
+  term = string.lower(term)
+  return pruned(tree, function(statistic)
+    return string.find(string.lower(statistic.name), term, 1, true) ~= nil
+  end)
 end
 
 local function expandAll(expanded, nodes)
