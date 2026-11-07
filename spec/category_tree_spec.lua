@@ -130,6 +130,77 @@ describe("CategoryTree.visibleRows", function()
   end)
 end)
 
+describe("CategoryTree.filtered", function()
+  local CategoryTree = loadCategoryTree()
+
+  local tree = CategoryTree.build({
+    { id = 130, name = "Character", parentID = -1 },
+    { id = 131, name = "Wealth", parentID = 130 },
+    { id = 141, name = "Combat", parentID = -1 },
+    { id = 122, name = "Deaths", parentID = -1 },
+    { id = 123, name = "Arenas", parentID = 122 },
+  }, {
+    [130] = { { id = 60, name = "Total deaths" }, { id = 98, name = "Quests completed" } },
+    [131] = { { id = 328, name = "Total gold acquired" } },
+    [141] = { { id = 193, name = "Largest hit dealt" } },
+    [122] = { { id = 107, name = "Deaths from drowning" } },
+    [123] = { { id = 838, name = "Deaths in 2v2" } },
+  })
+
+  it("keeps only the Statistics whose name matches, whatever the case, with their Category path", function()
+    assert.are.same({
+      { id = 130, name = "Character", statistics = { { id = 60, name = "Total deaths" } }, children = {} },
+      {
+        id = 122, name = "Deaths",
+        statistics = { { id = 107, name = "Deaths from drowning" } },
+        children = {
+          { id = 123, name = "Arenas", statistics = { { id = 838, name = "Deaths in 2v2" } }, children = {} },
+        },
+      },
+    }, CategoryTree.filtered(tree, "DEATH"))
+  end)
+
+  it("ignores spaces before and after the text", function()
+    assert.are.same(CategoryTree.filtered(tree, "total deaths"), CategoryTree.filtered(tree, "  total deaths "))
+    assert.are.equal(1, #CategoryTree.filtered(tree, " total deaths "))
+  end)
+
+  it("does not match Category names", function()
+    assert.are.same({}, CategoryTree.filtered(tree, "wealth"))
+  end)
+
+  it("matches the text as it is, not as a pattern", function()
+    assert.are.same({}, CategoryTree.filtered(tree, "d."))
+    assert.are.same({ {
+      id = 122, name = "Deaths", statistics = {},
+      children = {
+        { id = 123, name = "Arenas", statistics = { { id = 838, name = "Deaths in 2v2" } }, children = {} },
+      },
+    } }, CategoryTree.filtered(tree, "2v2"))
+  end)
+
+  it("leaves the tree it was given unchanged", function()
+    local function copy(value)
+      if type(value) ~= "table" then
+        return value
+      end
+      local result = {}
+      for key, item in pairs(value) do
+        result[key] = copy(item)
+      end
+      return result
+    end
+    local before = copy(tree)
+    CategoryTree.filtered(tree, "death")
+    assert.are.same(before, tree)
+  end)
+
+  it("is no search at all when the text is empty or only spaces", function()
+    assert.is_nil(CategoryTree.filtered(tree, ""))
+    assert.is_nil(CategoryTree.filtered(tree, "   "))
+  end)
+end)
+
 describe("CategoryTree.toggled", function()
   local CategoryTree = loadCategoryTree()
 

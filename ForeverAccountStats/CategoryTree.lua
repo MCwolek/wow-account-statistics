@@ -53,6 +53,36 @@ function CategoryTree.build(categories, statistics)
   return withStatistics(roots)
 end
 
+-- Copies of the nodes holding a Statistic whose lowercased name contains `term`, each with only those Statistics and
+-- the child Categories kept in turn.
+local function matching(nodes, term)
+  local kept = {}
+  for _, node in ipairs(nodes) do
+    local statistics = {}
+    for _, statistic in ipairs(node.statistics) do
+      if string.find(string.lower(statistic.name), term, 1, true) then
+        statistics[#statistics + 1] = statistic
+      end
+    end
+    local children = matching(node.children, term)
+    if #statistics > 0 or #children > 0 then
+      kept[#kept + 1] = { id = node.id, name = node.name, statistics = statistics, children = children }
+    end
+  end
+  return kept
+end
+
+-- The tree cut down to the Statistics whose name contains `text`, ignoring case and spaces around it, and the
+-- Categories above them; nil when `text` is empty or only spaces, which is no search at all. Category names are not
+-- matched. The tree given is left unchanged.
+function CategoryTree.filtered(tree, text)
+  local term = string.match(text, "^%s*(.-)%s*$")
+  if term == "" then
+    return nil
+  end
+  return matching(tree, string.lower(term))
+end
+
 local function addRows(rows, nodes, expanded, depth)
   for _, node in ipairs(nodes) do
     local isExpanded = expanded[node.id] == true
