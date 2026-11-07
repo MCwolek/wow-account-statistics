@@ -42,3 +42,9 @@ function GameAPI.readStatistics()
   end
   return readings
 end
+
+-- Name of a Statistic, or nil when the game knows no such ID.
+function GameAPI.statisticName(statisticID)
+  local _, name = GetAchievementInfo(statisticID)
+  return name
+end

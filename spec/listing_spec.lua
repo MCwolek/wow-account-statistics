@@ -1,7 +1,11 @@
 local addon = require("addon")
 
+local coins = require("coins")
+
 local function loadListing()
   local ns = addon.loadFile("Locale.lua", {})
+  addon.loadFile("Values.lua", ns)
+  addon.loadFile("AccountTotals.lua", ns)
   return addon.loadFile("Listing.lua", ns).Listing
 end
 
@@ -57,5 +61,74 @@ describe("Listing.lines", function()
       "Forever Account Stats: Tracked Characters (1)",
       "  Calgan Blackbeard - now",
     }, Listing.lines(old, "Player-1-0000AAAA", NOW))
+  end)
+end)
+
+describe("Listing.parseCommand", function()
+  local Listing = loadListing()
+
+  it("lists Tracked Characters with no arguments", function()
+    assert.are.same({ action = "list" }, Listing.parseCommand(""))
+    assert.are.same({ action = "list" }, Listing.parseCommand("   "))
+  end)
+
+  it("dumps one Statistic by ID, ignoring case and extra spaces", function()
+    assert.are.same({ action = "dump", statisticID = 60 }, Listing.parseCommand("dump 60"))
+    assert.are.same({ action = "dump", statisticID = 328 }, Listing.parseCommand("  DUMP   328 "))
+  end)
+
+  it("shows usage for anything else", function()
+    assert.are.same({ action = "usage" }, Listing.parseCommand("dump"))
+    assert.are.same({ action = "usage" }, Listing.parseCommand("dump deaths"))
+    assert.are.same({ action = "usage" }, Listing.parseCommand("dump 60 61"))
+    assert.are.same({ action = "usage" }, Listing.parseCommand("help"))
+  end)
+end)
+
+describe("Listing.statisticLines", function()
+  local Listing = loadListing()
+
+  local db = {
+    characters = {
+      ["Player-1-0000BBBB"] = {
+        fullName = "Mira Stonehand", ruleset = "PvP",
+        snapshot = { [60] = "3", [328] = coins.silver(14) .. " " .. coins.copper(56), [1336] = "62 (Beasts)" },
+      },
+      ["Player-1-0000AAAA"] = {
+        fullName = "Calgan Blackbeard", ruleset = "PvE",
+        snapshot = { [60] = "--", [328] = coins.gold(1) .. " " .. coins.silver(64) .. " " .. coins.copper(39),
+          [1336] = "281 (Humanoid)" },
+      },
+      ["Player-1-0000CCCC"] = { fullName = "Arlen", ruleset = "PvE", snapshot = { [60] = "12" } },
+    },
+  }
+
+  it("shows each Tracked Character's value as the game shows it, then the Account Total", function()
+    assert.are.same({
+      "Forever Account Stats: Total deaths (60)",
+      "  Arlen (PvE) - 12",
+      "  Calgan Blackbeard (PvE) - --",
+      "  Mira Stonehand (PvP) - 3",
+      "  Account Total: 15",
+    }, Listing.statisticLines(db, 60, "Total deaths"))
+  end)
+
+  it("marks a Statistic missing from a Snapshot and sums money with coin icons", function()
+    assert.are.same({
+      "Forever Account Stats: Total gold acquired (328)",
+      "  Arlen (PvE) - ?",
+      "  Calgan Blackbeard (PvE) - " .. coins.gold(1) .. " " .. coins.silver(64) .. " " .. coins.copper(39),
+      "  Mira Stonehand (PvP) - " .. coins.silver(14) .. " " .. coins.copper(56),
+      "  Account Total: " .. coins.gold(1) .. " " .. coins.silver(78) .. " " .. coins.copper(95),
+    }, Listing.statisticLines(db, 328, "Total gold acquired"))
+  end)
+
+  it("shows no Account Total for a Text Statistic", function()
+    local lines = Listing.statisticLines(db, 1336, "Creature type killed the most")
+    assert.are.equal("  Account Total: —", lines[#lines])
+  end)
+
+  it("names a Statistic the game does not know as unknown", function()
+    assert.are.equal("Forever Account Stats: Unknown Statistic (99999)", Listing.statisticLines(db, 99999, nil)[1])
   end)
 end)
