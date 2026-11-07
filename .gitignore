@@ -1,0 +1,3 @@
+# Project-local Lua toolchain (scripts/setup-dev.sh)
+.lua/
+.venv/
