@@ -21,3 +21,24 @@ function Cells.statistic(db, statisticID, selectedGUID, currentGUID, liveSnapsho
     total = ns.AccountTotals.display(statisticID, snapshots),
   }
 end
+
+-- The list's rows from CategoryTree.visibleRows, each Statistic row completed with its cells (`value`, `total`, as
+-- Cells.statistic gives them) and `odd`, which stripes the Statistics below each Category header, starting odd.
+-- Category rows are kept as they are.
+function Cells.rows(visibleRows, db, selectedGUID, currentGUID, liveSnapshot)
+  local rows, odd = {}, true
+  for _, row in ipairs(visibleRows) do
+    if row.kind == "statistic" then
+      local cells = Cells.statistic(db, row.id, selectedGUID, currentGUID, liveSnapshot)
+      rows[#rows + 1] = {
+        kind = row.kind, id = row.id, name = row.name, depth = row.depth,
+        value = cells.value, total = cells.total, odd = odd,
+      }
+      odd = not odd
+    else
+      rows[#rows + 1] = row
+      odd = true
+    end
+  end
+  return rows
+end

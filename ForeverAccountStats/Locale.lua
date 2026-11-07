@@ -2,11 +2,16 @@
 local _, ns = ...
 
 ns.L = {
+  ACCOUNT_TOTAL_COLUMN = "Account Total",
   ACCOUNT_TOTAL_LINE = "  Account Total: %s",
   ADDON_TITLE = "Forever Account Stats",
+  CHARACTER_COLUMN = "Character",
   CHARACTER_WITH_RULESET = "%s (%s)",
   DAYS_AGO = "%d d ago",
+  -- date() format of Last Synced's exact date and time; C89 strftime specifiers only.
+  EXACT_DATE_TIME = "%Y-%m-%d %H:%M",
   HOURS_AGO = "%d h ago",
+  LAST_SYNCED = "Last Synced: %s",
   MINUTES_AGO = "%d min ago",
   -- Marker for a Statistic missing from a Character's Snapshot, e.g. one taken by an older version.
   MISSING_VALUE = "?",
@@ -15,8 +20,11 @@ ns.L = {
   -- Account Total shown for Text and Average Statistics, which have none.
   NO_ACCOUNT_TOTAL = "—",
   NOW = "now",
+  STATISTIC_COLUMN = "Statistic",
   STATISTIC_HEADER = "%s: %s (%d)",
   STATISTIC_LINE = "  %s - %s",
+  -- The button on the default UI's Statistics tab that opens the window.
+  STATISTICS_TAB_BUTTON = "Account Stats",
   TRACKED_CHARACTERS_HEADER = "%s: Tracked Characters (%d)",
   TRACKED_CHARACTER_LINE = "  %s - %s",
   UNKNOWN_STATISTIC = "Unknown Statistic",

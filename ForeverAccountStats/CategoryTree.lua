@@ -4,8 +4,20 @@ local _, ns = ...
 local CategoryTree = {}
 ns.CategoryTree = CategoryTree
 
+-- The Statistics of one Category the default Statistics panel shows: all but those marked `skip`.
+local function shown(statistics)
+  local result = {}
+  for _, statistic in ipairs(statistics or {}) do
+    if not statistic.skip then
+      result[#result + 1] = statistic
+    end
+  end
+  return result
+end
+
 -- Root nodes { id, name, statistics, children } from `categories`, an ordered list of { id, name, parentID },
--- and `statistics`, { [categoryID] = { { id, name }, ... } }. A Category whose parent is -1 or unknown is a root.
+-- and `statistics`, { [categoryID] = { { id, name, skip }, ... } }. A Category whose parent is -1 or unknown is a
+-- root. Statistics marked `skip` are left out, as the default Statistics panel leaves them out.
 -- Game order is kept for Categories and Statistics alike.
 function CategoryTree.build(categories, statistics)
   local nodes = {}
@@ -13,7 +25,7 @@ function CategoryTree.build(categories, statistics)
     nodes[category.id] = {
       id = category.id,
       name = category.name,
-      statistics = statistics[category.id] or {},
+      statistics = shown(statistics[category.id]),
       children = {},
     }
   end

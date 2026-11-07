@@ -58,3 +58,25 @@ function Characters.dropdownEntries(db, currentGUID, now)
   end
   return entries
 end
+
+-- Last Synced of a dropdown entry for the text beside the dropdown, { text, exact }: `text` reads it relative to
+-- now, `exact` is its date and time through `formatDate` (the game's date()). The logged-in Character's values are
+-- live, so it reads now at the exact time `now`.
+function Characters.lastSynced(entry, now, formatDate)
+  local syncedAt = entry.isCurrent and now or entry.lastSynced
+  return {
+    text = string.format(L.LAST_SYNCED, entry.relative),
+    exact = formatDate(L.EXACT_DATE_TIME, syncedAt),
+  }
+end
+
+-- The dropdown entry of the Character selected by `selectedGUID`, or the first entry (the logged-in Character)
+-- when none is selected or the selected one is no longer tracked.
+function Characters.selectedEntry(entries, selectedGUID)
+  for _, entry in ipairs(entries) do
+    if entry.guid == selectedGUID then
+      return entry
+    end
+  end
+  return entries[1]
+end

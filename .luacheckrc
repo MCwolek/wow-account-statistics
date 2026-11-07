@@ -11,16 +11,35 @@ globals = {
 
 -- WoW API the add-on reads. Add entries as the code starts using them.
 read_globals = {
+  "AchievementFrame",
+  "AchievementFrameStats",
+  "ButtonFrameTemplate_HideButtonBar",
+  "ButtonFrameTemplate_HidePortrait",
+  "C_AddOns",
+  "C_ClassColor",
+  "C_Timer",
+  "CreateAtlasMarkup",
+  "CreateDataProvider",
   "CreateFrame",
+  "CreateScrollBoxListLinearView",
+  "date",
+  "GameTooltip",
+  "GameTooltip_Hide",
   "GetAchievementInfo",
+  "GetCategoryInfo",
   "GetCategoryNumAchievements",
+  "GetClassAtlas",
   "GetRealmName",
   "GetStatistic",
   "GetStatisticsCategoryList",
+  "ScrollBoxConstants",
+  "ScrollUtil",
+  "time",
+  "UIParent",
+  "UISpecialFrames",
   "UnitClass",
   "UnitGUID",
   "UnitName",
-  "time",
 }
 
 files["spec/"] = { std = "+busted" }

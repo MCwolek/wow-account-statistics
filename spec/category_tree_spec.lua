@@ -41,6 +41,21 @@ describe("CategoryTree.build", function()
     local tree = CategoryTree.build({ { id = 152, name = "Dungeons & Raids", parentID = 999 } }, {})
     assert.are.same({ { id = 152, name = "Dungeons & Raids", statistics = {}, children = {} } }, tree)
   end)
+
+  it("leaves out Statistics the default Statistics panel skips", function()
+    local tree = CategoryTree.build({ { id = 130, name = "Character", parentID = -1 } }, {
+      [130] = {
+        { id = 60, name = "Total deaths", skip = false },
+        { id = 61, name = "Hidden statistic", skip = true },
+        { id = 98, name = "Quests completed" },
+      },
+    })
+    assert.are.same({ {
+      id = 130, name = "Character",
+      statistics = { { id = 60, name = "Total deaths", skip = false }, { id = 98, name = "Quests completed" } },
+      children = {},
+    } }, tree)
+  end)
 end)
 
 describe("CategoryTree.visibleRows", function()

@@ -14,5 +14,7 @@ CategoryTree.lua
 Cells.lua
 Command.lua
 Listing.lua
+WindowPosition.lua
 GameAPI.lua
+Window.lua
 Core.lua
