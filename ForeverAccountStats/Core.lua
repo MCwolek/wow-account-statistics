@@ -1,4 +1,4 @@
--- Wiring: game events and the /fas command. Logic lives in Sync.lua and Listing.lua.
+-- Wiring: game events and the /stats command. Logic lives in Sync.lua and Listing.lua.
 local addonName, ns = ...
 local Sync, Listing, GameAPI = ns.Sync, ns.Listing, ns.GameAPI
 
@@ -21,7 +21,7 @@ frame:SetScript("OnEvent", function(_, event, arg1)
 end)
 
 -- ForeverAccountStatsDB exists by now: ADDON_LOADED fires before the player can type a command.
-SLASH_FOREVERACCOUNTSTATS1 = "/fas"
+SLASH_FOREVERACCOUNTSTATS1 = "/stats"
 SlashCmdList.FOREVERACCOUNTSTATS = function()
   for _, line in ipairs(Listing.lines(ForeverAccountStatsDB, GameAPI.playerGUID(), GameAPI.now())) do
     print(line)
