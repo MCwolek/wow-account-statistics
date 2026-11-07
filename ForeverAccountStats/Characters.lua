@@ -20,6 +20,15 @@ function Characters.relativeLastSynced(syncedAt, now)
   return L.NOW
 end
 
+-- Relative Last Synced of the Tracked Character `guid`, or "now" for the logged-in Character (`currentGUID`): it
+-- Synced on login, Syncs again on logout, and the Statistics window reads its values live.
+function Characters.relativeLastSyncedOf(guid, character, currentGUID, now)
+  if guid == currentGUID then
+    return L.NOW
+  end
+  return Characters.relativeLastSynced(character.lastSynced, now)
+end
+
 -- Name of a Tracked Character: Full Name plus Ruleset, since a Full Name repeats across Rulesets.
 -- Characters synced before Rulesets were saved have none until their next Sync.
 function Characters.displayName(character)
@@ -40,7 +49,7 @@ function Characters.dropdownEntries(db, currentGUID, now)
       label = Characters.displayName(character),
       class = character.class,
       lastSynced = character.lastSynced,
-      relative = isCurrent and L.NOW or Characters.relativeLastSynced(character.lastSynced, now),
+      relative = Characters.relativeLastSyncedOf(guid, character, currentGUID, now),
       isCurrent = isCurrent,
     }
     if isCurrent then
@@ -68,6 +77,18 @@ function Characters.lastSynced(entry, now, formatDate)
     text = string.format(L.LAST_SYNCED, entry.relative),
     exact = formatDate(L.EXACT_DATE_TIME, syncedAt),
   }
+end
+
+-- Each Tracked Character's Statistic values, by GUID and as a list for AccountTotals: its saved Snapshot, or
+-- `liveValues` for the logged-in Character (`currentGUID`) when given. A Character without a Snapshot has none.
+function Characters.statisticValues(db, currentGUID, liveValues)
+  local byGUID, all = {}, {}
+  for guid, character in pairs(db.characters) do
+    local values = guid == currentGUID and liveValues or character.snapshot or {}
+    byGUID[guid] = values
+    all[#all + 1] = values
+  end
+  return byGUID, all
 end
 
 -- The dropdown entry of the Character selected by `selectedGUID`, or the first entry (the logged-in Character)

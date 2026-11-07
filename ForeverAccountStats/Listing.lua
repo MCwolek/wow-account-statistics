@@ -8,12 +8,14 @@ ns.Listing = Listing
 local Characters = ns.Characters
 
 -- Chat lines for /stats: a header, then each Tracked Character by Full Name and Ruleset with its Last Synced.
--- The logged-in Character (`currentGUID`) reads "now": it Synced on login and Syncs again on logout.
+-- The logged-in Character (`currentGUID`) reads "now".
 function Listing.lines(db, currentGUID, now)
   local entries = {}
   for guid, character in pairs(db.characters) do
-    local synced = guid == currentGUID and L.NOW or Characters.relativeLastSynced(character.lastSynced, now)
-    entries[#entries + 1] = { name = Characters.displayName(character), synced = synced }
+    entries[#entries + 1] = {
+      name = Characters.displayName(character),
+      synced = Characters.relativeLastSyncedOf(guid, character, currentGUID, now),
+    }
   end
   table.sort(entries, function(a, b)
     return a.name < b.name
@@ -29,13 +31,12 @@ end
 -- Chat lines for /stats dump: the Statistic's name and ID, each Tracked Character's value as stored in its
 -- Snapshot, then the Account Total. `statisticName` is nil when the game knows no such Statistic.
 function Listing.statisticLines(db, statisticID, statisticName)
-  local entries, snapshots = {}, {}
-  for _, character in pairs(db.characters) do
-    local snapshot = character.snapshot or {}
-    snapshots[#snapshots + 1] = snapshot
+  local byGUID, snapshots = Characters.statisticValues(db)
+  local entries = {}
+  for guid, character in pairs(db.characters) do
     entries[#entries + 1] = {
       name = Characters.displayName(character),
-      value = ns.Values.display(snapshot[statisticID]),
+      value = ns.Values.display(byGUID[guid][statisticID]),
     }
   end
   table.sort(entries, function(a, b)

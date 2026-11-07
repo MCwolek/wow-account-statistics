@@ -15,10 +15,22 @@ local function shown(statistics)
   return result
 end
 
+-- The nodes that have something to show: a Statistic of their own or a child Category kept in turn.
+local function withStatistics(nodes)
+  local kept = {}
+  for _, node in ipairs(nodes) do
+    node.children = withStatistics(node.children)
+    if #node.statistics > 0 or #node.children > 0 then
+      kept[#kept + 1] = node
+    end
+  end
+  return kept
+end
+
 -- Root nodes { id, name, statistics, children } from `categories`, an ordered list of { id, name, parentID },
 -- and `statistics`, { [categoryID] = { { id, name, skip }, ... } }. A Category whose parent is -1 or unknown is a
--- root. Statistics marked `skip` are left out, as the default Statistics panel leaves them out.
--- Game order is kept for Categories and Statistics alike.
+-- root. Statistics marked `skip` are left out, as the default Statistics panel leaves them out, and so is a
+-- Category with no Statistic to show anywhere below it. Game order is kept for Categories and Statistics alike.
 function CategoryTree.build(categories, statistics)
   local nodes = {}
   for _, category in ipairs(categories) do
@@ -38,7 +50,7 @@ function CategoryTree.build(categories, statistics)
       roots[#roots + 1] = nodes[category.id]
     end
   end
-  return roots
+  return withStatistics(roots)
 end
 
 local function addRows(rows, nodes, expanded, depth)
@@ -61,4 +73,15 @@ function CategoryTree.visibleRows(tree, expanded)
   local rows = {}
   addRows(rows, tree, expanded, 0)
   return rows
+end
+
+-- A copy of `expanded`, the set { [categoryID] = true }, with the Category `categoryID` expanded when it was
+-- collapsed and collapsed when it was expanded.
+function CategoryTree.toggled(expanded, categoryID)
+  local result = {}
+  for id in pairs(expanded) do
+    result[id] = true
+  end
+  result[categoryID] = not expanded[categoryID] or nil
+  return result
 end

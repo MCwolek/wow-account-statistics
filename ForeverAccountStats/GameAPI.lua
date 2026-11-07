@@ -24,6 +24,11 @@ function GameAPI.playerGUID()
   return UnitGUID("player")
 end
 
+-- Whether the add-on `name` (its folder name, e.g. "Blizzard_AchievementUI") has loaded.
+function GameAPI.isAddOnLoaded(name)
+  return C_AddOns.IsAddOnLoaded(name)
+end
+
 -- Current time in seconds (Unix epoch), as time() returns it.
 function GameAPI.now()
   return time()

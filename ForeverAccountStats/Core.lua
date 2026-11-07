@@ -20,7 +20,7 @@ frame:SetScript("OnEvent", function(_, event, arg1)
   if event == "ADDON_LOADED" and arg1 == addonName then
     ForeverAccountStatsDB = Sync.ensureDB(ForeverAccountStatsDB)
     -- Another add-on may have loaded the Achievement UI before this one.
-    if C_AddOns.IsAddOnLoaded(ACHIEVEMENT_UI) then
+    if GameAPI.isAddOnLoaded(ACHIEVEMENT_UI) then
       Window.addStatisticsTabButton()
     end
   elseif event == "ADDON_LOADED" and arg1 == ACHIEVEMENT_UI then

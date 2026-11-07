@@ -1,8 +1,8 @@
 -- Thin adapter: the Statistics window and its button on the default Statistics tab. It draws what the pure modules
--- (CategoryTree, Cells, Characters, WindowPosition) compute and reads the game through GameAPI.
+-- (CategoryTree, Rows, Characters, WindowPosition) compute and reads the game through GameAPI.
 local _, ns = ...
 local L, GameAPI, Sync = ns.L, ns.GameAPI, ns.Sync
-local CategoryTree, Cells, Characters, WindowPosition = ns.CategoryTree, ns.Cells, ns.Characters, ns.WindowPosition
+local CategoryTree, Rows, Characters, WindowPosition = ns.CategoryTree, ns.Rows, ns.Characters, ns.WindowPosition
 
 local Window = {}
 ns.Window = Window
@@ -15,7 +15,9 @@ local COLUMN_WIDTH = 120
 local COLUMN_GAP = 10
 local DROPDOWN_WIDTH = 260
 -- The default Statistics panel re-reads on every CRITERIA_UPDATE; that event comes in bursts, so wait a little.
-local LIVE_REFRESH_DELAY = 0.5
+local REREAD_DELAY = 0.5
+-- Seconds between updates of the Last Synced text while the window is shown; it counts whole minutes.
+local LAST_SYNCED_INTERVAL = 10
 local STAT_TEXTURE = "Interface\\AchievementFrame\\UI-Achievement-Stat-Buttons"
 local EXPAND_TEXTURE = "Interface\\Buttons\\UI-PlusButton-Up"
 local COLLAPSE_TEXTURE = "Interface\\Buttons\\UI-MinusButton-Up"
@@ -25,15 +27,13 @@ local frame          -- created on first open, once SavedVariables are loaded
 local tree           -- the Category tree, read on first open
 local expanded = {}  -- Categories expanded since the window opened
 local selectedGUID   -- Character chosen in the dropdown since the window opened
-local liveSnapshot   -- the logged-in Character's values, read while the window is shown
-local refreshPending = false
-
-local function db()
-  return ForeverAccountStatsDB
-end
+local liveValues     -- the logged-in Character's values, read while the window is shown; not saved
+local rereadPending = false
+local lastSyncedTicker
+local statisticsTabButton
 
 local function dropdownEntries()
-  return Characters.dropdownEntries(db(), GameAPI.playerGUID(), GameAPI.now())
+  return Characters.dropdownEntries(ForeverAccountStatsDB, GameAPI.playerGUID(), GameAPI.now())
 end
 
 -- Full Name and Ruleset with the class icon and in the class colour; a class the game does not colour stays white.
@@ -49,33 +49,41 @@ local function characterLabel(entry)
   return CreateAtlasMarkup(GetClassAtlas(entry.class), 14, 14) .. " " .. label
 end
 
-local function readLive()
-  liveSnapshot = Sync.buildSnapshot(GameAPI.readStatistics())
+local function readLiveValues()
+  liveValues = Sync.buildSnapshot(GameAPI.readStatistics())
 end
 
-local function refresh(keepScroll)
-  local currentGUID = GameAPI.playerGUID()
-  local entry = Characters.selectedEntry(dropdownEntries(), selectedGUID)
-  selectedGUID = entry and entry.guid or currentGUID
+-- Last Synced of the selected Character beside the dropdown; nothing to show while no Character is tracked.
+local function showLastSynced(entry)
   if entry then
     frame.lastSynced = Characters.lastSynced(entry, GameAPI.now(), GameAPI.formatDate)
     frame.LastSyncedText:SetText(frame.lastSynced.text)
   end
-  local visible = CategoryTree.visibleRows(tree, expanded)
-  local rows = Cells.rows(visible, db(), selectedGUID, currentGUID, liveSnapshot)
+end
+
+local function redraw(keepScroll)
+  local entry = Characters.selectedEntry(dropdownEntries(), selectedGUID)
+  selectedGUID = entry and entry.guid
+  showLastSynced(entry)
+  local rows = Rows.build(CategoryTree.visibleRows(tree, expanded), {
+    db = ForeverAccountStatsDB,
+    selectedGUID = selectedGUID,
+    currentGUID = GameAPI.playerGUID(),
+    liveValues = liveValues,
+  })
   frame.ScrollBox:SetDataProvider(CreateDataProvider(rows), keepScroll and ScrollBoxConstants.RetainScrollPosition)
 end
 
-local function scheduleLiveRefresh()
-  if refreshPending then
+local function scheduleReread()
+  if rereadPending then
     return
   end
-  refreshPending = true
-  C_Timer.After(LIVE_REFRESH_DELAY, function()
-    refreshPending = false
+  rereadPending = true
+  C_Timer.After(REREAD_DELAY, function()
+    rereadPending = false
     if frame:IsShown() then
-      readLive()
-      refresh(true)
+      readLiveValues()
+      redraw(true)
     end
   end)
 end
@@ -126,8 +134,8 @@ local function createRegions(row)
 
   row:SetScript("OnClick", function(self)
     if self.data.kind == "category" then
-      expanded[self.data.id] = not expanded[self.data.id] or nil
-      refresh(true)
+      expanded = CategoryTree.toggled(expanded, self.data.id)
+      redraw(true)
     end
   end)
   row:SetScript("OnEnter", function(self)
@@ -222,7 +230,7 @@ local function createDropdown(parent)
         return data.guid == selectedGUID
       end, function(data)
         selectedGUID = data.guid
-        refresh(true)
+        redraw(true)
       end, entry)
       radio:AddInitializer(function(button, description)
         local relative = button:AttachFontString()
@@ -245,6 +253,12 @@ local function createLastSynced(parent, dropdown)
   text:SetPoint("LEFT", dropdown, "RIGHT", 12, 0)
   local hover = CreateFrame("Frame", nil, parent)
   hover:SetAllPoints(text)
+  -- A plain Frame gets no OnEnter until it takes mouse motion; EnableMouse is the older call that also does.
+  if hover.EnableMouseMotion then
+    hover:EnableMouseMotion(true)
+  else
+    hover:EnableMouse(true)
+  end
   hover:SetScript("OnEnter", function(self)
     if not frame.lastSynced then
       return
@@ -261,7 +275,7 @@ local function savePosition(self)
   self:StopMovingOrSizing()
   self:SetUserPlaced(false)
   local point, _, relativePoint, x, y = self:GetPoint(1)
-  db().window = WindowPosition.save(point, relativePoint, x, y)
+  ForeverAccountStatsDB.window = WindowPosition.save(point, relativePoint, x, y)
 end
 
 local function create()
@@ -289,7 +303,7 @@ local function create()
   end)
   table.insert(UISpecialFrames, FRAME_NAME)
   frame:ClearAllPoints()
-  local point, relativePoint, x, y = WindowPosition.anchor(db().window)
+  local point, relativePoint, x, y = WindowPosition.anchor(ForeverAccountStatsDB.window)
   frame:SetPoint(point, UIParent, relativePoint, x, y)
 
   frame.ScrollBox = createList(frame.Inset)
@@ -298,18 +312,27 @@ local function create()
 
   frame:SetScript("OnShow", function(self)
     self:RegisterEvent("CRITERIA_UPDATE")
-    readLive()
-    refresh(false)
+    readLiveValues()
+    redraw(false)
     self.Dropdown:GenerateMenu()
+    -- Relative Last Synced moves on with the clock, not only with the list.
+    lastSyncedTicker = C_Timer.NewTicker(LAST_SYNCED_INTERVAL, function()
+      showLastSynced(Characters.selectedEntry(dropdownEntries(), selectedGUID))
+    end)
   end)
   -- Closing forgets the expanded Categories and the chosen Character: the next open starts collapsed, on the
   -- logged-in Character.
   frame:SetScript("OnHide", function(self)
     self:UnregisterEvent("CRITERIA_UPDATE")
+    -- create() hides the new frame before it was ever shown, so there may be no ticker yet.
+    if lastSyncedTicker then
+      lastSyncedTicker:Cancel()
+      lastSyncedTicker = nil
+    end
     expanded = {}
     selectedGUID = nil
   end)
-  frame:SetScript("OnEvent", scheduleLiveRefresh)
+  frame:SetScript("OnEvent", scheduleReread)
   frame:Hide()
 end
 
@@ -324,11 +347,11 @@ end
 -- Puts a button that opens the window on the default UI's Statistics tab. Call it once Blizzard_AchievementUI has
 -- loaded; it is load-on-demand.
 function Window.addStatisticsTabButton()
-  local stats = AchievementFrameStats
-  if not stats or Window.statisticsTabButton then
+  local statisticsPanel = AchievementFrameStats
+  if not statisticsPanel or statisticsTabButton then
     return
   end
-  local button = CreateFrame("Button", nil, stats, "UIPanelButtonTemplate")
+  local button = CreateFrame("Button", nil, statisticsPanel, "UIPanelButtonTemplate")
   button:SetSize(140, 22)
   button:SetText(L.STATISTICS_TAB_BUTTON)
   -- On the Statistics tab the header's Back button is hidden, which frees its spot.
@@ -336,9 +359,9 @@ function Window.addStatisticsTabButton()
   if header then
     button:SetPoint("TOPLEFT", header, "TOPLEFT", 6, -10)
   else
-    button:SetPoint("BOTTOMRIGHT", stats, "TOPRIGHT", 0, 4)
+    button:SetPoint("BOTTOMRIGHT", statisticsPanel, "TOPRIGHT", 0, 4)
   end
-  button:SetFrameLevel(stats:GetFrameLevel() + 10)
+  button:SetFrameLevel(statisticsPanel:GetFrameLevel() + 10)
   button:SetScript("OnClick", Window.toggle)
-  Window.statisticsTabButton = button
+  statisticsTabButton = button
 end

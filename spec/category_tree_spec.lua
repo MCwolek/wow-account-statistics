@@ -18,6 +18,7 @@ describe("CategoryTree.build", function()
       [130] = { { id = 60, name = "Total deaths" } },
       [131] = { { id = 328, name = "Total gold acquired" }, { id = 326, name = "Gold from quest rewards" } },
       [141] = { { id = 193, name = "Largest hit dealt" } },
+      [145] = { { id = 344, name = "Bandages used" } },
     }
 
     assert.are.same({
@@ -30,7 +31,7 @@ describe("CategoryTree.build", function()
             statistics = { { id = 328, name = "Total gold acquired" }, { id = 326, name = "Gold from quest rewards" } },
             children = {},
           },
-          { id = 145, name = "Consumables", statistics = {}, children = {} },
+          { id = 145, name = "Consumables", statistics = { { id = 344, name = "Bandages used" } }, children = {} },
         },
       },
       { id = 141, name = "Combat", statistics = { { id = 193, name = "Largest hit dealt" } }, children = {} },
@@ -38,8 +39,32 @@ describe("CategoryTree.build", function()
   end)
 
   it("puts a Category with an unknown parent at the root", function()
-    local tree = CategoryTree.build({ { id = 152, name = "Dungeons & Raids", parentID = 999 } }, {})
-    assert.are.same({ { id = 152, name = "Dungeons & Raids", statistics = {}, children = {} } }, tree)
+    local tree = CategoryTree.build({ { id = 152, name = "Dungeons & Raids", parentID = 999 } }, {
+      [152] = { { id = 932, name = "Total 5-player dungeons entered" } },
+    })
+    assert.are.same({ {
+      id = 152, name = "Dungeons & Raids",
+      statistics = { { id = 932, name = "Total 5-player dungeons entered" } },
+      children = {},
+    } }, tree)
+  end)
+
+  it("leaves out a Category with no Statistic to show anywhere below it", function()
+    local categories = {
+      { id = 130, name = "Character", parentID = -1 },
+      { id = 145, name = "Consumables", parentID = 130 },
+      { id = 141, name = "Combat", parentID = -1 },
+      { id = 142, name = "Hidden", parentID = 141 },
+      { id = 143, name = "Empty", parentID = 142 },
+    }
+    local statistics = {
+      [130] = { { id = 60, name = "Total deaths" } },
+      [142] = { { id = 61, name = "Hidden statistic", skip = true } },
+    }
+
+    assert.are.same({
+      { id = 130, name = "Character", statistics = { { id = 60, name = "Total deaths" } }, children = {} },
+    }, CategoryTree.build(categories, statistics))
   end)
 
   it("leaves out Statistics the default Statistics panel skips", function()
@@ -102,5 +127,23 @@ describe("CategoryTree.visibleRows", function()
       { kind = "statistic", id = 328, name = "Total gold acquired", depth = 2 },
       { kind = "category", id = 141, name = "Combat", depth = 0, expanded = false },
     }, CategoryTree.visibleRows(tree, expanded))
+  end)
+end)
+
+describe("CategoryTree.toggled", function()
+  local CategoryTree = loadCategoryTree()
+
+  it("expands a collapsed Category and keeps the others as they are", function()
+    assert.are.same({ [130] = true, [131] = true }, CategoryTree.toggled({ [131] = true }, 130))
+  end)
+
+  it("collapses an expanded Category", function()
+    assert.are.same({ [131] = true }, CategoryTree.toggled({ [130] = true, [131] = true }, 130))
+  end)
+
+  it("leaves the set it was given unchanged", function()
+    local expanded = { [131] = true }
+    CategoryTree.toggled(expanded, 130)
+    assert.are.same({ [131] = true }, expanded)
   end)
 end)
