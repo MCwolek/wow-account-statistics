@@ -160,8 +160,23 @@ describe("CategoryTree.searchResults", function()
     }, CategoryTree.searchResults(tree, "DEATH"))
   end)
 
-  it("does not match Category names", function()
-    assert.are.same({}, CategoryTree.searchResults(tree, "wealth"))
+  it("keeps the whole of a Category whose name matches, whatever the case, with its Category path", function()
+    assert.are.same({ {
+      id = 130, name = "Character", statistics = {},
+      children = {
+        { id = 131, name = "Wealth", statistics = { { id = 328, name = "Total gold acquired" } }, children = {} },
+      },
+    } }, CategoryTree.searchResults(tree, "WEAL"))
+  end)
+
+  it("keeps the child Categories of a Category whose name matches", function()
+    assert.are.same({ {
+      id = 130, name = "Character",
+      statistics = { { id = 60, name = "Total deaths" }, { id = 98, name = "Quests completed" } },
+      children = {
+        { id = 131, name = "Wealth", statistics = { { id = 328, name = "Total gold acquired" } }, children = {} },
+      },
+    } }, CategoryTree.searchResults(tree, "charac"))
   end)
 
   it("searches for the text as it is, not as a pattern", function()

@@ -5,19 +5,24 @@ local CategoryTree = {}
 ns.CategoryTree = CategoryTree
 
 -- Copies of the nodes that have something to show: each holds the Statistics `keep` picks of its own and the child
--- Categories kept in turn, and is left out when neither remains. The nodes given are left unchanged.
-local function pruned(nodes, keep)
+-- Categories kept in turn, and is left out when neither remains. A node `keepWhole` picks, when given, is kept as it
+-- is. The nodes given are left unchanged.
+local function pruned(nodes, keep, keepWhole)
   local kept = {}
   for _, node in ipairs(nodes) do
-    local statistics = {}
-    for _, statistic in ipairs(node.statistics) do
-      if keep(statistic) then
-        statistics[#statistics + 1] = statistic
+    if keepWhole and keepWhole(node) then
+      kept[#kept + 1] = node
+    else
+      local statistics = {}
+      for _, statistic in ipairs(node.statistics) do
+        if keep(statistic) then
+          statistics[#statistics + 1] = statistic
+        end
       end
-    end
-    local children = pruned(node.children, keep)
-    if #statistics > 0 or #children > 0 then
-      kept[#kept + 1] = { id = node.id, name = node.name, statistics = statistics, children = children }
+      local children = pruned(node.children, keep, keepWhole)
+      if #statistics > 0 or #children > 0 then
+        kept[#kept + 1] = { id = node.id, name = node.name, statistics = statistics, children = children }
+      end
     end
   end
   return kept
@@ -54,13 +59,15 @@ function CategoryTree.build(categories, statistics)
   return pruned(roots, isShown)
 end
 
--- The search results for `term`: the tree cut down to the Statistics whose name contains it, ignoring case, and the
--- Categories above them. Category names are not searched. The tree given is left unchanged.
+-- The search results for `term`: the tree cut down to the Categories whose name contains it, ignoring case, each
+-- kept whole, and the Statistics whose name contains it, each with the Categories above it. The tree given is left
+-- unchanged.
 function CategoryTree.searchResults(tree, term)
   local lowered = string.lower(term)
-  return pruned(tree, function(statistic)
-    return string.find(string.lower(statistic.name), lowered, 1, true) ~= nil
-  end)
+  local function contains(item)
+    return string.find(string.lower(item.name), lowered, 1, true) ~= nil
+  end
+  return pruned(tree, contains, contains)
 end
 
 local function expandAll(expanded, nodes)
