@@ -22,10 +22,11 @@ local COLUMN_WIDTH = 120
 local COLUMN_GAP = 10
 -- Wide enough for the longest Full Name and Ruleset with the class icon.
 local DROPDOWN_WIDTH = 320
--- The search box fills the rest of the dropdown's line: after the dropdown (16 in from the left edge) and a gap,
--- up to 20 short of the right edge.
+local DROPDOWN_LEFT = 16
+-- The search box fills the rest of the dropdown's line: after the dropdown and a gap, up to 20 short of the right
+-- edge.
 local SEARCH_GAP = 14
-local SEARCH_WIDTH = WIDTH - 16 - DROPDOWN_WIDTH - SEARCH_GAP - 20
+local SEARCH_WIDTH = WIDTH - DROPDOWN_LEFT - DROPDOWN_WIDTH - SEARCH_GAP - 20
 local ICON_SIZE = 16
 -- The default Statistics panel re-reads on every CRITERIA_UPDATE; that event comes in bursts, so wait a little.
 local REREAD_DELAY = 0.5
@@ -226,7 +227,7 @@ end
 
 local function createDropdown(parent)
   local dropdown = CreateFrame("DropdownButton", nil, parent, "WowStyle1DropdownTemplate")
-  dropdown:SetPoint("TOPLEFT", parent, "TOPLEFT", 16, -30)
+  dropdown:SetPoint("TOPLEFT", parent, "TOPLEFT", DROPDOWN_LEFT, -30)
   dropdown:SetWidth(DROPDOWN_WIDTH)
   dropdown:SetSelectionTranslator(function(selection)
     return selectionLabel(selection.data)
