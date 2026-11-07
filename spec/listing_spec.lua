@@ -6,32 +6,12 @@ local function loadListing()
   local ns = addon.loadFile("Locale.lua", {})
   addon.loadFile("Values.lua", ns)
   addon.loadFile("AccountTotals.lua", ns)
+  addon.loadFile("Characters.lua", ns)
   return addon.loadFile("Listing.lua", ns).Listing
 end
 
 local MINUTE, HOUR, DAY = 60, 3600, 86400
 local NOW = 1700000000
-
-describe("Listing.relativeLastSynced", function()
-  local Listing = loadListing()
-
-  it("counts whole days", function()
-    assert.are.equal("5 d ago", Listing.relativeLastSynced(NOW - 5 * DAY - 7 * HOUR, NOW))
-  end)
-
-  it("counts whole hours under a day", function()
-    assert.are.equal("23 h ago", Listing.relativeLastSynced(NOW - DAY + 1, NOW))
-  end)
-
-  it("counts whole minutes under an hour", function()
-    assert.are.equal("1 min ago", Listing.relativeLastSynced(NOW - MINUTE - 30, NOW))
-  end)
-
-  it("is now under a minute", function()
-    assert.are.equal("now", Listing.relativeLastSynced(NOW - 59, NOW))
-    assert.are.equal("now", Listing.relativeLastSynced(NOW, NOW))
-  end)
-end)
 
 describe("Listing.lines", function()
   local Listing = loadListing()
@@ -61,27 +41,6 @@ describe("Listing.lines", function()
       "Forever Account Stats: Tracked Characters (1)",
       "  Calgan Blackbeard - now",
     }, Listing.lines(old, "Player-1-0000AAAA", NOW))
-  end)
-end)
-
-describe("Listing.parseCommand", function()
-  local Listing = loadListing()
-
-  it("lists Tracked Characters with no arguments", function()
-    assert.are.same({ action = "list" }, Listing.parseCommand(""))
-    assert.are.same({ action = "list" }, Listing.parseCommand("   "))
-  end)
-
-  it("dumps one Statistic by ID, ignoring case and extra spaces", function()
-    assert.are.same({ action = "dump", statisticID = 60 }, Listing.parseCommand("dump 60"))
-    assert.are.same({ action = "dump", statisticID = 328 }, Listing.parseCommand("  DUMP   328 "))
-  end)
-
-  it("shows usage for anything else", function()
-    assert.are.same({ action = "usage" }, Listing.parseCommand("dump"))
-    assert.are.same({ action = "usage" }, Listing.parseCommand("dump deaths"))
-    assert.are.same({ action = "usage" }, Listing.parseCommand("dump 60 61"))
-    assert.are.same({ action = "usage" }, Listing.parseCommand("help"))
   end)
 end)
 

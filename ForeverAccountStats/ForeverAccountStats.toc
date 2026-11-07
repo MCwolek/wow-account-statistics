@@ -9,6 +9,10 @@ Locale.lua
 Values.lua
 AccountTotals.lua
 Sync.lua
+Characters.lua
+CategoryTree.lua
+Cells.lua
+Command.lua
 Listing.lua
 GameAPI.lua
 Core.lua

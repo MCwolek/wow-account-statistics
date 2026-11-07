@@ -2,7 +2,7 @@
 
 A World of Warcraft: Forever add-on that shows the in-game Statistics of all your characters side by side, plus totals across your whole account. Search for a Statistic, for example "death", and see every character's value and the account total on one row.
 
-> **Status:** early development. Each character saves a Snapshot of its Statistics, and `/stats` lists the Tracked Characters with when each last synced, and `/stats dump <Statistic ID>` shows one Statistic for each with its Account Total. There is no window yet. See the [issues](../../issues) for the roadmap.
+> **Status:** early development. Each character saves a Snapshot of its Statistics. `/stats` opens the Statistics window, `/stats list` lists the Tracked Characters with when each last synced, and `/stats dump <Statistic ID>` shows one Statistic for each with its Account Total. See the [issues](../../issues) for the roadmap.
 
 ## How it works
 

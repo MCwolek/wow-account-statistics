@@ -1,6 +1,6 @@
--- Wiring: game events and the /stats command (list, dump <Statistic ID>). Logic lives in Sync.lua and Listing.lua.
+-- Wiring: game events and the /stats command (see Command.lua). Logic lives in Sync.lua, Command.lua and Listing.lua.
 local addonName, ns = ...
-local Sync, Listing, GameAPI = ns.Sync, ns.Listing, ns.GameAPI
+local Sync, Command, Listing, GameAPI = ns.Sync, ns.Command, ns.Listing, ns.GameAPI
 
 local function sync()
   local character = Sync.character(GameAPI.readPlayer())
@@ -23,9 +23,10 @@ end)
 -- ForeverAccountStatsDB exists by now: ADDON_LOADED fires before the player can type a command.
 SLASH_FOREVERACCOUNTSTATS1 = "/stats"
 SlashCmdList.FOREVERACCOUNTSTATS = function(message)
-  local command = Listing.parseCommand(message or "")
+  local command = Command.parse(message or "")
   local lines
-  if command.action == "list" then
+  -- Until the Statistics window exists (#3), bare /stats keeps listing the Tracked Characters.
+  if command.action == "list" or command.action == "toggle" then
     lines = Listing.lines(ForeverAccountStatsDB, GameAPI.playerGUID(), GameAPI.now())
   elseif command.action == "dump" then
     local name = GameAPI.statisticName(command.statisticID)

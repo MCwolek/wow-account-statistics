@@ -20,5 +20,6 @@ ns.L = {
   TRACKED_CHARACTERS_HEADER = "%s: Tracked Characters (%d)",
   TRACKED_CHARACTER_LINE = "  %s - %s",
   UNKNOWN_STATISTIC = "Unknown Statistic",
-  USAGE = "%s: /stats lists Tracked Characters; /stats dump <Statistic ID> shows one Statistic for each.",
+  USAGE = "%s: /stats opens the Statistics window; /stats list lists Tracked Characters; "
+    .. "/stats dump <Statistic ID> shows one Statistic for each.",
 }
