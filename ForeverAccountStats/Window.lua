@@ -18,8 +18,6 @@ local DROPDOWN_WIDTH = 320
 local ICON_SIZE = 16
 -- The default Statistics panel re-reads on every CRITERIA_UPDATE; that event comes in bursts, so wait a little.
 local REREAD_DELAY = 0.5
--- Seconds between updates of the Last Synced text while the window is shown; it counts whole minutes.
-local LAST_SYNCED_INTERVAL = 10
 local STAT_TEXTURE = "Interface\\AchievementFrame\\UI-Achievement-Stat-Buttons"
 local EXPAND_TEXTURE = "Interface\\Buttons\\UI-PlusButton-Up"
 local COLLAPSE_TEXTURE = "Interface\\Buttons\\UI-MinusButton-Up"
@@ -31,7 +29,6 @@ local expanded = {}  -- Categories expanded since the window opened
 local selectedGUID   -- Character chosen in the dropdown since the window opened
 local liveValues     -- the logged-in Character's values, read while the window is shown; not saved
 local rereadPending = false
-local lastSyncedTicker
 local statisticsTabButton
 
 local function dropdownEntries()
@@ -59,18 +56,9 @@ local function readLiveValues()
   liveValues = Sync.buildSnapshot(GameAPI.readStatistics())
 end
 
--- Last Synced of the selected Character beside the dropdown; nothing to show while no Character is tracked.
-local function showLastSynced(entry)
-  if entry then
-    frame.lastSynced = Characters.lastSynced(entry, GameAPI.now(), GameAPI.formatDate)
-    frame.LastSyncedText:SetText(frame.lastSynced.text)
-  end
-end
-
 local function redraw(keepScroll)
   local entry = Characters.selectedEntry(dropdownEntries(), selectedGUID)
   selectedGUID = entry and entry.guid
-  showLastSynced(entry)
   local rows = Rows.build(CategoryTree.visibleRows(tree, expanded), {
     db = ForeverAccountStatsDB,
     selectedGUID = selectedGUID,
@@ -241,6 +229,11 @@ local function createDropdown(parent)
         selectedGUID = data.guid
         redraw(true)
       end, entry)
+      -- Hovering an entry shows its exact Last Synced; the menu already reads it relative to now.
+      radio:SetTooltip(function(tooltip, description)
+        local exact = Characters.exactLastSynced(description:GetData(), GameAPI.now(), GameAPI.formatDate)
+        GameTooltip_SetTitle(tooltip, exact)
+      end)
       -- The class icon is its own texture between the radio button and the label, and the label keeps the width
       -- the radio sized it to: an icon inside the label's text, or a label stretched to the right-hand text, made
       -- the label wrap onto two lines and cut the name short.
@@ -269,30 +262,6 @@ local function createDropdown(parent)
     end
   end)
   return dropdown
-end
-
--- Last Synced of the selected Character beside the dropdown; hovering it shows the exact date and time.
-local function createLastSynced(parent, dropdown)
-  local text = parent:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
-  text:SetPoint("LEFT", dropdown, "RIGHT", 12, 0)
-  local hover = CreateFrame("Frame", nil, parent)
-  hover:SetAllPoints(text)
-  -- A plain Frame gets no OnEnter until it takes mouse motion; EnableMouse is the older call that also does.
-  if hover.EnableMouseMotion then
-    hover:EnableMouseMotion(true)
-  else
-    hover:EnableMouse(true)
-  end
-  hover:SetScript("OnEnter", function(self)
-    if not frame.lastSynced then
-      return
-    end
-    GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-    GameTooltip:SetText(frame.lastSynced.exact, 1, 1, 1)
-    GameTooltip:Show()
-  end)
-  hover:SetScript("OnLeave", GameTooltip_Hide)
-  return text
 end
 
 local function savePosition(self)
@@ -332,27 +301,17 @@ local function create()
 
   frame.ScrollBox = createList(frame.Inset)
   frame.Dropdown = createDropdown(frame)
-  frame.LastSyncedText = createLastSynced(frame, frame.Dropdown)
 
   frame:SetScript("OnShow", function(self)
     self:RegisterEvent("CRITERIA_UPDATE")
     readLiveValues()
     redraw(false)
     self.Dropdown:GenerateMenu()
-    -- Relative Last Synced moves on with the clock, not only with the list.
-    lastSyncedTicker = C_Timer.NewTicker(LAST_SYNCED_INTERVAL, function()
-      showLastSynced(Characters.selectedEntry(dropdownEntries(), selectedGUID))
-    end)
   end)
   -- Closing forgets the expanded Categories and the chosen Character: the next open starts collapsed, on the
   -- logged-in Character.
   frame:SetScript("OnHide", function(self)
     self:UnregisterEvent("CRITERIA_UPDATE")
-    -- create() hides the new frame before it was ever shown, so there may be no ticker yet.
-    if lastSyncedTicker then
-      lastSyncedTicker:Cancel()
-      lastSyncedTicker = nil
-    end
     expanded = {}
     selectedGUID = nil
   end)

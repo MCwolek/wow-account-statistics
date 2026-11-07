@@ -25,6 +25,7 @@ read_globals = {
   "date",
   "GameTooltip",
   "GameTooltip_Hide",
+  "GameTooltip_SetTitle",
   "GetAchievementInfo",
   "GetCategoryInfo",
   "GetCategoryNumAchievements",
