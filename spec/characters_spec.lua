@@ -105,20 +105,20 @@ describe("Characters.selectedEntry", function()
   end)
 end)
 
-describe("Characters.exactLastSynced", function()
+describe("Characters.lastSyncedTooltip", function()
   local Characters = loadCharacters()
 
   -- Local time, as the game's date() formats it.
   local now = os.time({ year = 2026, month = 11, day = 7, hour = 10, min = 5, sec = 30 })
 
-  it("is another Character's Last Synced as a date and time", function()
+  it("gives another Character's Last Synced as a date and time", function()
     local entry = { lastSynced = now - 2 * DAY - 3 * HOUR, relative = "2 d ago", isCurrent = false }
-    assert.are.equal("2026-11-05 07:05", Characters.exactLastSynced(entry, now, os.date))
+    assert.are.equal("Last sync at 2026-11-05 07:05", Characters.lastSyncedTooltip(entry, now, os.date))
   end)
 
-  it("is now for the logged-in Character, since its values are live", function()
+  it("gives now for the logged-in Character, since its values are live", function()
     local entry = { lastSynced = now - 3 * HOUR, relative = "now", isCurrent = true }
-    assert.are.equal("2026-11-07 10:05", Characters.exactLastSynced(entry, now, os.date))
+    assert.are.equal("Last sync at 2026-11-07 10:05", Characters.lastSyncedTooltip(entry, now, os.date))
   end)
 end)
 

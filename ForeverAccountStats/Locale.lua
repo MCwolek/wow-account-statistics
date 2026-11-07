@@ -11,6 +11,8 @@ ns.L = {
   -- date() format of Last Synced's exact date and time; C89 strftime specifiers only.
   EXACT_DATE_TIME = "%Y-%m-%d %H:%M",
   HOURS_AGO = "%d h ago",
+  -- Tooltip of a Character in the window's dropdown; %s is the exact date and time.
+  LAST_SYNC_AT = "Last sync at %s",
   MINUTES_AGO = "%d min ago",
   -- Marker for a Statistic missing from a Character's Snapshot, e.g. one taken by an older version.
   MISSING_VALUE = "?",

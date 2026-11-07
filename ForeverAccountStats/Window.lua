@@ -238,8 +238,8 @@ local function createDropdown(parent)
       end, entry)
       -- Hovering an entry shows its exact Last Synced; the menu already reads it relative to now.
       radio:SetTooltip(function(tooltip, description)
-        local exact = Characters.exactLastSynced(description:GetData(), GameAPI.now(), GameAPI.formatDate)
-        GameTooltip_SetTitle(tooltip, exact)
+        local text = Characters.lastSyncedTooltip(description:GetData(), GameAPI.now(), GameAPI.formatDate)
+        GameTooltip_SetTitle(tooltip, text)
       end)
       -- The class icon is its own texture between the radio button and the label, and the label keeps the width
       -- the radio sized it to: an icon inside the label's text, or a label stretched to the right-hand text, made
