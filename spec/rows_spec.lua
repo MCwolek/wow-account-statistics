@@ -29,15 +29,15 @@ describe("Rows.build", function()
     { kind = "statistic", id = 328, name = "Total gold acquired", depth = 2 },
   }
 
-  it("gives Statistic rows another Character's saved value, the Account Total with the logged-in Character's live "
-    .. "value, and stripes from each Category", function()
+  it("gives Statistic rows another Character's saved value and the Account Total with the logged-in Character's "
+    .. "live value", function()
     local view = { db = db, selectedGUID = OTHER, currentGUID = CURRENT, liveValues = liveValues }
     assert.are.same({
       { kind = "category", id = 130, name = "Character", depth = 0, expanded = true },
-      { kind = "statistic", id = 60, name = "Total deaths", depth = 1, value = "3", total = "8", odd = true },
-      { kind = "statistic", id = 98, name = "Quests completed", depth = 1, value = "84", total = "114", odd = false },
+      { kind = "statistic", id = 60, name = "Total deaths", depth = 1, value = "3", total = "8" },
+      { kind = "statistic", id = 98, name = "Quests completed", depth = 1, value = "84", total = "114" },
       { kind = "category", id = 131, name = "Wealth", depth = 1, expanded = true },
-      { kind = "statistic", id = 328, name = "Total gold acquired", depth = 2, value = "5", total = "17", odd = true },
+      { kind = "statistic", id = 328, name = "Total gold acquired", depth = 2, value = "5", total = "17" },
     }, Rows.build(visible, view))
   end)
 

@@ -26,6 +26,8 @@ read_globals = {
   "GameTooltip",
   "GameTooltip_Hide",
   "GameTooltip_SetTitle",
+  "GameFontHighlight_NoShadow",
+  "GameFontNormal_NoShadow",
   "GetAchievementInfo",
   "GetCategoryInfo",
   "GetCategoryNumAchievements",

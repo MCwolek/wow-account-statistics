@@ -9,8 +9,14 @@ ns.Window = Window
 
 local FRAME_NAME = "ForeverAccountStatsFrame"
 local WIDTH, HEIGHT = 620, 540
-local ROW_HEIGHT = 24
-local INDENT = 12
+-- Sizes of the profession window's recipe list.
+local CATEGORY_HEIGHT = 25
+local STATISTIC_HEIGHT = 20
+local ROW_SPACING = 1
+local LIST_PADDING = 5
+local INDENT = 10
+-- Statistic names start where recipe names do, clear of their Category's header text.
+local STATISTIC_INSET = 20
 local COLUMN_WIDTH = 120
 local COLUMN_GAP = 10
 -- Wide enough for the longest Full Name and Ruleset with the class icon.
@@ -18,10 +24,6 @@ local DROPDOWN_WIDTH = 320
 local ICON_SIZE = 16
 -- The default Statistics panel re-reads on every CRITERIA_UPDATE; that event comes in bursts, so wait a little.
 local REREAD_DELAY = 0.5
-local STAT_TEXTURE = "Interface\\AchievementFrame\\UI-Achievement-Stat-Buttons"
-local EXPAND_TEXTURE = "Interface\\Buttons\\UI-PlusButton-Up"
-local COLLAPSE_TEXTURE = "Interface\\Buttons\\UI-MinusButton-Up"
-local VALUE_R, VALUE_G, VALUE_B = 1, 0.97, 0.6
 
 local frame          -- created on first open, once SavedVariables are loaded
 local tree           -- the Category tree, read on first open
@@ -82,48 +84,47 @@ local function scheduleReread()
   end)
 end
 
+-- Rows look like the profession window's recipe list: Categories on its header bar with the +/- on the right,
+-- Statistics as plain white lines with a soft hover glow.
 local function createRegions(row)
-  row.Background = row:CreateTexture(nil, "BACKGROUND")
-  row.Background:SetAllPoints()
-  row.Background:SetTexture(STAT_TEXTURE)
-
   row.HeaderLeft = row:CreateTexture(nil, "BACKGROUND")
-  row.HeaderLeft:SetTexture(STAT_TEXTURE)
-  row.HeaderLeft:SetSize(23, 23)
-  row.HeaderLeft:SetPoint("BOTTOMLEFT", 0, -1)
-  row.HeaderLeft:SetTexCoord(0, 0.08984375, 0, 0.1796875)
+  row.HeaderLeft:SetAtlas("Professions-recipe-header-left", true)
+  row.HeaderLeft:SetPoint("LEFT", 0, 2)
   row.HeaderRight = row:CreateTexture(nil, "BACKGROUND")
-  row.HeaderRight:SetTexture(STAT_TEXTURE)
-  row.HeaderRight:SetSize(23, 23)
-  row.HeaderRight:SetPoint("BOTTOMRIGHT", 0, -1)
-  row.HeaderRight:SetTexCoord(0.91015625, 1, 0, 0.1796875)
+  row.HeaderRight:SetAtlas("Professions-recipe-header-right", true)
+  row.HeaderRight:SetPoint("RIGHT", 0, 2)
   row.HeaderMiddle = row:CreateTexture(nil, "BACKGROUND")
-  row.HeaderMiddle:SetTexture(STAT_TEXTURE)
-  row.HeaderMiddle:SetHeight(23)
+  row.HeaderMiddle:SetAtlas("Professions-recipe-header-middle", false)
   row.HeaderMiddle:SetPoint("TOPLEFT", row.HeaderLeft, "TOPRIGHT")
-  row.HeaderMiddle:SetPoint("TOPRIGHT", row.HeaderRight, "TOPLEFT")
-  row.HeaderMiddle:SetTexCoord(0.08984375, 0.91015625, 0, 0.1796875)
+  row.HeaderMiddle:SetPoint("BOTTOMRIGHT", row.HeaderRight, "BOTTOMLEFT")
 
-  row.ExpandIcon = row:CreateTexture(nil, "ARTWORK")
-  row.ExpandIcon:SetSize(16, 16)
-  row.ExpandIcon:SetPoint("LEFT", 6, 0)
-  row.Title = row:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-  row.Title:SetPoint("LEFT", row.ExpandIcon, "RIGHT", 6, 0)
-  row.Title:SetPoint("RIGHT", -8, 0)
+  row.CollapseIcon = row:CreateTexture(nil, "ARTWORK")
+  row.CollapseIcon:SetPoint("RIGHT", -10, 2)
+  row.CollapseIconGlow = row:CreateTexture(nil, "HIGHLIGHT")
+  row.CollapseIconGlow:SetBlendMode("ADD")
+  row.CollapseIconGlow:SetPoint("CENTER", row.CollapseIcon)
+  row.Title = row:CreateFontString(nil, "OVERLAY", "GameFontNormal_NoShadow")
+  row.Title:SetPoint("LEFT", 10, 2)
+  row.Title:SetPoint("RIGHT", row.CollapseIcon, "LEFT", -5, 0)
   row.Title:SetJustifyH("LEFT")
   row.Title:SetWordWrap(false)
 
-  row.Total = row:CreateFontString(nil, "ARTWORK", "GameFontHighlightRight")
-  row.Total:SetPoint("RIGHT", -5, 0)
+  row.HoverGlow = row:CreateTexture(nil, "HIGHLIGHT")
+  row.HoverGlow:SetAtlas("Professions_Recipe_Hover", false)
+  row.HoverGlow:SetAllPoints()
+  row.HoverGlow:SetAlpha(0.5)
+  row.Total = row:CreateFontString(nil, "ARTWORK", "GameFontHighlight_NoShadow")
+  row.Total:SetPoint("RIGHT", -10, 0)
   row.Total:SetWidth(COLUMN_WIDTH)
-  row.Total:SetTextColor(VALUE_R, VALUE_G, VALUE_B)
-  row.Value = row:CreateFontString(nil, "ARTWORK", "GameFontHighlightRight")
+  row.Total:SetJustifyH("RIGHT")
+  row.Value = row:CreateFontString(nil, "ARTWORK", "GameFontHighlight_NoShadow")
   row.Value:SetPoint("RIGHT", row.Total, "LEFT", -COLUMN_GAP, 0)
   row.Value:SetWidth(COLUMN_WIDTH)
-  row.Value:SetTextColor(VALUE_R, VALUE_G, VALUE_B)
-  row.Name = row:CreateFontString(nil, "ARTWORK", "GameFontHighlightLeft")
-  row.Name:SetPoint("LEFT", 5, 0)
+  row.Value:SetJustifyH("RIGHT")
+  row.Name = row:CreateFontString(nil, "ARTWORK", "GameFontHighlight_NoShadow")
+  row.Name:SetPoint("LEFT", STATISTIC_INSET, 0)
   row.Name:SetPoint("RIGHT", row.Value, "LEFT", -COLUMN_GAP, 0)
+  row.Name:SetJustifyH("LEFT")
   row.Name:SetWordWrap(false)
 
   row:SetScript("OnClick", function(self)
@@ -133,18 +134,23 @@ local function createRegions(row)
     end
   end)
   row:SetScript("OnEnter", function(self)
-    if self.data.kind == "statistic" and self.Name:IsTruncated() then
+    if self.data.kind == "category" then
+      self.Title:SetFontObject(GameFontHighlight_NoShadow)
+    elseif self.Name:IsTruncated() then
       GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
       GameTooltip:SetText(self.data.name, 1, 1, 1, 1, true)
       GameTooltip:Show()
     end
   end)
-  row:SetScript("OnLeave", GameTooltip_Hide)
+  row:SetScript("OnLeave", function(self)
+    self.Title:SetFontObject(GameFontNormal_NoShadow)
+    GameTooltip_Hide()
+  end)
 end
 
 -- Pooled rows serve both kinds, so every region is set every time.
 local function initRow(row, data)
-  if not row.Background then
+  if not row.Title then
     createRegions(row)
   end
   row.data = data
@@ -152,26 +158,20 @@ local function initRow(row, data)
   row.HeaderLeft:SetShown(isCategory)
   row.HeaderMiddle:SetShown(isCategory)
   row.HeaderRight:SetShown(isCategory)
-  row.ExpandIcon:SetShown(isCategory)
+  row.CollapseIcon:SetShown(isCategory)
+  row.CollapseIconGlow:SetShown(isCategory)
   row.Title:SetShown(isCategory)
-  row.Background:SetShown(not isCategory)
+  row.HoverGlow:SetShown(not isCategory)
   row.Name:SetShown(not isCategory)
   row.Value:SetShown(not isCategory)
   row.Total:SetShown(not isCategory)
   if isCategory then
-    row.ExpandIcon:SetTexture(data.expanded and COLLAPSE_TEXTURE or EXPAND_TEXTURE)
+    local atlas = data.expanded and "Professions-recipe-header-collapse" or "Professions-recipe-header-expand"
+    row.CollapseIcon:SetAtlas(atlas, true)
+    row.CollapseIconGlow:SetAtlas(atlas, true)
+    row.Title:SetFontObject(GameFontNormal_NoShadow)
     row.Title:SetText(data.name)
   else
-    -- The default Statistics panel's alternating row backgrounds.
-    if data.odd then
-      row.Background:SetTexCoord(0, 1, 0.1875, 0.3671875)
-      row.Background:SetBlendMode("BLEND")
-      row.Background:SetAlpha(1)
-    else
-      row.Background:SetTexCoord(0, 1, 0.375, 0.5390625)
-      row.Background:SetBlendMode("ADD")
-      row.Background:SetAlpha(0.5)
-    end
     row.Name:SetText(data.name)
     row.Value:SetText(data.value)
     row.Total:SetText(data.total)
@@ -186,8 +186,15 @@ local function createList(parent)
   scrollBar:SetPoint("TOPLEFT", scrollBox, "TOPRIGHT", 6, -2)
   scrollBar:SetPoint("BOTTOMLEFT", scrollBox, "BOTTOMRIGHT", 6, 2)
 
-  local view = CreateScrollBoxListLinearView(2, 2, 0, 0, 0)
-  view:SetElementExtent(ROW_HEIGHT)
+  -- The profession list's dark background behind the rows.
+  local background = parent:CreateTexture(nil, "BACKGROUND", nil, 1)
+  background:SetAtlas("Professions-background-summarylist")
+  background:SetAllPoints()
+
+  local view = CreateScrollBoxListLinearView(LIST_PADDING, LIST_PADDING, LIST_PADDING, 0, ROW_SPACING)
+  view:SetElementExtentCalculator(function(_, data)
+    return data.kind == "category" and CATEGORY_HEIGHT or STATISTIC_HEIGHT
+  end)
   view:SetElementInitializer("Button", initRow)
   view:SetElementIndentCalculator(function(data)
     return data.depth * INDENT
