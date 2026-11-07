@@ -15,12 +15,16 @@ A player character on the Account, identified by its GUID and shown by its Full 
 _Avoid_: Alt, toon, char
 
 **Full Name**:
-A Character's First Name plus Surname (e.g. "Calgan Blackbeard"); unique within a region and ruleset.
+A Character's First Name plus Surname (e.g. "Calgan Blackbeard"); unique within a region and Ruleset, so the same Full Name can appear once per Ruleset.
 _Avoid_: Name (when only the First Name is meant)
 
 **Surname**:
 The second part of a Character's Full Name. Not a realm.
 _Avoid_: Last name, realm
+
+**Ruleset**:
+The rules a Character plays under, such as PvE, PvP or RP. On Forever each Ruleset is one realm per region, and the add-on reads it as the last word of the realm name ("CAMWOW EU4 Realm 5 PvE" is PvE).
+_Avoid_: Realm, server
 
 **Tracked Character**:
 A Character that has been logged in at least once with the add-on enabled. Only Tracked Characters appear in the add-on.

@@ -17,16 +17,35 @@ describe("Sync.fullName", function()
   end)
 end)
 
+describe("Sync.ruleset", function()
+  local Sync = loadSync()
+
+  it("is the last word of the realm name", function()
+    assert.are.equal("PvE", Sync.ruleset("CAMWOW EU4 Realm 5 PvE"))
+    assert.are.equal("RP-PvP", Sync.ruleset("CAMWOW EU4 Realm 7 RP-PvP"))
+  end)
+
+  it("is the whole realm name when it has one word", function()
+    assert.are.equal("Hardcore", Sync.ruleset("Hardcore"))
+  end)
+
+  it("is nil without a realm name", function()
+    assert.is_nil(Sync.ruleset(nil))
+    assert.is_nil(Sync.ruleset(""))
+  end)
+end)
+
 describe("Sync.character", function()
   local Sync = loadSync()
 
   it("builds the Character from the raw player reading", function()
     assert.are.same(
-      { guid = "Player-1-0000AAAA", fullName = "Calgan Blackbeard", class = "WARRIOR" },
+      { guid = "Player-1-0000AAAA", fullName = "Calgan Blackbeard", ruleset = "PvE", class = "WARRIOR" },
       Sync.character({
         guid = "Player-1-0000AAAA",
         firstName = "Calgan",
         surname = "Blackbeard",
+        realmName = "CAMWOW EU4 Realm 5 PvE",
         classFile = "WARRIOR",
       })
     )
@@ -56,12 +75,13 @@ end)
 
 describe("Sync.record", function()
   local Sync = loadSync()
-  local calgan = { guid = "Player-1-0000AAAA", fullName = "Calgan Blackbeard", class = "WARRIOR" }
+  local calgan = { guid = "Player-1-0000AAAA", fullName = "Calgan Blackbeard", ruleset = "PvE", class = "WARRIOR" }
 
-  it("stores the Character under its GUID with Full Name, class, Last Synced and Snapshot", function()
+  it("stores the Character under its GUID with Full Name, Ruleset, class, Last Synced and Snapshot", function()
     local db = Sync.record(nil, calgan, { [60] = "250" }, 1700000000)
     assert.are.same({
       fullName = "Calgan Blackbeard",
+      ruleset = "PvE",
       class = "WARRIOR",
       lastSynced = 1700000000,
       snapshot = { [60] = "250" },
@@ -94,18 +114,20 @@ describe("Sync.record", function()
     local db = Sync.record(nil, calgan, {}, 1700000000)
     assert.are.same({
       fullName = "Calgan Blackbeard",
+      ruleset = "PvE",
       class = "WARRIOR",
       lastSynced = 1700000000,
       snapshot = {},
     }, db.characters["Player-1-0000AAAA"])
   end)
 
-  it("updates Full Name and class even when the Snapshot is unreadable", function()
+  it("updates Full Name, Ruleset and class even when the Snapshot is unreadable", function()
     local db = Sync.record(nil, calgan, { [60] = "250" }, 1700000000)
-    local renamed = { guid = "Player-1-0000AAAA", fullName = "Calgan Ironbeard", class = "PALADIN" }
+    local renamed = { guid = "Player-1-0000AAAA", fullName = "Calgan Ironbeard", ruleset = "PvE", class = "PALADIN" }
     db = Sync.record(db, renamed, { [60] = "--" }, 1700000900)
     assert.are.same({
       fullName = "Calgan Ironbeard",
+      ruleset = "PvE",
       class = "PALADIN",
       lastSynced = 1700000000,
       snapshot = { [60] = "250" },

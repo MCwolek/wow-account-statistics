@@ -12,11 +12,22 @@ function Sync.fullName(firstName, surname)
   return firstName .. " " .. surname
 end
 
--- The Character ({ guid, fullName, class }) from a raw player reading ({ guid, firstName, surname, classFile }).
+-- Ruleset from the realm name: on Forever each Ruleset is one realm whose name ends in it,
+-- e.g. "CAMWOW EU4 Realm 5 PvE" is PvE.
+function Sync.ruleset(realmName)
+  if realmName == nil or realmName == "" then
+    return nil
+  end
+  return realmName:match("(%S+)%s*$")
+end
+
+-- The Character ({ guid, fullName, ruleset, class }) from a raw player reading
+-- ({ guid, firstName, surname, realmName, classFile }).
 function Sync.character(reading)
   return {
     guid = reading.guid,
     fullName = Sync.fullName(reading.firstName, reading.surname),
+    ruleset = Sync.ruleset(reading.realmName),
     class = reading.classFile,
   }
 end
@@ -51,7 +62,7 @@ local function isReadable(snapshot)
   return false
 end
 
--- Stores a Sync of `character` ({ guid, fullName, class }) and returns the db.
+-- Stores a Sync of `character` ({ guid, fullName, ruleset, class }) and returns the db.
 -- An unreadable Snapshot never replaces an earlier one, and then Last Synced stays as it was.
 function Sync.record(db, character, snapshot, now)
   db = Sync.ensureDB(db)
@@ -61,6 +72,7 @@ function Sync.record(db, character, snapshot, now)
     db.characters[character.guid] = entry
   end
   entry.fullName = character.fullName
+  entry.ruleset = character.ruleset
   entry.class = character.class
   if entry.snapshot == nil or isReadable(snapshot) then
     entry.snapshot = snapshot

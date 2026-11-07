@@ -3,6 +3,7 @@ local _, ns = ...
 
 ns.L = {
   ADDON_TITLE = "Forever Account Stats",
+  CHARACTER_WITH_RULESET = "%s (%s)",
   DAYS_AGO = "%d d ago",
   HOURS_AGO = "%d h ago",
   MINUTES_AGO = "%d min ago",

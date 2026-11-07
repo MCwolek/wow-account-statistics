@@ -14,6 +14,7 @@ read_globals = {
   "CreateFrame",
   "GetAchievementInfo",
   "GetCategoryNumAchievements",
+  "GetRealmName",
   "GetStatistic",
   "GetStatisticsCategoryList",
   "UnitClass",

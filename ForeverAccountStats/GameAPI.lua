@@ -4,7 +4,8 @@ local _, ns = ...
 local GameAPI = {}
 ns.GameAPI = GameAPI
 
--- The logged-in Character as read: { guid, firstName, surname, classFile }; classFile is e.g. "WARRIOR".
+-- The logged-in Character as read: { guid, firstName, surname, realmName, classFile }.
+-- realmName is e.g. "CAMWOW EU4 Realm 5 PvE"; classFile is e.g. "WARRIOR".
 function GameAPI.readPlayer()
   local firstName, surname = UnitName("player")
   local _, classFile = UnitClass("player")
@@ -12,6 +13,7 @@ function GameAPI.readPlayer()
     guid = UnitGUID("player"),
     firstName = firstName,
     surname = surname,
+    realmName = GetRealmName(),
     classFile = classFile,
   }
 end
