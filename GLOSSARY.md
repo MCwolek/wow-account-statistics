@@ -40,7 +40,7 @@ A named group of Statistics as shown in the game's Statistics panel (e.g. Charac
 _Avoid_: Section, group
 
 **Account Total**:
-The combined value of one Statistic across all Tracked Characters: a sum, except for Peak Statistics.
+The combined value of one Statistic across all Tracked Characters, whatever their Ruleset: a sum, except for Peak Statistics.
 _Avoid_: Aggregate, overall, total stats
 
 **Peak Statistic**:
