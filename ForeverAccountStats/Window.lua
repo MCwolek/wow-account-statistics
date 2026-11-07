@@ -287,6 +287,8 @@ local function createSearchBox(parent, dropdown)
   searchBox.Instructions:SetText(L.SEARCH_PLACEHOLDER)
   searchBox:HookScript("OnTextChanged", function(self)
     list = ListState.searched(list, self:GetText())
+    -- The window's OnHide empties the box as well, which lands here with the window already hidden: then leave
+    -- the list undrawn, as OnShow redraws it on the next open.
     if parent:IsShown() then
       redraw(false)
     end
@@ -345,6 +347,7 @@ local function create()
   frame:SetScript("OnHide", function(self)
     self:UnregisterEvent("CRITERIA_UPDATE")
     selectedGUID = nil
+    -- Fires the search box's OnTextChanged, which skips its redraw while the window is hidden.
     self.SearchBox:SetText("")
     list = ListState.new(tree)
   end)
