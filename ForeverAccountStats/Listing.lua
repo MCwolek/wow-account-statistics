@@ -1,4 +1,4 @@
--- Pure text for the /fas listing of Tracked Characters.
+-- Pure text for the /stats listing of Tracked Characters.
 local _, ns = ...
 local L = ns.L
 
@@ -29,7 +29,7 @@ local function displayName(character)
   return string.format(L.CHARACTER_WITH_RULESET, character.fullName, character.ruleset)
 end
 
--- Chat lines for /fas: a header, then each Tracked Character by Full Name and Ruleset with its Last Synced.
+-- Chat lines for /stats: a header, then each Tracked Character by Full Name and Ruleset with its Last Synced.
 -- The logged-in Character (`currentGUID`) reads "now": it Synced on login and Syncs again on logout.
 function Listing.lines(db, currentGUID, now)
   local entries = {}
