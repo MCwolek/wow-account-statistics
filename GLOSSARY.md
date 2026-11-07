@@ -55,6 +55,10 @@ _Avoid_: Label stat, string stat
 A Statistic that is one Character's daily average (e.g. "Average quests completed per day"), hand-picked by Statistic ID; summing them overstates, so it has no Account Total.
 _Avoid_: Rate, per-day stat
 
+**Statistics window**:
+The add-on's own window, opened with /stats or the button on the default UI's Statistics tab: every Statistic by Category, with the value of the Character chosen in its dropdown and the Account Total.
+_Avoid_: Main window, frame, Statistics panel (that is the game's own)
+
 ### Syncing
 
 **Snapshot**:
