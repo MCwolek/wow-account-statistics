@@ -276,14 +276,14 @@ local function createDropdown(parent)
   return dropdown
 end
 
--- Typing shows only the Statistics whose name matches, with their Categories expanded; emptying the box brings back
--- the whole list as it was expanded before.
+-- Typing shows the search results, every Category expanded; emptying the box brings back the whole list as it was
+-- expanded before (see ListState).
 local function createSearchBox(parent, dropdown)
   local searchBox = CreateFrame("EditBox", nil, parent, "SearchBoxTemplate")
   searchBox:SetSize(SEARCH_WIDTH, 20)
   searchBox:SetPoint("LEFT", dropdown, "RIGHT", SEARCH_GAP, 0)
   searchBox:SetAutoFocus(false)
-  searchBox.Instructions:SetText(L.SEARCH)
+  searchBox.Instructions:SetText(L.SEARCH_PLACEHOLDER)
   searchBox:HookScript("OnTextChanged", function(self)
     list = ListState.searched(list, self:GetText())
     if parent:IsShown() then
