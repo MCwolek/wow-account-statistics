@@ -13,7 +13,9 @@ local ROW_HEIGHT = 24
 local INDENT = 12
 local COLUMN_WIDTH = 120
 local COLUMN_GAP = 10
-local DROPDOWN_WIDTH = 260
+-- Wide enough for the longest Full Name and Ruleset with the class icon.
+local DROPDOWN_WIDTH = 320
+local ICON_SIZE = 16
 -- The default Statistics panel re-reads on every CRITERIA_UPDATE; that event comes in bursts, so wait a little.
 local REREAD_DELAY = 0.5
 -- Seconds between updates of the Last Synced text while the window is shown; it counts whole minutes.
@@ -36,17 +38,21 @@ local function dropdownEntries()
   return Characters.dropdownEntries(ForeverAccountStatsDB, GameAPI.playerGUID(), GameAPI.now())
 end
 
--- Full Name and Ruleset with the class icon and in the class colour; a class the game does not colour stays white.
-local function characterLabel(entry)
+-- Full Name and Ruleset in the class colour; a class the game does not colour stays white.
+local function coloredLabel(entry)
+  local color = entry.class and C_ClassColor.GetClassColor(entry.class)
+  if color then
+    return color:WrapTextInColorCode(entry.label)
+  end
+  return entry.label
+end
+
+-- The coloured label with the class icon in front, for the closed dropdown.
+local function selectionLabel(entry)
   if not entry.class then
     return entry.label
   end
-  local label = entry.label
-  local color = C_ClassColor.GetClassColor(entry.class)
-  if color then
-    label = color:WrapTextInColorCode(label)
-  end
-  return CreateAtlasMarkup(GetClassAtlas(entry.class), 14, 14) .. " " .. label
+  return CreateAtlasMarkup(GetClassAtlas(entry.class), ICON_SIZE, ICON_SIZE) .. " " .. coloredLabel(entry)
 end
 
 local function readLiveValues()
@@ -222,24 +228,42 @@ local function createDropdown(parent)
   local dropdown = CreateFrame("DropdownButton", nil, parent, "WowStyle1DropdownTemplate")
   dropdown:SetPoint("TOPLEFT", parent, "TOPLEFT", 16, -30)
   dropdown:SetWidth(DROPDOWN_WIDTH)
+  dropdown:SetSelectionTranslator(function(selection)
+    return selectionLabel(selection.data)
+  end)
   -- Re-run whenever the menu opens, so the relative Last Synced times are current.
   dropdown:SetupMenu(function(_, root)
     root:SetScrollMode(20 * 15)
     for _, entry in ipairs(dropdownEntries()) do
-      local radio = root:CreateRadio(characterLabel(entry), function(data)
+      local radio = root:CreateRadio(coloredLabel(entry), function(data)
         return data.guid == selectedGUID
       end, function(data)
         selectedGUID = data.guid
         redraw(true)
       end, entry)
+      -- The class icon is its own texture between the radio button and the label, and the label keeps the width
+      -- the radio sized it to: an icon inside the label's text, or a label stretched to the right-hand text, made
+      -- the label wrap onto two lines and cut the name short.
       radio:AddInitializer(function(button, description)
+        local data = description:GetData()
+        local label = button.fontString
+        label:SetWordWrap(false)
+        local iconWidth = 0
+        if data.class then
+          local icon = button:AttachTexture()
+          icon:SetAtlas(GetClassAtlas(data.class))
+          icon:SetSize(ICON_SIZE, ICON_SIZE)
+          icon:SetPoint("LEFT", button.leftTexture1, "RIGHT", 2, 0)
+          label:SetPoint("LEFT", icon, "RIGHT", 4, 0)
+          iconWidth = 2 + ICON_SIZE + 4
+        end
         local relative = button:AttachFontString()
         relative:SetPoint("RIGHT")
         relative:SetJustifyH("RIGHT")
         relative:SetFontObject("GameFontDisableSmall")
-        relative:SetText(description:GetData().relative)
-        button.fontString:SetPoint("RIGHT", relative, "LEFT", -10, 0)
-        local width = 20 + button.fontString:GetUnboundedStringWidth() + 10 + relative:GetUnboundedStringWidth()
+        relative:SetText(data.relative)
+        local radioWidth = button.leftTexture1:GetWidth()
+        local width = radioWidth + iconWidth + label:GetUnboundedStringWidth() + 16 + relative:GetUnboundedStringWidth()
         return width, 20
       end)
     end
