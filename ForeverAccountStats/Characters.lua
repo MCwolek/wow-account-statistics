@@ -71,7 +71,7 @@ end
 -- Tooltip of a dropdown entry: its Last Synced as an exact date and time, through `formatDate` (the game's date()).
 -- The logged-in Character's values are live, so its time is `now`.
 function Characters.lastSyncedTooltip(entry, now, formatDate)
-  return string.format(L.LAST_SYNC_AT, formatDate(L.EXACT_DATE_TIME, entry.isCurrent and now or entry.lastSynced))
+  return string.format(L.LAST_SYNC, formatDate(L.EXACT_DATE_TIME, entry.isCurrent and now or entry.lastSynced))
 end
 
 -- Each Tracked Character's Statistic values, by GUID and as a list for AccountTotals: its saved Snapshot, or

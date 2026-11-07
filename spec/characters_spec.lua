@@ -113,12 +113,12 @@ describe("Characters.lastSyncedTooltip", function()
 
   it("gives another Character's Last Synced as a date and time", function()
     local entry = { lastSynced = now - 2 * DAY - 3 * HOUR, relative = "2 d ago", isCurrent = false }
-    assert.are.equal("Last sync at 2026-11-05 07:05", Characters.lastSyncedTooltip(entry, now, os.date))
+    assert.are.equal("Last sync: 2026-11-05 07:05", Characters.lastSyncedTooltip(entry, now, os.date))
   end)
 
   it("gives now for the logged-in Character, since its values are live", function()
     local entry = { lastSynced = now - 3 * HOUR, relative = "now", isCurrent = true }
-    assert.are.equal("Last sync at 2026-11-07 10:05", Characters.lastSyncedTooltip(entry, now, os.date))
+    assert.are.equal("Last sync: 2026-11-07 10:05", Characters.lastSyncedTooltip(entry, now, os.date))
   end)
 end)
 
