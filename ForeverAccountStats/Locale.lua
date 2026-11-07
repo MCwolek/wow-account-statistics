@@ -21,6 +21,8 @@ ns.L = {
   -- Account Total shown for Text and Average Statistics, which have none.
   NO_ACCOUNT_TOTAL = "—",
   NOW = "now",
+  -- Placeholder in the window's search box, which filters Statistics by name.
+  SEARCH = "Search Statistics",
   STATISTIC_COLUMN = "Statistic",
   STATISTIC_HEADER = "%s: %s (%d)",
   STATISTIC_LINE = "  %s - %s",

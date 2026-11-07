@@ -21,13 +21,19 @@ local COLUMN_WIDTH = 120
 local COLUMN_GAP = 10
 -- Wide enough for the longest Full Name and Ruleset with the class icon.
 local DROPDOWN_WIDTH = 320
+-- The search box fills the rest of the dropdown's line: after the dropdown (16 in from the left edge) and a gap,
+-- up to 20 short of the right edge.
+local SEARCH_GAP = 14
+local SEARCH_WIDTH = WIDTH - 16 - DROPDOWN_WIDTH - SEARCH_GAP - 20
 local ICON_SIZE = 16
 -- The default Statistics panel re-reads on every CRITERIA_UPDATE; that event comes in bursts, so wait a little.
 local REREAD_DELAY = 0.5
 
 local frame          -- created on first open, once SavedVariables are loaded
 local tree           -- the Category tree, read on first open
-local expanded = {}  -- Categories expanded since the window opened
+local expanded = {}  -- Categories expanded since the window opened, kept while a search shows
+local matches        -- the tree cut down to the search box's matches; nil when the box is empty
+local searchExpanded -- Categories expanded in the search results
 local selectedGUID   -- Character chosen in the dropdown since the window opened
 local liveValues     -- the logged-in Character's values, read while the window is shown; not saved
 local rereadPending = false
@@ -61,7 +67,13 @@ end
 local function redraw(keepScroll)
   local entry = Characters.selectedEntry(dropdownEntries(), selectedGUID)
   selectedGUID = entry and entry.guid
-  local rows = Rows.build(CategoryTree.visibleRows(tree, expanded), {
+  local visibleRows
+  if matches then
+    visibleRows = CategoryTree.visibleRows(matches, searchExpanded)
+  else
+    visibleRows = CategoryTree.visibleRows(tree, expanded)
+  end
+  local rows = Rows.build(visibleRows, {
     db = ForeverAccountStatsDB,
     selectedGUID = selectedGUID,
     currentGUID = GameAPI.playerGUID(),
@@ -129,7 +141,11 @@ local function createRegions(row)
 
   row:SetScript("OnClick", function(self)
     if self.data.kind == "category" then
-      expanded = CategoryTree.toggled(expanded, self.data.id)
+      if matches then
+        searchExpanded = CategoryTree.toggled(searchExpanded, self.data.id)
+      else
+        expanded = CategoryTree.toggled(expanded, self.data.id)
+      end
       redraw(true)
     end
   end)
@@ -271,6 +287,24 @@ local function createDropdown(parent)
   return dropdown
 end
 
+-- Typing shows only the Statistics whose name matches, with their Categories expanded; emptying the box brings back
+-- the whole list as it was expanded before.
+local function createSearchBox(parent, dropdown)
+  local searchBox = CreateFrame("EditBox", nil, parent, "SearchBoxTemplate")
+  searchBox:SetSize(SEARCH_WIDTH, 20)
+  searchBox:SetPoint("LEFT", dropdown, "RIGHT", SEARCH_GAP, 0)
+  searchBox:SetAutoFocus(false)
+  searchBox.Instructions:SetText(L.SEARCH)
+  searchBox:HookScript("OnTextChanged", function(self)
+    matches = CategoryTree.filtered(tree, self:GetText())
+    searchExpanded = matches and CategoryTree.allExpanded(matches)
+    if parent:IsShown() then
+      redraw(false)
+    end
+  end)
+  return searchBox
+end
+
 local function savePosition(self)
   self:StopMovingOrSizing()
   self:SetUserPlaced(false)
@@ -308,6 +342,7 @@ local function create()
 
   frame.ScrollBox = createList(frame.Inset)
   frame.Dropdown = createDropdown(frame)
+  frame.SearchBox = createSearchBox(frame, frame.Dropdown)
 
   frame:SetScript("OnShow", function(self)
     self:RegisterEvent("CRITERIA_UPDATE")
@@ -315,12 +350,13 @@ local function create()
     redraw(false)
     self.Dropdown:GenerateMenu()
   end)
-  -- Closing forgets the expanded Categories and the chosen Character: the next open starts collapsed, on the
-  -- logged-in Character.
+  -- Closing forgets the expanded Categories, the chosen Character and the search: the next open starts collapsed,
+  -- on the logged-in Character, with an empty search box.
   frame:SetScript("OnHide", function(self)
     self:UnregisterEvent("CRITERIA_UPDATE")
     expanded = {}
     selectedGUID = nil
+    self.SearchBox:SetText("")
   end)
   frame:SetScript("OnEvent", scheduleReread)
   frame:Hide()
