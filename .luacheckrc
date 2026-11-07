@@ -1,6 +1,6 @@
 std = "lua51"
 max_line_length = 120
-exclude_files = { ".lua/", ".venv/" }
+exclude_files = { ".lua/", ".luarocks/", ".venv/" }
 
 -- Globals the add-on defines or writes into.
 globals = {
