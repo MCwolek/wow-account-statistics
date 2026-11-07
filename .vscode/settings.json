@@ -15,6 +15,19 @@
         "~/.vscode-server/extensions/ketho.wow-api-0.22.3/Annotations/Core"
     ],
     "Lua.diagnostics.globals": [
-        "SlashCmdList"
+        "SlashCmdList",
+        "ButtonFrameTemplate_HidePortrait",
+        "ButtonFrameTemplate_HideButtonBar",
+        "AchievementFrameStats",
+        "GameTooltip_Hide",
+        "ScrollUtil",
+        "UISpecialFrames",
+        "AchievementFrame",
+        "CreateDataProvider",
+        "CreateScrollBoxListLinearView",
+        "ScrollBoxConstants",
+        "GetClassAtlas",
+        "GameTooltip_SetTitle",
+        "GameFontHighlight_NoShadow"
     ]
 }
