@@ -4,8 +4,13 @@ local _, ns = ...
 local Breakdown = {}
 ns.Breakdown = Breakdown
 
--- Where a value goes: amounts first, then "--" (never happened), then "?" (missing from the Snapshot).
-local RANK = { number = 1, money = 1, never = 2, missing = 3 }
+-- Sort order of the parsed value kinds (see Values.parse): amounts first, then a Statistic that never happened, then
+-- one missing from the Snapshot.
+local SORT_ORDER = { number = 1, money = 1, never = 2, missing = 3 }
+
+local function isAmount(value)
+  return value.kind == "number" or value.kind == "money"
+end
 
 -- How many Tracked Characters the Breakdown lists; the others are only counted.
 local MAX_LINES = 5
@@ -29,10 +34,10 @@ function Breakdown.build(statisticID, view)
     }
   end
   table.sort(entries, function(a, b)
-    local rankA, rankB = RANK[a.parsed.kind], RANK[b.parsed.kind]
-    if rankA ~= rankB then
-      return rankA < rankB
-    elseif rankA == RANK.number and a.parsed.amount ~= b.parsed.amount then
+    local orderA, orderB = SORT_ORDER[a.parsed.kind], SORT_ORDER[b.parsed.kind]
+    if orderA ~= orderB then
+      return orderA < orderB
+    elseif isAmount(a.parsed) and a.parsed.amount ~= b.parsed.amount then
       return a.parsed.amount > b.parsed.amount
     end
     return a.label < b.label
