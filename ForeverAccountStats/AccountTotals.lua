@@ -90,6 +90,13 @@ function AccountTotals.compute(statisticID, snapshots)
   return { kind = kind, amount = total }
 end
 
+-- Whether the Statistic has an Account Total that some Snapshot gives a value to: false for a Text or Average
+-- Statistic, and false when the total would be "missing".
+function AccountTotals.hasKnownTotal(statisticID, snapshots)
+  local total = AccountTotals.compute(statisticID, snapshots)
+  return total ~= nil and total.kind ~= "missing"
+end
+
 -- Display string of the Account Total; NO_ACCOUNT_TOTAL when the Statistic has none.
 function AccountTotals.display(statisticID, snapshots)
   local total = AccountTotals.compute(statisticID, snapshots)

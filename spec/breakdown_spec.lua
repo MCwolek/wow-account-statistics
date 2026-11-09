@@ -73,6 +73,11 @@ describe("Breakdown.build", function()
     assert.is_nil(Breakdown.build(95, { db = db({ Ana = { [95] = "27" } }) }))
   end)
 
+  it("is nil when no Character's Snapshot has the Statistic", function()
+    -- e.g. "Most Horde factions at Exalted" on an Account of Alliance Characters only.
+    assert.is_nil(Breakdown.build(926, { db = db({ Ana = {}, Bron = { [60] = "3" } }) }))
+  end)
+
   it("names each Character with its Ruleset and class, and reads the logged-in Character's live values", function()
     local current, other = "Player-1-0000AAAA", "Player-1-0000BBBB"
     local view = {

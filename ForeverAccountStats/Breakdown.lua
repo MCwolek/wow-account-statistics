@@ -12,10 +12,10 @@ local MAX_LINES = 5
 
 -- Breakdown of the Statistic `statisticID` for `view`, { db, currentGUID, liveValues }, as { lines, more }: each
 -- line { label, class, value } for one of the top MAX_LINES Tracked Characters, highest value first, and `more` the
--- count of the others. nil when the Statistic has no Account Total.
+-- count of the others. nil unless AccountTotals.hasKnownTotal: no Account Total, or no Snapshot has the Statistic.
 function Breakdown.build(statisticID, view)
   local byGUID, all = ns.Characters.statisticValues(view.db, view.currentGUID, view.liveValues)
-  if ns.AccountTotals.compute(statisticID, all) == nil then
+  if not ns.AccountTotals.hasKnownTotal(statisticID, all) then
     return nil
   end
   local entries = {}

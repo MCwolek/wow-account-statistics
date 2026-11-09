@@ -174,3 +174,21 @@ describe("AccountTotals.compute", function()
     assert.are.same({ kind = "never", amount = 0 }, AccountTotals.compute(60, { blackbeard, blackbeard }))
   end)
 end)
+
+describe("AccountTotals.hasKnownTotal", function()
+  local AccountTotals = loadAccountTotals()
+
+  it("is true when some Character's Snapshot has the Statistic", function()
+    assert.is_true(AccountTotals.hasKnownTotal(60, { blackbeard, keram }))
+    assert.is_true(AccountTotals.hasKnownTotal(60, { blackbeard, {} }))
+  end)
+
+  it("is false when no Character's Snapshot has the Statistic", function()
+    assert.is_false(AccountTotals.hasKnownTotal(926, { blackbeard, keram }))
+  end)
+
+  it("is false for a Statistic without an Account Total", function()
+    assert.is_false(AccountTotals.hasKnownTotal(1336, { { [1336] = "62 (Beasts)" } }))
+    assert.is_false(AccountTotals.hasKnownTotal(95, { { [95] = "27" } }))
+  end)
+end)
