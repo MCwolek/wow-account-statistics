@@ -44,7 +44,7 @@ The combined value of one Statistic across all Tracked Characters, whatever thei
 _Avoid_: Aggregate, overall, total stats
 
 **Breakdown**:
-The tooltip of an Account Total in the Statistics window: the top 5 Tracked Characters' values of that Statistic, highest first, with "--" and "?" last.
+The tooltip on a Statistic with an Account Total in the Statistics window: the top 5 Tracked Characters' values of that Statistic, highest first, with "--" and "?" last.
 _Avoid_: Details, per-character list
 
 **Peak Statistic**:
