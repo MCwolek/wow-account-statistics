@@ -64,26 +64,28 @@ local function readLiveValues()
   liveValues = Sync.buildSnapshot(GameAPI.readStatistics())
 end
 
-local function redraw(keepScroll)
-  local entry = Characters.selectedEntry(dropdownEntries(), selectedGUID)
-  selectedGUID = entry and entry.guid
-  local rows = Rows.build(ListState.visibleRows(list), {
+-- What Rows and Breakdown read: every Tracked Character's values, the logged-in one's read live, and the Character
+-- chosen in the dropdown.
+local function valuesView()
+  return {
     db = ForeverAccountStatsDB,
     selectedGUID = selectedGUID,
     currentGUID = GameAPI.playerGUID(),
     liveValues = liveValues,
-  })
+  }
+end
+
+local function redraw(keepScroll)
+  local entry = Characters.selectedEntry(dropdownEntries(), selectedGUID)
+  selectedGUID = entry and entry.guid
+  local rows = Rows.build(ListState.visibleRows(list), valuesView())
   frame.ScrollBox:SetDataProvider(CreateDataProvider(rows), keepScroll and ScrollBoxConstants.RetainScrollPosition)
 end
 
 -- Fills GameTooltip with the Breakdown of the Statistic `data` under its full name: each Character class-coloured
 -- with its value on the right. False when the Statistic has no Account Total, so no Breakdown.
 local function showBreakdown(data)
-  local breakdown = Breakdown.build(data.id, {
-    db = ForeverAccountStatsDB,
-    currentGUID = GameAPI.playerGUID(),
-    liveValues = liveValues,
-  })
+  local breakdown = Breakdown.build(data.id, valuesView())
   if not breakdown then
     return false
   end
