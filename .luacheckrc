@@ -35,6 +35,7 @@ read_globals = {
   "GetRealmName",
   "GetStatistic",
   "GetStatisticsCategoryList",
+  "GRAY_FONT_COLOR",
   "ScrollBoxConstants",
   "ScrollUtil",
   "time",

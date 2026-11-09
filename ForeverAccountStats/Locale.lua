@@ -5,6 +5,8 @@ ns.L = {
   ACCOUNT_TOTAL_COLUMN = "Account Total",
   ACCOUNT_TOTAL_LINE = "  Account Total: %s",
   ADDON_TITLE = "Forever Account Stats",
+  -- Last line of an Account Total's Breakdown tooltip, counting the Tracked Characters past its top 5.
+  BREAKDOWN_MORE = "and %d more",
   CHARACTER_COLUMN = "Character",
   CHARACTER_WITH_RULESET = "%s (%s)",
   DAYS_AGO = "%d d ago",

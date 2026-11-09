@@ -1,9 +1,9 @@
 -- Thin adapter: the Statistics window and its button on the default Statistics tab. It draws what the pure modules
--- (CategoryTree, ListState, Rows, Characters, WindowPosition) compute and reads the game through GameAPI.
+-- (CategoryTree, ListState, Rows, Breakdown, Characters, WindowPosition) compute and reads the game through GameAPI.
 local _, ns = ...
 local L, GameAPI, Sync = ns.L, ns.GameAPI, ns.Sync
 local CategoryTree, ListState, Rows = ns.CategoryTree, ns.ListState, ns.Rows
-local Characters, WindowPosition = ns.Characters, ns.WindowPosition
+local Breakdown, Characters, WindowPosition = ns.Breakdown, ns.Characters, ns.WindowPosition
 
 local Window = {}
 ns.Window = Window
@@ -76,6 +76,27 @@ local function redraw(keepScroll)
   frame.ScrollBox:SetDataProvider(CreateDataProvider(rows), keepScroll and ScrollBoxConstants.RetainScrollPosition)
 end
 
+-- Fills GameTooltip with the Breakdown of the Statistic `data` under its full name: each Character class-coloured
+-- with its value on the right. False when the Statistic has no Account Total, so no Breakdown.
+local function showBreakdown(data)
+  local breakdown = Breakdown.build(data.id, {
+    db = ForeverAccountStatsDB,
+    currentGUID = GameAPI.playerGUID(),
+    liveValues = liveValues,
+  })
+  if not breakdown then
+    return false
+  end
+  GameTooltip_SetTitle(GameTooltip, data.name)
+  for _, line in ipairs(breakdown.lines) do
+    GameTooltip:AddDoubleLine(coloredLabel(line), line.value, 1, 1, 1, 1, 1, 1)
+  end
+  if breakdown.more > 0 then
+    GameTooltip:AddLine(L.BREAKDOWN_MORE:format(breakdown.more), GRAY_FONT_COLOR:GetRGB())
+  end
+  return true
+end
+
 local function scheduleReread()
   if rereadPending then
     return
@@ -139,13 +160,20 @@ local function createRegions(row)
       redraw(true)
     end
   end)
+  -- A Statistic row shows its Account Total's Breakdown, or else its full name when cut short.
   row:SetScript("OnEnter", function(self)
     if self.data.kind == "category" then
       self.Title:SetFontObject(GameFontHighlight_NoShadow)
+      return
+    end
+    GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+    if showBreakdown(self.data) then
+      GameTooltip:Show()
     elseif self.Name:IsTruncated() then
-      GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
       GameTooltip:SetText(self.data.name, 1, 1, 1, 1, true)
       GameTooltip:Show()
+    else
+      GameTooltip:Hide()
     end
   end)
   row:SetScript("OnLeave", function(self)
