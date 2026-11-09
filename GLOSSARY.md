@@ -43,6 +43,10 @@ _Avoid_: Section, group
 The combined value of one Statistic across all Tracked Characters, whatever their Ruleset: a sum, except for Peak Statistics. Text Statistics and Average Statistics have none, and neither does any Statistic whose value reads as text.
 _Avoid_: Aggregate, overall, total stats
 
+**Breakdown**:
+The tooltip of an Account Total in the Statistics window: the top 5 Tracked Characters' values of that Statistic, highest first, with "--" and "?" last.
+_Avoid_: Details, per-character list
+
 **Peak Statistic**:
 A Statistic whose Account Total is the highest value among Tracked Characters rather than their sum (e.g. "Largest hit dealt").
 _Avoid_: Max stat, record

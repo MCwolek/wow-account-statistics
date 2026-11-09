@@ -10,6 +10,7 @@ Values.lua
 AccountTotals.lua
 Sync.lua
 Characters.lua
+Breakdown.lua
 CategoryTree.lua
 ListState.lua
 Rows.lua
