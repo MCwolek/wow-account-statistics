@@ -5,17 +5,15 @@ local CategoryTree = ns.CategoryTree
 local ListState = {}
 ns.ListState = ListState
 
-local function expandAll(expanded, nodes)
-  for _, node in ipairs(nodes) do
+-- The set { [categoryID] = true } of every Category in the Category tree `tree`, nested ones too, added to
+-- `expanded` when given.
+local function allExpanded(tree, expanded)
+  expanded = expanded or {}
+  for _, node in ipairs(tree) do
     expanded[node.id] = true
-    expandAll(expanded, node.children)
+    allExpanded(node.children, expanded)
   end
   return expanded
-end
-
--- The set { [categoryID] = true } of every Category in the Category tree `tree`.
-local function allExpanded(tree)
-  return expandAll({}, tree)
 end
 
 -- A copy of `expanded`, the set { [categoryID] = true }, with the Category `categoryID` expanded when it was
