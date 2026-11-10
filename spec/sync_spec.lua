@@ -51,6 +51,19 @@ describe("Sync.character", function()
       })
     )
   end)
+
+  it("records the Faction, Horde or Alliance", function()
+    assert.are.equal("Horde", Sync.character({ guid = "Player-1-0000AAAA", firstName = "Calgan",
+      factionGroup = "Horde" }).faction)
+    assert.are.equal("Alliance", Sync.character({ guid = "Player-1-0000AAAA", firstName = "Calgan",
+      factionGroup = "Alliance" }).faction)
+  end)
+
+  it("records no Faction for any other faction group, or none", function()
+    assert.is_nil(Sync.character({ guid = "Player-1-0000AAAA", firstName = "Calgan",
+      factionGroup = "Neutral" }).faction)
+    assert.is_nil(Sync.character({ guid = "Player-1-0000AAAA", firstName = "Calgan" }).faction)
+  end)
 end)
 
 describe("Sync.buildSnapshot", function()
@@ -87,6 +100,23 @@ describe("Sync.record", function()
       lastSynced = 1700000000,
       snapshot = { [60] = "250" },
     }, db.characters["Player-1-0000AAAA"])
+  end)
+
+  it("stores the Character's Faction next to its class", function()
+    local horde = { guid = "Player-1-0000AAAA", fullName = "Calgan Blackbeard", class = "WARRIOR", faction = "Horde" }
+    local db = Sync.record(nil, horde, { [60] = "250" }, 1700000000)
+    assert.are.equal("Horde", db.characters["Player-1-0000AAAA"].faction)
+  end)
+
+  it("gives a Character tracked before Factions were recorded its Faction at its next Sync", function()
+    local db = { characters = { ["Player-1-0000AAAA"] = {
+      fullName = "Calgan Blackbeard", class = "WARRIOR", lastSynced = 1700000000, snapshot = { [60] = "250" },
+    } } }
+    local alliance = {
+      guid = "Player-1-0000AAAA", fullName = "Calgan Blackbeard", class = "WARRIOR", faction = "Alliance",
+    }
+    db = Sync.record(db, alliance, { [60] = "--" }, 1700000900)
+    assert.are.equal("Alliance", db.characters["Player-1-0000AAAA"].faction)
   end)
 
   it("keeps the other Tracked Characters", function()

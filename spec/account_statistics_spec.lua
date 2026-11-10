@@ -319,21 +319,23 @@ describe("AccountStatistics:breakdown", function()
     assert.is_nil(statisticsOf({ Ana = {}, Bron = { [60] = "3" } }):breakdown(926))
   end)
 
-  it("names each Character by Full Name and Ruleset with its class, counting the Live Values", function()
+  it("names each Character by Full Name and Ruleset with its class and Faction, counting the Live Values", function()
     local db = {
       characters = {
         [CURRENT] = {
-          fullName = "Calgan Blackbeard", lastSynced = NOW, ruleset = "PvE", class = "MAGE", snapshot = { [60] = "2" },
+          fullName = "Calgan Blackbeard", lastSynced = NOW, ruleset = "PvE", class = "MAGE", faction = "Horde",
+          snapshot = { [60] = "2" },
         },
         [OTHER] = {
-          fullName = "Mira Stonehand", lastSynced = NOW, ruleset = "PvP", class = "ROGUE", snapshot = { [60] = "3" },
+          fullName = "Mira Stonehand", lastSynced = NOW, ruleset = "PvP", class = "ROGUE", faction = "Alliance",
+          snapshot = { [60] = "3" },
         },
       },
     }
     assert.are.same({
       lines = {
-        { label = "Calgan Blackbeard (PvE)", class = "MAGE", value = "5" },
-        { label = "Mira Stonehand (PvP)", class = "ROGUE", value = "3" },
+        { label = "Calgan Blackbeard (PvE)", class = "MAGE", faction = "Horde", value = "5" },
+        { label = "Mira Stonehand (PvP)", class = "ROGUE", faction = "Alliance", value = "3" },
       },
       more = 0,
     }, AccountStatistics.new(db, CURRENT, NOW, { [60] = "5" }):breakdown(60))

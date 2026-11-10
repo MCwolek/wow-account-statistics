@@ -22,14 +22,18 @@ function Sync.ruleset(realmName)
   return realmName:match("(%S+)%s*$")
 end
 
--- The Character ({ guid, fullName, ruleset, class }) from a raw player reading
--- ({ guid, firstName, surname, realmName, classFile }).
+-- The faction groups that are a Faction; any other (e.g. "Neutral") counts as none.
+local FACTIONS = { Horde = true, Alliance = true }
+
+-- The Character ({ guid, fullName, ruleset, class, faction }) from a raw player reading
+-- ({ guid, firstName, surname, realmName, classFile, factionGroup }). faction is "Horde", "Alliance" or nil.
 function Sync.character(reading)
   return {
     guid = reading.guid,
     fullName = Sync.fullName(reading.firstName, reading.surname),
     ruleset = Sync.ruleset(reading.realmName),
     class = reading.classFile,
+    faction = FACTIONS[reading.factionGroup] and reading.factionGroup or nil,
   }
 end
 
@@ -63,7 +67,7 @@ local function isReadable(snapshot)
   return false
 end
 
--- Stores a Sync of `character` ({ guid, fullName, ruleset, class }) and returns the db.
+-- Stores a Sync of `character` ({ guid, fullName, ruleset, class, faction }) and returns the db.
 -- An unreadable Snapshot never replaces an earlier one, and then Last Synced stays as it was.
 function Sync.record(db, character, snapshot, now)
   db = Sync.ensureDB(db)
@@ -75,6 +79,7 @@ function Sync.record(db, character, snapshot, now)
   entry.fullName = character.fullName
   entry.ruleset = character.ruleset
   entry.class = character.class
+  entry.faction = character.faction
   if entry.snapshot == nil or isReadable(snapshot) then
     entry.snapshot = snapshot
     entry.lastSynced = now

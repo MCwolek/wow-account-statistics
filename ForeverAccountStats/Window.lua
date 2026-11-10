@@ -19,15 +19,31 @@ local BODY_BACKGROUND = "UI-Character-Info-General-BG"
 local BODY_TOP = -20
 local COLUMN_WIDTH = 120
 local COLUMN_GAP = 10
--- Wide enough for the longest Full Name and Ruleset with the class icon.
-local DROPDOWN_WIDTH = 320
+local ICON_SIZE = 16
+-- In a dropdown entry, the space between the radio button and the first icon, and after each icon.
+local RADIO_ICON_GAP = 2
+local ICON_GAP = 4
+-- Wide enough for the longest Full Name and Ruleset with the class icon (320), plus the Faction logo and its gap.
+local DROPDOWN_WIDTH = 320 + ICON_SIZE + ICON_GAP
 -- Right of the portrait circle, which reaches 57 in from the window's left edge.
 local DROPDOWN_LEFT = 62
 -- The search box fills the rest of the dropdown's line: after the dropdown and a gap, up to 20 short of the right
 -- edge.
 local SEARCH_GAP = 14
 local SEARCH_WIDTH = WIDTH - DROPDOWN_LEFT - DROPDOWN_WIDTH - SEARCH_GAP - 20
-local ICON_SIZE = 16
+-- The Faction logo's atlas, the quest log's red Horde and blue Alliance crest, named by the Faction in lower case and
+-- shown at the class icon's size. The character select screen's grey logo hardly showed at that size.
+local FACTION_LOGO = "questlog-questtypeicon-%s"
+-- The default dropdown menu's background (see MenuStyle1Mixin). The Character dropdown's menu and the window's
+-- tooltip both show it fully opaque, so the Faction logos stand out against it.
+local MENU_BACKGROUND = "common-dropdown-bg"
+local TOOLTIP_NAME = "ForeverAccountStatsTooltip"
+-- Room in the Breakdown under its title and below its last line, so the Faction logos and class icons, taller than the
+-- text, do not touch the title or the tooltip's bottom edge.
+local BREAKDOWN_TITLE_GAP = 4
+local BREAKDOWN_BOTTOM_PADDING = 4
+-- Empty space the size of the Faction logo or the class icon, in place of a missing one.
+local ICON_SPACE = "|TInterface\\Common\\spacer:" .. ICON_SIZE .. ":" .. ICON_SIZE .. "|t"
 -- Room at the right end of every dropdown entry for the X that Forgets its Character, so the Last Synced times line
 -- up whether an entry has one or not.
 local FORGET_BUTTON_SIZE = 16   -- the size MenuTemplates gives its utility buttons
@@ -55,12 +71,43 @@ local function coloredLabel(entry)
   return entry.label
 end
 
--- The coloured label with the class icon in front, for the closed dropdown.
-local function selectionLabel(entry)
-  if not entry.class then
-    return entry.label
+-- The Faction logo's atlas for a Character's Faction, nil for a Character without one. Sync.character keeps only the
+-- Factions, so the window needs no list of its own.
+local function factionLogo(faction)
+  return faction and FACTION_LOGO:format(faction:lower())
+end
+
+-- The class icon's atlas for a Character's class, nil for a Character without one.
+local function classIcon(class)
+  return class and GetClassAtlas(class)
+end
+
+-- `text` with the icon `atlas` in front. A nil `atlas` leaves empty space the icon's size when `keepSpace`, and
+-- nothing otherwise.
+local function withIcon(atlas, text, keepSpace)
+  if atlas then
+    return CreateAtlasMarkup(atlas, ICON_SIZE, ICON_SIZE) .. " " .. text
+  elseif keepSpace then
+    return ICON_SPACE .. " " .. text
   end
-  return CreateAtlasMarkup(GetClassAtlas(entry.class), ICON_SIZE, ICON_SIZE) .. " " .. coloredLabel(entry)
+  return text
+end
+
+-- A Character's Faction logo, class icon and class-coloured Full Name and Ruleset. With `keepSpace`, a missing logo or
+-- icon leaves empty space its size, so the names line up with the others'.
+local function characterLabel(entry, keepSpace)
+  return withIcon(factionLogo(entry.faction), withIcon(classIcon(entry.class), coloredLabel(entry), keepSpace),
+    keepSpace)
+end
+
+-- The closed dropdown's label: it names one Character, so a missing logo or icon leaves no space.
+local function selectionLabel(entry)
+  return characterLabel(entry, false)
+end
+
+-- A Breakdown line's label: a missing logo or icon leaves its space, so the names line up.
+local function breakdownLabel(line)
+  return characterLabel(line, true)
 end
 
 local function readLiveValues()
@@ -76,21 +123,59 @@ local function redraw(keepScroll)
   frame.ScrollBox:SetDataProvider(CreateDataProvider(rows), keepScroll and ScrollBoxConstants.RetainScrollPosition)
 end
 
--- Fills GameTooltip with the Breakdown of the Statistic `data` under its full name: each Character class-coloured
--- with its value on the right. False when the Statistic has no Account Total, so no Breakdown.
-local function showBreakdown(data)
+-- Puts the dropdown menu's background on the texture `background`, reaching past its parent's edges as the default
+-- menu's does: the atlas has a margin and a shadow of its own.
+local function placeMenuBackground(background)
+  background:SetAtlas(MENU_BACKGROUND)
+  background:SetPoint("TOPLEFT", -10, 3)
+  background:SetPoint("BOTTOMRIGHT", 10, -3)
+end
+
+-- The default dropdown menu style, but with its background fully opaque rather than letting the window show through.
+local OPAQUE_MENU_STYLE = CreateFromMixins(MenuStyle1Mixin)
+
+function OPAQUE_MENU_STYLE:Generate()
+  placeMenuBackground(self:AttachTexture())
+end
+
+local ownTooltip
+-- The font of the empty line under the Breakdown's title, its size the gap that line leaves.
+local titleGapFont
+
+-- The window's own tooltip, on the dropdown menu's opaque background in place of a tooltip's see-through blue one.
+-- Being IsEmbedded keeps the game from bringing back that blue backdrop each time the tooltip is cleared.
+local function windowTooltip()
+  if not ownTooltip then
+    ownTooltip = CreateFrame("GameTooltip", TOOLTIP_NAME, UIParent, "GameTooltipTemplate")
+    ownTooltip.IsEmbedded = true
+    ownTooltip.NineSlice:Hide()
+    placeMenuBackground(ownTooltip:CreateTexture(nil, "BACKGROUND"))
+    titleGapFont = CreateFont("ForeverAccountStatsTitleGapFont")
+    titleGapFont:SetFont(STANDARD_TEXT_FONT, BREAKDOWN_TITLE_GAP, "")
+  end
+  return ownTooltip
+end
+
+-- Fills `tip` with the Breakdown of the Statistic `data` under its full name: each Character with its Faction logo,
+-- class icon and class-coloured name, its value on the right. False when the Statistic has no Account Total, so no
+-- Breakdown.
+local function showBreakdown(tip, data)
   local breakdown =
     WindowSession.breakdown(session, ForeverAccountStatsDB, GameAPI.playerGUID(), GameAPI.now(), data.id)
   if not breakdown then
     return false
   end
-  GameTooltip_SetTitle(GameTooltip, data.name)
+  GameTooltip_SetTitle(tip, data.name)
+  -- A tooltip spaces its lines by itself, so a short empty line makes the gap under the title.
+  tip:AddLine(" ")
+  tip.TextLeft2:SetFontObject(titleGapFont)
   for _, line in ipairs(breakdown.lines) do
-    GameTooltip:AddDoubleLine(coloredLabel(line), line.value, 1, 1, 1, 1, 1, 1)
+    tip:AddDoubleLine(breakdownLabel(line), line.value, 1, 1, 1, 1, 1, 1)
   end
   if breakdown.more > 0 then
-    GameTooltip:AddLine(L.BREAKDOWN_MORE:format(breakdown.more), GRAY_FONT_COLOR:GetRGB())
+    tip:AddLine(L.BREAKDOWN_MORE:format(breakdown.more), GRAY_FONT_COLOR:GetRGB())
   end
+  tip:SetPadding(0, BREAKDOWN_BOTTOM_PADDING)
   return true
 end
 
@@ -352,19 +437,21 @@ local function createRegions(row)
     if not self.look.showsTooltip then
       return
     end
-    GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-    if showBreakdown(self.data) then
-      GameTooltip:Show()
+    local tip = windowTooltip()
+    tip:SetOwner(self, "ANCHOR_RIGHT")
+    if showBreakdown(tip, self.data) then
+      tip:Show()
     elseif self.Name:IsTruncated() then
-      GameTooltip:SetText(self.data.name, 1, 1, 1, 1, true)
-      GameTooltip:Show()
+      tip:SetText(self.data.name, 1, 1, 1, 1, true)
+      tip:SetPadding(0, 0)
+      tip:Show()
     else
-      GameTooltip:Hide()
+      tip:Hide()
     end
   end)
   row:SetScript("OnLeave", function(self)
     refreshHoverLine(self)
-    GameTooltip_Hide()
+    windowTooltip():Hide()
   end)
 end
 
@@ -421,10 +508,23 @@ local function createList(parent)
   return scrollBox
 end
 
+-- Attaches the icon `atlas` to the dropdown entry `button`, `offset` right of its radio button, and returns the offset
+-- for whatever comes after it. A nil `atlas` attaches nothing but keeps the icon's space.
+local function attachEntryIcon(button, atlas, offset)
+  if atlas then
+    local icon = button:AttachTexture()
+    icon:SetAtlas(atlas)
+    icon:SetSize(ICON_SIZE, ICON_SIZE)
+    icon:SetPoint("LEFT", button.leftTexture1, "RIGHT", offset, 0)
+  end
+  return offset + ICON_SIZE + ICON_GAP
+end
+
 local function createDropdown(parent)
   local dropdown = CreateFrame("DropdownButton", nil, parent, "WowStyle1DropdownTemplate")
   dropdown:SetPoint("TOPLEFT", parent, "TOPLEFT", DROPDOWN_LEFT, -30)
   dropdown:SetWidth(DROPDOWN_WIDTH)
+  dropdown.menuMixin = OPAQUE_MENU_STYLE
   dropdown:SetSelectionTranslator(function(selection)
     return selectionLabel(selection.data)
   end)
@@ -443,22 +543,17 @@ local function createDropdown(parent)
         local text = CharacterDropdown.lastSyncedTooltip(description:GetData(), GameAPI.formatDate)
         GameTooltip_SetTitle(tooltip, text)
       end)
-      -- The class icon is its own texture between the radio button and the label, and the label keeps the width
-      -- the radio sized it to: an icon inside the label's text, or a label stretched to the right-hand text, made
-      -- the label wrap onto two lines and cut the name short.
+      -- The Faction logo and the class icon are their own textures between the radio button and the label, and the
+      -- label keeps the width the radio sized it to: an icon inside the label's text, or a label stretched to the
+      -- right-hand text, made the label wrap onto two lines and cut the name short.
       radio:AddInitializer(function(button, description, menu)
         local data = description:GetData()
         local label = button.fontString
         label:SetWordWrap(false)
-        local iconWidth = 0
-        if data.class then
-          local icon = button:AttachTexture()
-          icon:SetAtlas(GetClassAtlas(data.class))
-          icon:SetSize(ICON_SIZE, ICON_SIZE)
-          icon:SetPoint("LEFT", button.leftTexture1, "RIGHT", 2, 0)
-          label:SetPoint("LEFT", icon, "RIGHT", 4, 0)
-          iconWidth = 2 + ICON_SIZE + 4
-        end
+        -- A Character without a Faction or a class keeps empty space the logo's or icon's size, so the names line up.
+        local labelOffset = attachEntryIcon(button, factionLogo(data.faction), RADIO_ICON_GAP)
+        labelOffset = attachEntryIcon(button, classIcon(data.class), labelOffset)
+        label:SetPoint("LEFT", button.leftTexture1, "RIGHT", labelOffset, 0)
         local relative = button:AttachFontString()
         relative:SetPoint("RIGHT", -FORGET_BUTTON_SPACE, 0)
         relative:SetJustifyH("RIGHT")
@@ -477,8 +572,8 @@ local function createDropdown(parent)
           end)
         end
         local radioWidth = button.leftTexture1:GetWidth()
-        local width = radioWidth + iconWidth + label:GetUnboundedStringWidth() + 16 + relative:GetUnboundedStringWidth()
-          + FORGET_BUTTON_SPACE
+        local width = radioWidth + labelOffset + label:GetUnboundedStringWidth() + 16
+          + relative:GetUnboundedStringWidth() + FORGET_BUTTON_SPACE
         return width, 20
       end)
     end

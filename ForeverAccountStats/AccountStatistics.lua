@@ -126,9 +126,9 @@ function AccountStatistics:accountTotal(statisticID)
   return ns.Values.format(total)
 end
 
--- Every Tracked Character's value of the Statistic, in Roster order (see Roster.of): { label, class, value, parsed,
--- position }, with `value` its display string, `parsed` the same value parsed (see Values.parse) and `position` its
--- place in the Roster.
+-- Every Tracked Character's value of the Statistic, in Roster order (see Roster.of): { label, class, faction, value,
+-- parsed, position }, with `value` its display string, `parsed` the same value parsed (see Values.parse) and
+-- `position` its place in the Roster.
 local function characterEntries(self, statisticID)
   local entries = {}
   for position, character in ipairs(self.roster) do
@@ -136,6 +136,7 @@ local function characterEntries(self, statisticID)
     entries[position] = {
       label = character.label,
       class = character.class,
+      faction = character.faction,
       value = ns.Values.display(raw),
       parsed = ns.Values.parse(raw),
       position = position,
@@ -144,13 +145,14 @@ local function characterEntries(self, statisticID)
   return entries
 end
 
--- The line a Character entry shows: { label, class, value }.
+-- The line a Character entry shows: { label, class, faction, value }.
 local function lineOf(entry)
-  return { label = entry.label, class = entry.class, value = entry.value }
+  return { label = entry.label, class = entry.class, faction = entry.faction, value = entry.value }
 end
 
--- Every Tracked Character's value of the Statistic as { label, class, value }, in Roster order: the Character's
--- Full Name and Ruleset, its class (see Roster.of), and its value's display string (see value).
+-- Every Tracked Character's value of the Statistic as { label, class, faction, value }, in Roster order: the
+-- Character's Full Name and Ruleset, its class and Faction (see Roster.of), and its value's display string
+-- (see value).
 function AccountStatistics:characterValues(statisticID)
   local lines = {}
   for i, entry in ipairs(characterEntries(self, statisticID)) do
@@ -170,7 +172,7 @@ end
 -- How many Tracked Characters a Breakdown lists; the others are only counted.
 local BREAKDOWN_LINES = 5
 
--- Breakdown of the Statistic as { lines, more }: each line { label, class, value } for one of the top
+-- Breakdown of the Statistic as { lines, more }: each line { label, class, faction, value } for one of the top
 -- BREAKDOWN_LINES Tracked Characters, highest value first, "--" and then "?" last, equal values in Roster order;
 -- `more` the count of the others. nil when the Statistic has no Account Total, or no Character's values have it.
 function AccountStatistics:breakdown(statisticID)
