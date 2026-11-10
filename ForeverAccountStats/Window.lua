@@ -19,23 +19,23 @@ local BODY_BACKGROUND = "UI-Character-Info-General-BG"
 local BODY_TOP = -20
 local COLUMN_WIDTH = 120
 local COLUMN_GAP = 10
--- Wide enough for the longest Full Name and Ruleset with the Faction logo and class icon.
-local DROPDOWN_WIDTH = 320
+local ICON_SIZE = 16
+-- In a dropdown entry, the space between the radio button and the first icon, and after each icon.
+local RADIO_ICON_GAP = 2
+local ICON_GAP = 4
+-- Wide enough for the longest Full Name and Ruleset with the class icon (320), plus the Faction logo and its gap.
+local DROPDOWN_WIDTH = 320 + ICON_SIZE + ICON_GAP
 -- Right of the portrait circle, which reaches 57 in from the window's left edge.
 local DROPDOWN_LEFT = 62
 -- The search box fills the rest of the dropdown's line: after the dropdown and a gap, up to 20 short of the right
 -- edge.
 local SEARCH_GAP = 14
 local SEARCH_WIDTH = WIDTH - DROPDOWN_LEFT - DROPDOWN_WIDTH - SEARCH_GAP - 20
-local ICON_SIZE = 16
--- In a dropdown entry, the space between the radio button and the first icon, and after each icon.
-local RADIO_ICON_GAP = 2
-local ICON_GAP = 4
 -- The Faction logo's atlas, named by the Faction in lower case, shown at the class icon's size. Atlas names ignore
 -- case: the game's own code spells this one both "characterselect" and "characterSelect".
 local FACTION_LOGO = "glues-characterselect-icon-faction-%s"
 -- Empty space the size of the Faction logo or the class icon, in place of a missing one.
-local ICON_SPACE ="|TInterface\\Common\\spacer:" .. ICON_SIZE .. ":" .. ICON_SIZE .. "|t"
+local ICON_SPACE = "|TInterface\\Common\\spacer:" .. ICON_SIZE .. ":" .. ICON_SIZE .. "|t"
 -- Room at the right end of every dropdown entry for the X that Forgets its Character, so the Last Synced times line
 -- up whether an entry has one or not.
 local FORGET_BUTTON_SIZE = 16   -- the size MenuTemplates gives its utility buttons
