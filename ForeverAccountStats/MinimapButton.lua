@@ -55,7 +55,8 @@ local function showTooltip(self)
   GameTooltip:Show()
 end
 
--- Holding the mouse button down nudges the icon 1px right and down, as the default UI's Minimap buttons do.
+-- Holding the left mouse button down, which clicks or drags the button, nudges the icon 1px right and down, as the
+-- default UI's Minimap buttons do.
 local function setIconPressed(self, pressed)
   local nudge = pressed and 1 or 0
   self.Icon:SetPoint("TOPLEFT", ICON_LEFT + nudge, ICON_TOP - nudge)
@@ -92,11 +93,15 @@ local function create()
   button:SetScript("OnDragStop", stopDrag)
   button:SetScript("OnEnter", showTooltip)
   button:SetScript("OnLeave", GameTooltip_Hide)
-  button:SetScript("OnMouseDown", function(self)
-    setIconPressed(self, true)
+  button:SetScript("OnMouseDown", function(self, mouseButton)
+    if mouseButton == "LeftButton" then
+      setIconPressed(self, true)
+    end
   end)
-  button:SetScript("OnMouseUp", function(self)
-    setIconPressed(self, false)
+  button:SetScript("OnMouseUp", function(self, mouseButton)
+    if mouseButton == "LeftButton" then
+      setIconPressed(self, false)
+    end
   end)
   button:SetScript("OnHide", function(self)
     setIconPressed(self, false)
