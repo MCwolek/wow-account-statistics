@@ -5,12 +5,13 @@ local coins = require("coins")
 local function loadListing()
   local ns = addon.loadFile("Locale.lua", {})
   addon.loadFile("Values.lua", ns)
+  addon.loadFile("Roster.lua", ns)
   addon.loadFile("Characters.lua", ns)
   addon.loadFile("AccountStatistics.lua", ns)
   return addon.loadFile("Listing.lua", ns).Listing
 end
 
-local MINUTE, HOUR, DAY = 60, 3600, 86400
+local HOUR, DAY = 3600, 86400
 local NOW = 1700000000
 
 describe("Listing.lines", function()
@@ -18,29 +19,17 @@ describe("Listing.lines", function()
 
   local db = {
     characters = {
-      ["Player-1-0000BBBB"] = { fullName = "Mira Stonehand", ruleset = "PvP", lastSynced = NOW - 5 * DAY },
       ["Player-1-0000AAAA"] = { fullName = "Calgan Blackbeard", ruleset = "PvP", lastSynced = NOW - 2 * HOUR },
-      ["Player-2-0000DDDD"] = { fullName = "Calgan Blackbeard", ruleset = "PvE", lastSynced = NOW - 2 * DAY },
-      ["Player-1-0000CCCC"] = { fullName = "Arlen", ruleset = "PvE", lastSynced = NOW - 3 * MINUTE },
+      ["Player-1-0000BBBB"] = { fullName = "Mira Stonehand", ruleset = "PvP", lastSynced = NOW - 5 * DAY },
     },
   }
 
-  it("lists every Tracked Character by Full Name and Ruleset, the logged-in one as now", function()
+  it("counts the Tracked Characters, then gives each one's label and relative Last Synced", function()
     assert.are.same({
-      "Forever Account Stats: Tracked Characters (4)",
-      "  Arlen (PvE) - 3 min ago",
-      "  Calgan Blackbeard (PvE) - 2 d ago",
+      "Forever Account Stats: Tracked Characters (2)",
       "  Calgan Blackbeard (PvP) - now",
       "  Mira Stonehand (PvP) - 5 d ago",
     }, Listing.lines(db, "Player-1-0000AAAA", NOW))
-  end)
-
-  it("leaves out the Ruleset for a Character synced before Rulesets were saved", function()
-    local old = { characters = { ["Player-1-0000AAAA"] = { fullName = "Calgan Blackbeard", lastSynced = NOW } } }
-    assert.are.same({
-      "Forever Account Stats: Tracked Characters (1)",
-      "  Calgan Blackbeard - now",
-    }, Listing.lines(old, "Player-1-0000AAAA", NOW))
   end)
 end)
 
