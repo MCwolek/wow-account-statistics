@@ -1,10 +1,10 @@
--- Thin adapter: the Statistics window and its button on the default Statistics tab. It draws what the pure modules
--- (CategoryTree, ListState, Rows, RowLayout, AccountStatistics, Characters, WindowPosition) compute and reads the
--- game through GameAPI.
+-- Thin adapter: the Statistics window and its button on the default Statistics tab. It forwards the window's actions
+-- to its Window Session (see WindowSession), draws what the pure modules (WindowSession, CategoryTree, RowLayout,
+-- Characters, WindowPosition) compute and reads the game through GameAPI.
 local _, ns = ...
 local L, GameAPI, Sync = ns.L, ns.GameAPI, ns.Sync
-local CategoryTree, ListState, Rows, RowLayout = ns.CategoryTree, ns.ListState, ns.Rows, ns.RowLayout
-local AccountStatistics, Characters, WindowPosition = ns.AccountStatistics, ns.Characters, ns.WindowPosition
+local CategoryTree, RowLayout, WindowSession = ns.CategoryTree, ns.RowLayout, ns.WindowSession
+local Characters, WindowPosition = ns.Characters, ns.WindowPosition
 
 local Window = {}
 ns.Window = Window
@@ -37,10 +37,7 @@ local FORGET_DIALOG = "FOREVER_ACCOUNT_STATS_FORGET"
 local REREAD_DELAY = 0.5
 
 local frame          -- created on first open, once SavedVariables are loaded
-local tree           -- the Category tree, read on first open
-local list           -- the ListState: Categories expanded and the search since the window opened
-local selectedGUID   -- Character chosen in the dropdown since the window opened
-local liveValues     -- the logged-in Character's Live Values, read while the window is shown; not saved
+local session        -- the Window Session, created with the frame
 local rereadPending = false
 local statisticsTabButton
 
@@ -66,25 +63,22 @@ local function selectionLabel(entry)
 end
 
 local function readLiveValues()
-  liveValues = Sync.buildSnapshot(GameAPI.readStatistics())
+  return Sync.buildSnapshot(GameAPI.readStatistics())
 end
 
--- Every Tracked Character's values, the logged-in one's Live Values in place of its Snapshot.
-local function accountStatistics()
-  return AccountStatistics.new(ForeverAccountStatsDB, GameAPI.playerGUID(), liveValues)
+local function chosenCharacter()
+  return WindowSession.chosenCharacter(session, ForeverAccountStatsDB, GameAPI.playerGUID())
 end
 
 local function redraw(keepScroll)
-  local entry = Characters.selectedEntry(dropdownEntries(), selectedGUID)
-  selectedGUID = entry and entry.guid
-  local rows = Rows.build(ListState.visibleRows(list), accountStatistics(), selectedGUID)
+  local rows = WindowSession.rows(session, ForeverAccountStatsDB, GameAPI.playerGUID())
   frame.ScrollBox:SetDataProvider(CreateDataProvider(rows), keepScroll and ScrollBoxConstants.RetainScrollPosition)
 end
 
 -- Fills GameTooltip with the Breakdown of the Statistic `data` under its full name: each Character class-coloured
 -- with its value on the right. False when the Statistic has no Account Total, so no Breakdown.
 local function showBreakdown(data)
-  local breakdown = accountStatistics():breakdown(data.id)
+  local breakdown = WindowSession.breakdown(session, ForeverAccountStatsDB, GameAPI.playerGUID(), data.id)
   if not breakdown then
     return false
   end
@@ -99,7 +93,7 @@ local function showBreakdown(data)
 end
 
 -- Forgets the Character `guid` once its confirmation dialog is accepted. When it was the one chosen in the dropdown,
--- the window falls back to the logged-in Character (see Characters.selectedEntry).
+-- the window falls back to the logged-in Character (see WindowSession.chosenCharacter).
 local function forget(guid)
   ForeverAccountStatsDB = Sync.forget(ForeverAccountStatsDB, guid, GameAPI.playerGUID())
   if frame:IsShown() then
@@ -131,8 +125,8 @@ local function scheduleReread()
   rereadPending = true
   C_Timer.After(REREAD_DELAY, function()
     rereadPending = false
-    if frame:IsShown() then
-      readLiveValues()
+    if WindowSession.isOpen(session) then
+      session = WindowSession.liveValuesRead(session, readLiveValues())
       redraw(true)
     end
   end)
@@ -167,7 +161,7 @@ local TOTAL_RIGHT = -12
 local PRESSED_X, PRESSED_Y = 1, -1
 
 local function toggleCategory(categoryID)
-  list = ListState.toggled(list, categoryID)
+  session = WindowSession.categoryToggled(session, categoryID)
   redraw(true)
 end
 
@@ -437,9 +431,9 @@ local function createDropdown(parent)
     root:SetScrollMode(20 * 15)
     for _, entry in ipairs(dropdownEntries()) do
       local radio = root:CreateRadio(coloredLabel(entry), function(data)
-        return data.guid == selectedGUID
+        return data.guid == chosenCharacter()
       end, function(data)
-        selectedGUID = data.guid
+        session = WindowSession.characterChosen(session, data.guid)
         redraw(true)
       end, entry)
       -- Hovering an entry shows its exact Last Synced; the menu already reads it relative to now.
@@ -491,7 +485,7 @@ local function createDropdown(parent)
 end
 
 -- Typing shows the search results, every Category expanded; emptying the box brings back the whole list as it was
--- expanded before (see ListState).
+-- expanded before (see WindowSession.searched).
 local function createSearchBox(parent, dropdown)
   local searchBox = CreateFrame("EditBox", nil, parent, "SearchBoxTemplate")
   searchBox:SetSize(SEARCH_WIDTH, 20)
@@ -499,10 +493,10 @@ local function createSearchBox(parent, dropdown)
   searchBox:SetAutoFocus(false)
   searchBox.Instructions:SetText(L.SEARCH_PLACEHOLDER)
   searchBox:HookScript("OnTextChanged", function(self)
-    list = ListState.searched(list, self:GetText())
-    -- The window's OnHide empties the box as well, which lands here with the window already hidden: then leave
-    -- the list undrawn, as OnShow redraws it on the next open.
-    if parent:IsShown() then
+    session = WindowSession.searched(session, self:GetText())
+    -- The window's OnHide empties the box after closing the Window Session, which ignores the search; the hidden
+    -- window stays undrawn until the next open.
+    if WindowSession.isOpen(session) then
       redraw(false)
     end
   end)
@@ -518,8 +512,7 @@ end
 
 local function create()
   local categories = GameAPI.readCategories()
-  tree = CategoryTree.build(categories.categories, categories.statistics)
-  list = ListState.new(tree)
+  session = WindowSession.new(CategoryTree.build(categories.categories, categories.statistics))
 
   frame = CreateFrame("Frame", FRAME_NAME, UIParent, "ButtonFrameTemplate")
   frame:SetSize(WIDTH, HEIGHT)
@@ -562,18 +555,16 @@ local function create()
 
   frame:SetScript("OnShow", function(self)
     self:RegisterEvent("CRITERIA_UPDATE")
-    readLiveValues()
+    session = WindowSession.opened(session, readLiveValues())
     redraw(false)
     self.Dropdown:GenerateMenu()
   end)
-  -- Closing forgets the collapsed Categories, the chosen Character and the search: the next open starts with every
-  -- Category expanded, on the logged-in Character, with an empty search box.
+  -- Closing forgets the collapsed Categories, the chosen Character and the search (see WindowSession.closed); the
+  -- search box is emptied to match.
   frame:SetScript("OnHide", function(self)
     self:UnregisterEvent("CRITERIA_UPDATE")
-    selectedGUID = nil
-    -- Fires the search box's OnTextChanged, which skips its redraw while the window is hidden.
+    session = WindowSession.closed(session)
     self.SearchBox:SetText("")
-    list = ListState.new(tree)
   end)
   frame:SetScript("OnEvent", scheduleReread)
   frame:Hide()
