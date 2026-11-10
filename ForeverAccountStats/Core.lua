@@ -20,7 +20,7 @@ frame:RegisterEvent("PLAYER_LOGOUT")
 frame:SetScript("OnEvent", function(_, event, arg1)
   if event == "ADDON_LOADED" and arg1 == addonName then
     ForeverAccountStatsDB = Sync.ensureDB(ForeverAccountStatsDB)
-    MinimapButton.update()
+    MinimapButton.applySettings()
     -- Another add-on may have loaded the Achievement UI before this one.
     if GameAPI.isAddOnLoaded(ACHIEVEMENT_UI) then
       Window.addStatisticsTabButton()
@@ -43,7 +43,7 @@ SlashCmdList.FOREVERACCOUNTSTATS = function(message)
   local lines
   if command.action == "minimap" then
     ForeverAccountStatsDB.minimapButton = MinimapButtonSettings.withShownToggled(ForeverAccountStatsDB.minimapButton)
-    MinimapButton.update()
+    MinimapButton.applySettings()
     local confirmation = MinimapButtonSettings.isShown(ForeverAccountStatsDB.minimapButton)
       and ns.L.MINIMAP_BUTTON_SHOWN or ns.L.MINIMAP_BUTTON_HIDDEN
     lines = { string.format(confirmation, ns.L.ADDON_TITLE) }

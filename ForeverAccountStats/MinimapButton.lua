@@ -105,7 +105,7 @@ end
 
 -- Shows the Minimap button where it was left, or hides it, as ForeverAccountStatsDB.minimapButton says. Call it once
 -- SavedVariables are loaded, and again whenever /stats minimap changes them.
-function MinimapButton.update()
+function MinimapButton.applySettings()
   local settings = ForeverAccountStatsDB.minimapButton
   if not MinimapButtonSettings.isShown(settings) then
     if button then
