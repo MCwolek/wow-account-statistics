@@ -1,4 +1,5 @@
--- Pure rows of the Statistics window's list: each Statistic with the selected Character's value and the Account Total.
+-- Pure rows of the Statistics window's list: each Statistic with the selected Character's value and the Account Total,
+-- and how each row is laid out.
 local _, ns = ...
 
 local Rows = {}
@@ -24,4 +25,23 @@ function Rows.build(visibleRows, view)
     end
   end
   return rows
+end
+
+-- Row heights by look, and the indent per depth, as the game's Statistics tab has them.
+local HEIGHTS = { category = 26, statistic = 24, nestedCategory = 22 }
+local INDENT = 20
+
+-- How the list lays out `row`, one of the rows above: { look, height, indent }. The look is "category" for a
+-- top-level Category, on its bar with the +/- on the right, "nestedCategory" for one inside another, with the
+-- open/closed icon on the left, or "statistic". Each depth indents the row by 20.
+function Rows.layout(row)
+  local look
+  if row.kind == "statistic" then
+    look = "statistic"
+  elseif row.depth > 0 then
+    look = "nestedCategory"
+  else
+    look = "category"
+  end
+  return { look = look, height = HEIGHTS[look], indent = row.depth * INDENT }
 end
