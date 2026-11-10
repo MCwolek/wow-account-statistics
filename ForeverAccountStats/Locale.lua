@@ -22,6 +22,12 @@ ns.L = {
   HOURS_AGO = "%d h ago",
   -- Tooltip of a Character in the window's dropdown; %s is the exact date and time.
   LAST_SYNC = "Last sync: %s",
+  -- The Minimap button tooltip's line under the add-on's name: the mouse action, then what it does.
+  MINIMAP_BUTTON_LEFT_CLICK = "Left Click:",
+  MINIMAP_BUTTON_LEFT_CLICK_ACTION = "Open Account Statistics",
+  -- Chat confirmations of /stats minimap; %s is the add-on's name.
+  MINIMAP_BUTTON_HIDDEN = "%s: Minimap button hidden. /stats minimap shows it again.",
+  MINIMAP_BUTTON_SHOWN = "%s: Minimap button shown. /stats minimap hides it.",
   MINUTES_AGO = "%d min ago",
   -- Marker for a Statistic missing from a Character's Snapshot, e.g. one taken by an older version.
   MISSING_VALUE = "?",
@@ -41,5 +47,5 @@ ns.L = {
   TRACKED_CHARACTER_LINE = "  %s - %s",
   UNKNOWN_STATISTIC = "Unknown Statistic",
   USAGE = "%s: /stats opens the Statistics window; /stats list lists Tracked Characters; "
-    .. "/stats dump <Statistic ID> shows one Statistic for each.",
+    .. "/stats dump <Statistic ID> shows one Statistic for each; /stats minimap hides or shows the Minimap button.",
 }

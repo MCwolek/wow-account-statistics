@@ -11,8 +11,9 @@ ns.Window = Window
 
 local FRAME_NAME = "ForeverAccountStatsFrame"
 local WIDTH, HEIGHT = 620, 540
--- The Statistics side tab's icon in the Character frame, shown in the window's portrait circle.
-local PORTRAIT_ICON = "Interface/ICONS/INV_SideTab_Stats_c60"
+-- The Statistics side tab's icon in the Character frame, shown in the window's portrait circle and on the Minimap
+-- button.
+Window.PORTRAIT_ICON = "Interface/ICONS/INV_SideTab_Stats_c60"
 -- The Character frame's backdrop behind its Statistics tab, from just under the title bar down.
 local BODY_BACKGROUND = "UI-Character-Info-General-BG"
 local BODY_TOP = -20
@@ -519,7 +520,7 @@ local function create()
   frame:SetSize(WIDTH, HEIGHT)
   frame:SetTitle(L.ADDON_TITLE)
   ButtonFrameTemplate_ShowPortrait(frame)
-  frame:SetPortraitToAsset(PORTRAIT_ICON)
+  frame:SetPortraitToAsset(Window.PORTRAIT_ICON)
   ButtonFrameTemplate_HideButtonBar(frame)
   -- The Character frame's backdrop in place of the template's rock, streaks and marble inset; the inset stays as
   -- the list's anchor.
