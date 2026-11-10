@@ -5,14 +5,17 @@ local _, ns = ...
 local WindowSession = {}
 ns.WindowSession = WindowSession
 
--- A copy of the open window with the fields that `change(session)` returns set. A closed window stays as it is:
--- emptying the search box on closing, for one, lands here after the window has closed.
+-- A copy of the open window with the fields that `change()` returns set. A closed window stays as it is, without
+-- calling `change`: emptying the search box on closing, for one, lands here after the window has closed.
 local function changed(session, change)
   if not session.list then
     return session
   end
-  local copy = { tree = session.tree, list = session.list, chosen = session.chosen, liveValues = session.liveValues }
-  for key, value in pairs(change(session)) do
+  local copy = {}
+  for key, value in pairs(session) do
+    copy[key] = value
+  end
+  for key, value in pairs(change()) do
     copy[key] = value
   end
   return copy
@@ -49,15 +52,15 @@ end
 -- The window with the Category `categoryID` expanded when it was collapsed and collapsed when it was expanded (see
 -- ListState.toggled).
 function WindowSession.categoryToggled(session, categoryID)
-  return changed(session, function(open)
-    return { list = ns.ListState.toggled(open.list, categoryID) }
+  return changed(session, function()
+    return { list = ns.ListState.toggled(session.list, categoryID) }
   end)
 end
 
 -- The window with the search box reading `text` (see ListState.searched).
 function WindowSession.searched(session, text)
-  return changed(session, function(open)
-    return { list = ns.ListState.searched(open.list, text) }
+  return changed(session, function()
+    return { list = ns.ListState.searched(session.list, text) }
   end)
 end
 
