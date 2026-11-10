@@ -80,3 +80,14 @@ function Sync.record(db, character, snapshot, now)
   end
   return db
 end
+
+-- Forgets the Tracked Character `guid`: removes it and its Snapshot, so it no longer counts in Account Totals.
+-- The logged-in Character (`currentGUID`) is never forgotten: it would be tracked again at its next Sync anyway.
+-- Returns the db.
+function Sync.forget(db, guid, currentGUID)
+  db = Sync.ensureDB(db)
+  if guid ~= currentGUID then
+    db.characters[guid] = nil
+  end
+  return db
+end

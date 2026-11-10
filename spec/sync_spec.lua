@@ -142,3 +142,51 @@ describe("Sync.record", function()
     assert.are.equal(1700000900, db.characters["Player-1-0000AAAA"].lastSynced)
   end)
 end)
+
+describe("Sync.forget", function()
+  local Sync = loadSync()
+  local calgan = { guid = "Player-1-0000AAAA", fullName = "Calgan Blackbeard", ruleset = "PvE", class = "WARRIOR" }
+  local mira = { guid = "Player-1-0000BBBB", fullName = "Mira Stonehand", ruleset = "PvE", class = "MAGE" }
+
+  local function trackBoth()
+    local db = Sync.record(nil, calgan, { [60] = "250" }, 1700000000)
+    return Sync.record(db, mira, { [60] = "3" }, 1700000500)
+  end
+
+  it("removes the Tracked Character and its Snapshot, keeping the others", function()
+    local db = Sync.forget(trackBoth(), mira.guid, calgan.guid)
+    assert.is_nil(db.characters[mira.guid])
+    assert.are.same({ [60] = "250" }, db.characters[calgan.guid].snapshot)
+  end)
+
+  it("never forgets the logged-in Character", function()
+    local db = Sync.forget(trackBoth(), calgan.guid, calgan.guid)
+    assert.are.same({ [60] = "250" }, db.characters[calgan.guid].snapshot)
+    assert.are.same({ [60] = "3" }, db.characters[mira.guid].snapshot)
+  end)
+
+  it("tracks a forgotten Character anew when it Syncs again", function()
+    local db = Sync.forget(trackBoth(), mira.guid, calgan.guid)
+    db = Sync.record(db, mira, { [60] = "4" }, 1700009000)
+    assert.are.same({
+      fullName = "Mira Stonehand",
+      ruleset = "PvE",
+      class = "MAGE",
+      lastSynced = 1700009000,
+      snapshot = { [60] = "4" },
+    }, db.characters[mira.guid])
+  end)
+
+  it("drops the forgotten Character from the dropdown and the Account Totals", function()
+    local ns = addon.loadFile("Locale.lua", { Sync = Sync })
+    local Characters = addon.loadFile("Characters.lua", ns).Characters
+    local AccountTotals = addon.loadFile("AccountTotals.lua", addon.loadFile("Values.lua", ns)).AccountTotals
+    local db = Sync.forget(trackBoth(), mira.guid, calgan.guid)
+
+    local entries = Characters.dropdownEntries(db, calgan.guid, 1700010000)
+    assert.are.equal(1, #entries)
+    assert.are.equal(calgan.guid, entries[1].guid)
+    local _, all = Characters.statisticValues(db, calgan.guid)
+    assert.are.equal("250", AccountTotals.display(60, all))
+  end)
+end)
