@@ -4,7 +4,8 @@ WoW: Forever add-on: every Character's Statistics side by side, plus Account Tot
 
 ## WoW: Forever facts
 
-- Forever runs the **retail (Midnight) client and API** on interface `16001`, with vanilla-era content. Look up APIs in retail docs ([warcraft.wiki.gg](https://warcraft.wiki.gg), [Gethe/wow-ui-source](https://github.com/Gethe/wow-ui-source)), not Classic ones.
+- Forever runs the **retail (Midnight) client and API** on interface `16001`, with vanilla-era content. Look up APIs in retail docs ([warcraft.wiki.gg](https://warcraft.wiki.gg)), not Classic ones.
+- Read Blizzard's interface code (FrameXML, templates, atlas names) only from files exported from the user's own Forever client, never from third-party mirrors of it. The user exports them by launching with `-console` and typing `ExportInterfaceFiles code` in the console (`` ` ``) on the login or character select screen; in the world it reads "Unknown console command". When `` ` `` opens nothing (e.g. on a non-US keyboard), first type `/run SetConsoleKey("#")` in the world, then log out to character select and press `#`; the key lasts until the game quits. They land in `_forever_/BlizzardInterfaceCode/`.
 - `select(4, GetBuildInfo())` is `16001`, so retail-style checks like `>= 100000` take the wrong branch.
 - The game runs **Lua 5.1**; the local toolchain matches it. Write 5.1: no `//`, bitwise operators, `goto`, `utf8` or `math.type`.
 - `UnitName("player")` returns first name and **surname**. The surname is not a realm.
