@@ -30,11 +30,13 @@ local PEAK_STATISTICS = {
   [377] = true, -- Most factions at Exalted
   [378] = true, -- Most factions at Revered or higher
   [529] = true, -- Most factions at Honored or higher
-  [926] = true, -- Most Horde factions at Exalted
-  [1466] = true, -- Most Alliance factions at Exalted
   [931] = true, -- Total factions encountered
   [1337] = true, -- Different creature types killed
-  -- Collections may be account-wide on this client, so every Character would count the same ones (see #8).
+  -- Account-wide (#8): every Character reads the same value, 4, though none has a faction at Exalted, so it is
+  -- not one Character's own (likely counted from other game modes on the Account). A sum would multiply it.
+  [926] = true, -- Most Horde factions at Exalted
+  [1466] = true, -- Most Alliance factions at Exalted
+  -- Collections may be account-wide on this client too; unverified, as they read "--" on every Character so far.
   [338] = true, -- Vanity pets owned
   [339] = true, -- Mounts owned
 }
