@@ -32,6 +32,9 @@
         "MenuVariants",
         "StaticPopup_Show",
         "StaticPopupDialogs",
-        "ButtonFrameTemplate_ShowPortrait"
+        "ButtonFrameTemplate_ShowPortrait",
+        "GameTooltip_AddInstructionLine",
+        "GameTooltip_AddColoredDoubleLine",
+        "GameTooltip_AddNormalLine"
     ]
 }
