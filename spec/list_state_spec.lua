@@ -64,6 +64,16 @@ describe("ListState", function()
     assert.are.same(ListState.visibleRows(ListState.new(tree)), ListState.visibleRows(state))
   end)
 
+  it("leaves the list it was given unchanged when toggling during a search", function()
+    local state = ListState.searched(ListState.new(tree), "gold")
+    ListState.toggled(state, 131)
+    assert.are.same(
+      ListState.visibleRows(ListState.searched(ListState.new(tree), "gold")),
+      ListState.visibleRows(state)
+    )
+    assert.are.same(ListState.visibleRows(ListState.new(tree)), ListState.visibleRows(ListState.searched(state, "")))
+  end)
+
   it("shows the search results with every Category expanded", function()
     assert.are.same({
       { kind = "category", id = 130, name = "Character", depth = 0, expanded = true },
