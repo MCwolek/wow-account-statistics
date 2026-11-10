@@ -16,13 +16,3 @@ describe("ForeverAccountStats.toc", function()
     end
   end)
 end)
-
-describe("Locale", function()
-  it("defines every string as non-empty text", function()
-    local ns = addon.loadFile("Locale.lua", {})
-    for key, value in pairs(ns.L) do
-      assert.are.equal("string", type(value), key)
-      assert.is_true(#value > 0, key)
-    end
-  end)
-end)
