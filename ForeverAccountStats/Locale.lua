@@ -53,8 +53,13 @@ local enUS = {
     .. "/stats dump <Statistic ID> shows one Statistic for each; /stats minimap hides or shows the Minimap button.",
 }
 
+-- German. Keep every placeholder of the English text, in the same order: Lua 5.1's string.format has no positional
+-- arguments.
+local deDE = {}
+
 Locale.tables = {
   enUS = enUS,
+  deDE = deDE,
 }
 
 -- The strings for a locale (a GetLocale() value), out of tables keyed like it:
@@ -70,4 +75,6 @@ function Locale.pick(tables, locale)
   return strings
 end
 
-ns.L = Locale.pick(Locale.tables, "enUS")
+-- The add-on follows the game's text language and has no language setting of its own (docs/adr/0004).
+-- GetLocale() is the only game API this file calls: the text has to be in place before any other file loads.
+ns.L = Locale.pick(Locale.tables, GetLocale())

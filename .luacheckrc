@@ -37,6 +37,7 @@ read_globals = {
   "GetCategoryNumAchievements",
   "GetClassAtlas",
   "GetCursorPosition",
+  "GetLocale",
   "GetRealmName",
   "GetStatistic",
   "GetStatisticsCategoryList",

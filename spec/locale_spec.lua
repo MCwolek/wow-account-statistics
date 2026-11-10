@@ -21,3 +21,30 @@ describe("Locale.pick", function()
     assert.are.same({ TITLE = "Statistics", CANCEL = "Cancel" }, Locale.pick(tables, "enGB"))
   end)
 end)
+
+describe("ns.L", function()
+  -- Loads Locale.lua the way a client in the given language does.
+  local function loadIn(locale)
+    local gameGetLocale = _G.GetLocale
+    ---@diagnostic disable-next-line: duplicate-set-field
+    _G.GetLocale = function()
+      return locale
+    end
+    local ns = addon.loadFile("Locale.lua", {})
+    _G.GetLocale = gameGetLocale
+    return ns
+  end
+
+  it("is the German text on a German client, English where it has none", function()
+    local ns = loadIn("deDE")
+    local tables = ns.Locale.tables
+    for key, english in pairs(tables.enUS) do
+      assert.are.equal(tables.deDE[key] or english, ns.L[key], key)
+    end
+  end)
+
+  it("is the English text on a client in a language without a translation", function()
+    local ns = loadIn("frFR")
+    assert.are.same(ns.Locale.tables.enUS, ns.L)
+  end)
+end)
