@@ -1,8 +1,8 @@
 -- Wiring: game events and the /stats command (see Command.lua). Logic lives in Sync.lua, Command.lua and Listing.lua;
 -- the Statistics window in Window.lua and the Minimap button in MinimapButton.lua.
 local addonName, ns = ...
-local Sync, Command, Listing, GameAPI, Window, MinimapButton =
-  ns.Sync, ns.Command, ns.Listing, ns.GameAPI, ns.Window, ns.MinimapButton
+local Sync, Command, Listing, GameAPI, Window = ns.Sync, ns.Command, ns.Listing, ns.GameAPI, ns.Window
+local MinimapButton, MinimapButtonSettings = ns.MinimapButton, ns.MinimapButtonSettings
 
 -- The default UI's Statistics tab lives in this load-on-demand add-on.
 local ACHIEVEMENT_UI = "Blizzard_AchievementUI"
@@ -41,7 +41,13 @@ SlashCmdList.FOREVERACCOUNTSTATS = function(message)
     return
   end
   local lines
-  if command.action == "list" then
+  if command.action == "minimap" then
+    ForeverAccountStatsDB.minimapButton = MinimapButtonSettings.shownToggled(ForeverAccountStatsDB.minimapButton)
+    MinimapButton.update()
+    local confirmation = MinimapButtonSettings.isShown(ForeverAccountStatsDB.minimapButton)
+      and ns.L.MINIMAP_BUTTON_SHOWN or ns.L.MINIMAP_BUTTON_HIDDEN
+    lines = { string.format(confirmation, ns.L.ADDON_TITLE) }
+  elseif command.action == "list" then
     lines = Listing.lines(ForeverAccountStatsDB, GameAPI.playerGUID(), GameAPI.now())
   elseif command.action == "dump" then
     local name = GameAPI.statisticName(command.statisticID)
