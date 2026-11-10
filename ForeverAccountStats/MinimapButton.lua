@@ -44,6 +44,11 @@ local function setIconPressed(self, pressed)
   self.Icon:SetPoint("TOPLEFT", ICON_LEFT + nudge, ICON_TOP - nudge)
 end
 
+-- Puts the button at its saved angle, on the ring as wide as the Minimap is now.
+local function placeAtSavedAngle()
+  place(MinimapButtonSettings.angle(ForeverAccountStatsDB.minimapButton))
+end
+
 local function startDrag(self)
   GameTooltip_Hide()
   self:SetScript("OnUpdate", followCursor)
@@ -53,7 +58,7 @@ local function stopDrag(self)
   self:SetScript("OnUpdate", nil)
   setIconPressed(self, false)
   ForeverAccountStatsDB.minimapButton = MinimapButtonSettings.moved(ForeverAccountStatsDB.minimapButton, cursorAngle())
-  place(MinimapButtonSettings.angle(ForeverAccountStatsDB.minimapButton))
+  placeAtSavedAngle()
 end
 
 local function showTooltip(self)
@@ -107,6 +112,9 @@ local function create()
   button:SetScript("OnHide", function(self)
     setIconPressed(self, false)
   end)
+  -- Edit Mode's Minimap size scales the Minimap, which the button follows as its child. Whatever resizes the Minimap
+  -- itself, such as another add-on, changes the ring's radius, so the button is placed on the new ring.
+  Minimap:HookScript("OnSizeChanged", placeAtSavedAngle)
 end
 
 -- Shows the Minimap button where it was left, or hides it, as ForeverAccountStatsDB.minimapButton says. Call it once
@@ -122,7 +130,7 @@ function MinimapButton.applySettings()
   if not button then
     create()
   end
-  place(MinimapButtonSettings.angle(settings))
+  placeAtSavedAngle()
   button:Show()
 end
 
