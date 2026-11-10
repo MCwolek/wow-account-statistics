@@ -73,14 +73,3 @@ end
 function Characters.lastSyncedTooltip(entry, now, formatDate)
   return string.format(L.LAST_SYNC, formatDate(L.EXACT_DATE_TIME, entry.isCurrent and now or entry.lastSynced))
 end
-
--- The dropdown entry of the Character selected by `selectedGUID`, or the first entry (the logged-in Character)
--- when none is selected or the selected one is no longer tracked.
-function Characters.selectedEntry(entries, selectedGUID)
-  for _, entry in ipairs(entries) do
-    if entry.guid == selectedGUID then
-      return entry
-    end
-  end
-  return entries[1]
-end
