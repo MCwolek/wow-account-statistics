@@ -418,8 +418,8 @@ local function create()
     redraw(false)
     self.Dropdown:GenerateMenu()
   end)
-  -- Closing forgets the expanded Categories, the chosen Character and the search: the next open starts collapsed,
-  -- on the logged-in Character, with an empty search box.
+  -- Closing forgets the collapsed Categories, the chosen Character and the search: the next open starts with every
+  -- Category expanded, on the logged-in Character, with an empty search box.
   frame:SetScript("OnHide", function(self)
     self:UnregisterEvent("CRITERIA_UPDATE")
     selectedGUID = nil
