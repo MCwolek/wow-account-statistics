@@ -37,6 +37,13 @@ local function followCursor()
   place(cursorAngle())
 end
 
+-- Holding the left mouse button down, which clicks or drags the button, nudges the icon 1px right and down, as the
+-- default UI's Minimap buttons do.
+local function setIconPressed(self, pressed)
+  local nudge = pressed and 1 or 0
+  self.Icon:SetPoint("TOPLEFT", ICON_LEFT + nudge, ICON_TOP - nudge)
+end
+
 local function startDrag(self)
   GameTooltip_Hide()
   self:SetScript("OnUpdate", followCursor)
@@ -44,6 +51,7 @@ end
 
 local function stopDrag(self)
   self:SetScript("OnUpdate", nil)
+  setIconPressed(self, false)
   ForeverAccountStatsDB.minimapButton = MinimapButtonSettings.moved(ForeverAccountStatsDB.minimapButton, cursorAngle())
   place(MinimapButtonSettings.angle(ForeverAccountStatsDB.minimapButton))
 end
@@ -53,13 +61,6 @@ local function showTooltip(self)
   GameTooltip_SetTitle(GameTooltip, L.ADDON_TITLE)
   GameTooltip_AddInstructionLine(GameTooltip, L.MINIMAP_BUTTON_HINT)
   GameTooltip:Show()
-end
-
--- Holding the left mouse button down, which clicks or drags the button, nudges the icon 1px right and down, as the
--- default UI's Minimap buttons do.
-local function setIconPressed(self, pressed)
-  local nudge = pressed and 1 or 0
-  self.Icon:SetPoint("TOPLEFT", ICON_LEFT + nudge, ICON_TOP - nudge)
 end
 
 local function create()
