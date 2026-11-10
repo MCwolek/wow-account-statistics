@@ -28,6 +28,9 @@ local DROPDOWN_LEFT = 62
 local SEARCH_GAP = 14
 local SEARCH_WIDTH = WIDTH - DROPDOWN_LEFT - DROPDOWN_WIDTH - SEARCH_GAP - 20
 local ICON_SIZE = 16
+-- In a dropdown entry, the space between the radio button and the first icon, and after each icon.
+local RADIO_ICON_GAP = 2
+local ICON_GAP = 4
 -- The Faction logo's atlas, named by the Faction in lower case, shown at the class icon's size. Atlas names ignore
 -- case: the game's own code spells this one both "characterselect" and "characterSelect".
 local FACTION_LOGO = "glues-characterselect-icon-faction-%s"
@@ -454,6 +457,18 @@ local function createList(parent)
   return scrollBox
 end
 
+-- Attaches the icon `atlas` to the dropdown entry `button`, `offset` right of its radio button, and returns the offset
+-- for whatever comes after it. A nil `atlas` attaches nothing but keeps the icon's space.
+local function attachEntryIcon(button, atlas, offset)
+  if atlas then
+    local icon = button:AttachTexture()
+    icon:SetAtlas(atlas)
+    icon:SetSize(ICON_SIZE, ICON_SIZE)
+    icon:SetPoint("LEFT", button.leftTexture1, "RIGHT", offset, 0)
+  end
+  return offset + ICON_SIZE + ICON_GAP
+end
+
 local function createDropdown(parent)
   local dropdown = CreateFrame("DropdownButton", nil, parent, "WowStyle1DropdownTemplate")
   dropdown:SetPoint("TOPLEFT", parent, "TOPLEFT", DROPDOWN_LEFT, -30)
@@ -484,22 +499,11 @@ local function createDropdown(parent)
         local label = button.fontString
         label:SetWordWrap(false)
         -- A Character without a Faction keeps empty space the logo's size, so the names line up.
-        local logo = factionLogo(data.faction)
-        if logo then
-          local factionIcon = button:AttachTexture()
-          factionIcon:SetAtlas(logo)
-          factionIcon:SetSize(ICON_SIZE, ICON_SIZE)
-          factionIcon:SetPoint("LEFT", button.leftTexture1, "RIGHT", 2, 0)
-        end
-        local iconWidth = 2 + ICON_SIZE + 4
+        local labelOffset = attachEntryIcon(button, factionLogo(data.faction), RADIO_ICON_GAP)
         if data.class then
-          local icon = button:AttachTexture()
-          icon:SetAtlas(GetClassAtlas(data.class))
-          icon:SetSize(ICON_SIZE, ICON_SIZE)
-          icon:SetPoint("LEFT", button.leftTexture1, "RIGHT", iconWidth, 0)
-          iconWidth = iconWidth + ICON_SIZE + 4
+          labelOffset = attachEntryIcon(button, GetClassAtlas(data.class), labelOffset)
         end
-        label:SetPoint("LEFT", button.leftTexture1, "RIGHT", iconWidth, 0)
+        label:SetPoint("LEFT", button.leftTexture1, "RIGHT", labelOffset, 0)
         local relative = button:AttachFontString()
         relative:SetPoint("RIGHT", -FORGET_BUTTON_SPACE, 0)
         relative:SetJustifyH("RIGHT")
@@ -518,8 +522,8 @@ local function createDropdown(parent)
           end)
         end
         local radioWidth = button.leftTexture1:GetWidth()
-        local width = radioWidth + iconWidth + label:GetUnboundedStringWidth() + 16 + relative:GetUnboundedStringWidth()
-          + FORGET_BUTTON_SPACE
+        local width = radioWidth + labelOffset + label:GetUnboundedStringWidth() + 16
+          + relative:GetUnboundedStringWidth() + FORGET_BUTTON_SPACE
         return width, 20
       end)
     end
