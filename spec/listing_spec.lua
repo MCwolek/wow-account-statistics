@@ -6,7 +6,6 @@ local function loadListing()
   local ns = addon.loadFile("Locale.lua", {})
   addon.loadFile("Values.lua", ns)
   addon.loadFile("Roster.lua", ns)
-  addon.loadFile("Characters.lua", ns)
   addon.loadFile("AccountStatistics.lua", ns)
   return addon.loadFile("Listing.lua", ns).Listing
 end

@@ -3,7 +3,7 @@ local addon = require("addon")
 local function loadWindowSession()
   local ns = {}
   for _, path in ipairs({
-    "Locale.lua", "Values.lua", "Characters.lua", "AccountStatistics.lua", "CategoryTree.lua", "ListState.lua",
+    "Locale.lua", "Values.lua", "Roster.lua", "AccountStatistics.lua", "CategoryTree.lua", "ListState.lua",
     "RowLayout.lua", "Rows.lua", "WindowSession.lua",
   }) do
     addon.loadFile(path, ns)
