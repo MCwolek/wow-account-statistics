@@ -25,9 +25,10 @@ local enUS = {
   HOURS_AGO = "%d h ago",
   -- Tooltip of a Character in the window's dropdown; %s is the exact date and time.
   LAST_SYNC = "Last sync: %s",
-  -- The Minimap button tooltip's line under the add-on's name: the mouse action, then what it does.
+  -- The Minimap button tooltip's line under the add-on's name: the mouse action, then what it does; %s is the add-on's
+  -- name.
   MINIMAP_BUTTON_LEFT_CLICK = "Left Click:",
-  MINIMAP_BUTTON_LEFT_CLICK_ACTION = "Open Account Statistics",
+  MINIMAP_BUTTON_LEFT_CLICK_ACTION = "Open %s",
   -- Chat confirmations of /stats minimap; %s is the add-on's name.
   MINIMAP_BUTTON_HIDDEN = "%s: Minimap button hidden. /stats minimap shows it again.",
   MINIMAP_BUTTON_SHOWN = "%s: Minimap button shown. /stats minimap hides it.",
@@ -71,7 +72,7 @@ local deDE = {
   HOURS_AGO = "vor %d Std.",
   LAST_SYNC = "Zuletzt synchronisiert: %s",
   MINIMAP_BUTTON_LEFT_CLICK = "Linksklick:",
-  MINIMAP_BUTTON_LEFT_CLICK_ACTION = "Account Statistics öffnen",
+  MINIMAP_BUTTON_LEFT_CLICK_ACTION = "%s öffnen",
   MINIMAP_BUTTON_HIDDEN = "%s: Minikartensymbol ausgeblendet. /stats minimap zeigt es wieder an.",
   MINIMAP_BUTTON_SHOWN = "%s: Minikartensymbol eingeblendet. /stats minimap blendet es aus.",
   MINUTES_AGO = "vor %d Min.",

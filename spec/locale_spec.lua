@@ -150,6 +150,17 @@ describe("Locale tables", function()
     end
   end)
 
+  it("spell out the add-on's name only in its title, so a rename touches one string", function()
+    local addonName = tables.enUS.ADDON_TITLE
+    for locale, strings in pairs(tables) do
+      for key, text in pairs(strings) do
+        if key ~= "ADDON_TITLE" then
+          assert.is_nil(text:find(addonName, 1, true), locale .. " " .. key)
+        end
+      end
+    end
+  end)
+
   describe("German", function()
     -- Keys German leaves to English: the add-on's name stays "Account Statistics" in every language.
     local LEFT_IN_ENGLISH = { ADDON_TITLE = true }

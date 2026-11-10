@@ -73,8 +73,8 @@ local function showTooltip(self)
   local noWrap = false
   GameTooltip_AddColoredDoubleLine(GameTooltip, L.ADDON_TITLE, GameAPI.addOnVersion(), NORMAL_FONT_COLOR,
     GREEN_FONT_COLOR, noWrap)
-  GameTooltip_AddNormalLine(GameTooltip,
-    LIGHTGRAY_FONT_COLOR:WrapTextInColorCode(L.MINIMAP_BUTTON_LEFT_CLICK) .. " " .. L.MINIMAP_BUTTON_LEFT_CLICK_ACTION)
+  GameTooltip_AddNormalLine(GameTooltip, LIGHTGRAY_FONT_COLOR:WrapTextInColorCode(L.MINIMAP_BUTTON_LEFT_CLICK) .. " "
+    .. string.format(L.MINIMAP_BUTTON_LEFT_CLICK_ACTION, L.ADDON_TITLE))
   GameTooltip:Show()
 end
 
