@@ -1,7 +1,8 @@
 -- Thin adapter: the Minimap button, which opens or closes the Statistics window. Where it sits and whether it is shown
 -- come from MinimapButtonSettings, saved in ForeverAccountStatsDB.minimapButton.
 local _, ns = ...
-local L, Window, MinimapButtonSettings, MinimapRing = ns.L, ns.Window, ns.MinimapButtonSettings, ns.MinimapRing
+local L, GameAPI, Window = ns.L, ns.GameAPI, ns.Window
+local MinimapButtonSettings, MinimapRing = ns.MinimapButtonSettings, ns.MinimapRing
 
 local MinimapButton = {}
 ns.MinimapButton = MinimapButton
@@ -61,10 +62,15 @@ local function stopDrag(self)
   placeAtSavedAngle()
 end
 
+-- The add-on's name in gold with its version in green on the right, then the left click in grey and what it does in
+-- gold, as other add-ons' Minimap buttons show theirs.
 local function showTooltip(self)
   GameTooltip:SetOwner(self, "ANCHOR_LEFT")
-  GameTooltip_SetTitle(GameTooltip, L.ADDON_TITLE)
-  GameTooltip_AddInstructionLine(GameTooltip, L.MINIMAP_BUTTON_HINT)
+  local noWrap = false
+  GameTooltip_AddColoredDoubleLine(GameTooltip, L.ADDON_TITLE, GameAPI.addOnVersion(), NORMAL_FONT_COLOR,
+    GREEN_FONT_COLOR, noWrap)
+  GameTooltip_AddNormalLine(GameTooltip,
+    LIGHTGRAY_FONT_COLOR:WrapTextInColorCode(L.MINIMAP_BUTTON_LEFT_CLICK) .. " " .. L.MINIMAP_BUTTON_LEFT_CLICK_ACTION)
   GameTooltip:Show()
 end
 

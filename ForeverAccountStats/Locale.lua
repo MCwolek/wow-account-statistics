@@ -22,8 +22,9 @@ ns.L = {
   HOURS_AGO = "%d h ago",
   -- Tooltip of a Character in the window's dropdown; %s is the exact date and time.
   LAST_SYNC = "Last sync: %s",
-  -- Second line of the Minimap button's tooltip, under the add-on's name.
-  MINIMAP_BUTTON_HINT = "Click to open or close the Statistics window. Drag to move.",
+  -- The Minimap button tooltip's line under the add-on's name: the mouse action, then what it does.
+  MINIMAP_BUTTON_LEFT_CLICK = "Left Click:",
+  MINIMAP_BUTTON_LEFT_CLICK_ACTION = "Open Account Statistics",
   -- Chat confirmations of /stats minimap; %s is the add-on's name.
   MINIMAP_BUTTON_HIDDEN = "%s: Minimap button hidden. /stats minimap shows it again.",
   MINIMAP_BUTTON_SHOWN = "%s: Minimap button shown. /stats minimap hides it.",
