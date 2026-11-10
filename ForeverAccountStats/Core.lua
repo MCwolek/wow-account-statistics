@@ -42,7 +42,7 @@ SlashCmdList.FOREVERACCOUNTSTATS = function(message)
   end
   local lines
   if command.action == "minimap" then
-    ForeverAccountStatsDB.minimapButton = MinimapButtonSettings.shownToggled(ForeverAccountStatsDB.minimapButton)
+    ForeverAccountStatsDB.minimapButton = MinimapButtonSettings.withShownToggled(ForeverAccountStatsDB.minimapButton)
     MinimapButton.update()
     local confirmation = MinimapButtonSettings.isShown(ForeverAccountStatsDB.minimapButton)
       and ns.L.MINIMAP_BUTTON_SHOWN or ns.L.MINIMAP_BUTTON_HIDDEN

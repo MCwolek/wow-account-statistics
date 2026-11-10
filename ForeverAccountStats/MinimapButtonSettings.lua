@@ -19,7 +19,7 @@ function MinimapButtonSettings.isShown(saved)
 end
 
 -- The settings to save once /stats minimap hides a shown button or shows a hidden one.
-function MinimapButtonSettings.shownToggled(saved)
+function MinimapButtonSettings.withShownToggled(saved)
   local settings = copy(saved)
   settings.hidden = MinimapButtonSettings.isShown(saved) or nil
   return settings
