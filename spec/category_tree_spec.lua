@@ -83,53 +83,6 @@ describe("CategoryTree.build", function()
   end)
 end)
 
-describe("CategoryTree.visibleRows", function()
-  local CategoryTree = loadCategoryTree()
-
-  local tree = CategoryTree.build({
-    { id = 130, name = "Character", parentID = -1 },
-    { id = 131, name = "Wealth", parentID = 130 },
-    { id = 141, name = "Combat", parentID = -1 },
-  }, {
-    [130] = { { id = 60, name = "Total deaths" } },
-    [131] = { { id = 328, name = "Total gold acquired" } },
-    [141] = { { id = 193, name = "Largest hit dealt" } },
-  })
-
-  it("shows only the root Categories, collapsed, when nothing is expanded", function()
-    assert.are.same({
-      { kind = "category", id = 130, name = "Character", depth = 0, expanded = false },
-      { kind = "category", id = 141, name = "Combat", depth = 0, expanded = false },
-    }, CategoryTree.visibleRows(tree, {}))
-  end)
-
-  it("shows an expanded Category's own Statistics, then its child Categories, one level deeper", function()
-    assert.are.same({
-      { kind = "category", id = 130, name = "Character", depth = 0, expanded = true },
-      { kind = "statistic", id = 60, name = "Total deaths", depth = 1 },
-      { kind = "category", id = 131, name = "Wealth", depth = 1, expanded = false },
-      { kind = "category", id = 141, name = "Combat", depth = 0, expanded = false },
-    }, CategoryTree.visibleRows(tree, { [130] = true }))
-  end)
-
-  it("hides an expanded child Category while its parent is collapsed, and shows it again with the parent", function()
-    local expanded = { [131] = true }
-    assert.are.same({
-      { kind = "category", id = 130, name = "Character", depth = 0, expanded = false },
-      { kind = "category", id = 141, name = "Combat", depth = 0, expanded = false },
-    }, CategoryTree.visibleRows(tree, expanded))
-
-    expanded[130] = true
-    assert.are.same({
-      { kind = "category", id = 130, name = "Character", depth = 0, expanded = true },
-      { kind = "statistic", id = 60, name = "Total deaths", depth = 1 },
-      { kind = "category", id = 131, name = "Wealth", depth = 1, expanded = true },
-      { kind = "statistic", id = 328, name = "Total gold acquired", depth = 2 },
-      { kind = "category", id = 141, name = "Combat", depth = 0, expanded = false },
-    }, CategoryTree.visibleRows(tree, expanded))
-  end)
-end)
-
 describe("CategoryTree.searchResults", function()
   local CategoryTree = loadCategoryTree()
 
@@ -203,46 +156,5 @@ describe("CategoryTree.searchResults", function()
     local before = copy(tree)
     CategoryTree.searchResults(tree, "death")
     assert.are.same(before, tree)
-  end)
-end)
-
-describe("CategoryTree.allExpanded", function()
-  local CategoryTree = loadCategoryTree()
-
-  it("expands every Category of the tree, so search results show with their Category path", function()
-    local tree = CategoryTree.build({
-      { id = 130, name = "Character", parentID = -1 },
-      { id = 131, name = "Wealth", parentID = 130 },
-      { id = 141, name = "Combat", parentID = -1 },
-    }, {
-      [130] = { { id = 60, name = "Total deaths" } },
-      [131] = { { id = 328, name = "Total gold acquired" } },
-      [141] = { { id = 193, name = "Largest hit dealt" } },
-    })
-    local results = CategoryTree.searchResults(tree, "gold")
-
-    assert.are.same({
-      { kind = "category", id = 130, name = "Character", depth = 0, expanded = true },
-      { kind = "category", id = 131, name = "Wealth", depth = 1, expanded = true },
-      { kind = "statistic", id = 328, name = "Total gold acquired", depth = 2 },
-    }, CategoryTree.visibleRows(results, CategoryTree.allExpanded(results)))
-  end)
-end)
-
-describe("CategoryTree.toggled", function()
-  local CategoryTree = loadCategoryTree()
-
-  it("expands a collapsed Category and keeps the others as they are", function()
-    assert.are.same({ [130] = true, [131] = true }, CategoryTree.toggled({ [131] = true }, 130))
-  end)
-
-  it("collapses an expanded Category", function()
-    assert.are.same({ [131] = true }, CategoryTree.toggled({ [130] = true, [131] = true }, 130))
-  end)
-
-  it("leaves the set it was given unchanged", function()
-    local expanded = { [131] = true }
-    CategoryTree.toggled(expanded, 130)
-    assert.are.same({ [131] = true }, expanded)
   end)
 end)

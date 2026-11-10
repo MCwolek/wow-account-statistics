@@ -11,7 +11,7 @@ ns.RowLayout = RowLayout
 local HEIGHTS = { category = 26, statistic = 24, nestedCategory = 22 }
 local INDENT = 20
 
--- How the list lays out `row`, one of CategoryTree.visibleRows: { look, height, indent }. The look is "category" for
+-- How the list lays out `row`, one of ListState.visibleRows: { look, height, indent }. The look is "category" for
 -- a top-level Category, on its bar with the +/- on the right, "nestedCategory" for one inside another, with the
 -- open/closed icon on the left, or "statistic". Each depth indents the row by 20.
 function RowLayout.of(row)
