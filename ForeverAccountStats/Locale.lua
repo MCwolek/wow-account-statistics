@@ -1,7 +1,10 @@
--- All user-facing text lives here, in English. Translations are a later feature.
+-- All user-facing text lives here: one table per locale, keyed like GetLocale().
 local _, ns = ...
 
-ns.L = {
+local Locale = {}
+ns.Locale = Locale
+
+local enUS = {
   ACCOUNT_TOTAL_COLUMN = "Account Total",
   ACCOUNT_TOTAL_LINE = "  Account Total: %s",
   ADDON_TITLE = "Forever Account Stats",
@@ -49,3 +52,22 @@ ns.L = {
   USAGE = "%s: /stats opens the Statistics window; /stats list lists Tracked Characters; "
     .. "/stats dump <Statistic ID> shows one Statistic for each; /stats minimap hides or shows the Minimap button.",
 }
+
+Locale.tables = {
+  enUS = enUS,
+}
+
+-- The strings for a locale (a GetLocale() value), out of tables keyed like it:
+-- that locale's own text, and English for every key its table lacks.
+function Locale.pick(tables, locale)
+  local strings = {}
+  for key, text in pairs(tables.enUS) do
+    strings[key] = text
+  end
+  for key, text in pairs(tables[locale] or {}) do
+    strings[key] = text
+  end
+  return strings
+end
+
+ns.L = Locale.pick(Locale.tables, "enUS")
