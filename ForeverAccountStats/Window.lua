@@ -28,6 +28,10 @@ local DROPDOWN_LEFT = 16
 local SEARCH_GAP = 14
 local SEARCH_WIDTH = WIDTH - DROPDOWN_LEFT - DROPDOWN_WIDTH - SEARCH_GAP - 20
 local ICON_SIZE = 16
+-- Room at the right end of every dropdown entry for the X that Forgets its Character, so the Last Synced times line
+-- up whether an entry has one or not.
+local FORGET_BUTTON_SPACE = 16 + 4
+local FORGET_DIALOG = "FOREVER_ACCOUNT_STATS_FORGET"
 -- The default Statistics panel re-reads on every CRITERIA_UPDATE; that event comes in bursts, so wait a little.
 local REREAD_DELAY = 0.5
 
@@ -97,6 +101,32 @@ local function showBreakdown(data)
     GameTooltip:AddLine(L.BREAKDOWN_MORE:format(breakdown.more), GRAY_FONT_COLOR:GetRGB())
   end
   return true
+end
+
+-- Forgets the Character `guid` once its confirmation dialog is accepted. When it was the one chosen in the dropdown,
+-- the window falls back to the logged-in Character (see Characters.selectedEntry).
+local function forget(guid)
+  ForeverAccountStatsDB = Sync.forget(ForeverAccountStatsDB, guid, GameAPI.playerGUID())
+  if frame:IsShown() then
+    redraw(true)
+    frame.Dropdown:GenerateMenu()
+  end
+end
+
+local function defineForgetDialog()
+  StaticPopupDialogs[FORGET_DIALOG] = {
+    text = L.FORGET_CONFIRM,
+    button1 = L.FORGET_ACCEPT,
+    button2 = L.FORGET_CANCEL,
+    -- `data` is the GUID given to StaticPopup_Show. Returns nothing, so the dialog closes.
+    OnAccept = function(_, data)
+      forget(data)
+    end,
+    showAlert = true,
+    timeout = 0,
+    whileDead = true,
+    hideOnEscape = true,
+  }
 end
 
 local function scheduleReread()
@@ -280,7 +310,7 @@ local function createDropdown(parent)
       -- The class icon is its own texture between the radio button and the label, and the label keeps the width
       -- the radio sized it to: an icon inside the label's text, or a label stretched to the right-hand text, made
       -- the label wrap onto two lines and cut the name short.
-      radio:AddInitializer(function(button, description)
+      radio:AddInitializer(function(button, description, menu)
         local data = description:GetData()
         local label = button.fontString
         label:SetWordWrap(false)
@@ -294,12 +324,24 @@ local function createDropdown(parent)
           iconWidth = 2 + ICON_SIZE + 4
         end
         local relative = button:AttachFontString()
-        relative:SetPoint("RIGHT")
+        relative:SetPoint("RIGHT", -FORGET_BUTTON_SPACE, 0)
         relative:SetJustifyH("RIGHT")
         relative:SetFontObject("GameFontDisableSmall")
         relative:SetText(data.relative)
+        -- Every Character but the logged-in one can be Forgotten through an X shown while its entry is hovered, as
+        -- the Edit Mode layout dropdown deletes a layout. Clicking it does not choose the Character.
+        if not data.isCurrent then
+          local forgetButton = MenuTemplates.AttachAutoHideCancelButton(button)
+          MenuTemplates.SetUtilityButtonTooltipText(forgetButton, L.FORGET_TOOLTIP)
+          MenuTemplates.SetUtilityButtonAnchor(forgetButton, MenuVariants.GearButtonAnchor, button)
+          MenuTemplates.SetUtilityButtonClickHandler(forgetButton, function()
+            menu:Close()
+            StaticPopup_Show(FORGET_DIALOG, data.label, nil, data.guid)
+          end)
+        end
         local radioWidth = button.leftTexture1:GetWidth()
         local width = radioWidth + iconWidth + label:GetUnboundedStringWidth() + 16 + relative:GetUnboundedStringWidth()
+          + FORGET_BUTTON_SPACE
         return width, 20
       end)
     end
@@ -365,6 +407,7 @@ local function create()
   frame.ScrollBox = createList(frame.Inset)
   frame.Dropdown = createDropdown(frame)
   frame.SearchBox = createSearchBox(frame, frame.Dropdown)
+  defineForgetDialog()
 
   frame:SetScript("OnShow", function(self)
     self:RegisterEvent("CRITERIA_UPDATE")

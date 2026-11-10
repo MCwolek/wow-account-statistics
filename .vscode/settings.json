@@ -28,6 +28,10 @@
         "ScrollBoxConstants",
         "GetClassAtlas",
         "GameTooltip_SetTitle",
-        "GameFontHighlight_NoShadow"
+        "GameFontHighlight_NoShadow",
+        "MenuTemplates",
+        "MenuVariants",
+        "StaticPopup_Show",
+        "StaticPopupDialogs"
     ]
 }

@@ -6,7 +6,7 @@ A World of Warcraft: Forever add-on that shows the in-game Statistics of all you
 
 ## How it works
 
-WoW only lets an add-on read the Statistics of the character you are logged in with. So each character saves a Snapshot of its Statistics when you log in, log out, or `/reload`, and the add-on combines those Snapshots. A character shows up after you have logged in with it once while the add-on is enabled. See [docs/adr/0001-snapshots-only.md](docs/adr/0001-snapshots-only.md) for why.
+WoW only lets an add-on read the Statistics of the character you are logged in with. So each character saves a Snapshot of its Statistics when you log in, log out, or `/reload`, and the add-on combines those Snapshots. A character shows up after you have logged in with it once while the add-on is enabled. To Forget one, for example after deleting it, hover it in the window's character dropdown and click its X; logging it in again tracks it anew. See [docs/adr/0001-snapshots-only.md](docs/adr/0001-snapshots-only.md) for why.
 
 Terms such as Snapshot, Tracked Character and Account Total are defined in [GLOSSARY.md](GLOSSARY.md).
 

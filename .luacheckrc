@@ -7,6 +7,7 @@ globals = {
   "ForeverAccountStatsDB",
   "SLASH_FOREVERACCOUNTSTATS1",
   "SlashCmdList",
+  "StaticPopupDialogs",
 }
 
 -- WoW API the add-on reads. Add entries as the code starts using them.
@@ -36,8 +37,11 @@ read_globals = {
   "GetStatistic",
   "GetStatisticsCategoryList",
   "GRAY_FONT_COLOR",
+  "MenuTemplates",
+  "MenuVariants",
   "ScrollBoxConstants",
   "ScrollUtil",
+  "StaticPopup_Show",
   "time",
   "UIParent",
   "UISpecialFrames",

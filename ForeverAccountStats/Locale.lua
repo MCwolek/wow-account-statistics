@@ -12,6 +12,13 @@ ns.L = {
   DAYS_AGO = "%d d ago",
   -- date() format of Last Synced's exact date and time; C89 strftime specifiers only.
   EXACT_DATE_TIME = "%Y-%m-%d %H:%M",
+  -- The confirmation dialog of Forget, opened by the X on a dropdown entry; %s is the Full Name with its Ruleset.
+  FORGET_CONFIRM = "Forget %s?\n\nIts Statistics will no longer count in the Account Totals. "
+    .. "Logging it in again tracks it anew.",
+  FORGET_ACCEPT = "Forget",
+  FORGET_CANCEL = "Cancel",
+  -- Tooltip of the X on a dropdown entry.
+  FORGET_TOOLTIP = "Forget this Character",
   HOURS_AGO = "%d h ago",
   -- Tooltip of a Character in the window's dropdown; %s is the exact date and time.
   LAST_SYNC = "Last sync: %s",
