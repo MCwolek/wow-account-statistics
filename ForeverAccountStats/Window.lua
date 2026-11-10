@@ -38,6 +38,10 @@ local FACTION_LOGO = "questlog-questtypeicon-%s"
 -- tooltip both show it fully opaque, so the Faction logos stand out against it.
 local MENU_BACKGROUND = "common-dropdown-bg"
 local TOOLTIP_NAME = "ForeverAccountStatsTooltip"
+-- Room in the Breakdown under its title and below its last line, so the Faction logos and class icons, taller than the
+-- text, do not touch the title or the tooltip's bottom edge.
+local BREAKDOWN_TITLE_GAP = 4
+local BREAKDOWN_BOTTOM_PADDING = 4
 -- Empty space the size of the Faction logo or the class icon, in place of a missing one.
 local ICON_SPACE = "|TInterface\\Common\\spacer:" .. ICON_SIZE .. ":" .. ICON_SIZE .. "|t"
 -- Room at the right end of every dropdown entry for the X that Forgets its Character, so the Last Synced times line
@@ -135,6 +139,8 @@ function OPAQUE_MENU_STYLE:Generate()
 end
 
 local ownTooltip
+-- The font of the empty line under the Breakdown's title, its size the gap that line leaves.
+local titleGapFont
 
 -- The window's own tooltip, on the dropdown menu's opaque background in place of a tooltip's see-through blue one.
 -- Being IsEmbedded keeps the game from bringing back that blue backdrop each time the tooltip is cleared.
@@ -144,6 +150,8 @@ local function windowTooltip()
     ownTooltip.IsEmbedded = true
     ownTooltip.NineSlice:Hide()
     placeMenuBackground(ownTooltip:CreateTexture(nil, "BACKGROUND"))
+    titleGapFont = CreateFont("ForeverAccountStatsTitleGapFont")
+    titleGapFont:SetFont(STANDARD_TEXT_FONT, BREAKDOWN_TITLE_GAP, "")
   end
   return ownTooltip
 end
@@ -158,12 +166,16 @@ local function showBreakdown(tip, data)
     return false
   end
   GameTooltip_SetTitle(tip, data.name)
+  -- A tooltip spaces its lines by itself, so a short empty line makes the gap under the title.
+  tip:AddLine(" ")
+  tip.TextLeft2:SetFontObject(titleGapFont)
   for _, line in ipairs(breakdown.lines) do
     tip:AddDoubleLine(breakdownLabel(line), line.value, 1, 1, 1, 1, 1, 1)
   end
   if breakdown.more > 0 then
     tip:AddLine(L.BREAKDOWN_MORE:format(breakdown.more), GRAY_FONT_COLOR:GetRGB())
   end
+  tip:SetPadding(0, BREAKDOWN_BOTTOM_PADDING)
   return true
 end
 
@@ -431,6 +443,7 @@ local function createRegions(row)
       tip:Show()
     elseif self.Name:IsTruncated() then
       tip:SetText(self.data.name, 1, 1, 1, 1, true)
+      tip:SetPadding(0, 0)
       tip:Show()
     else
       tip:Hide()
