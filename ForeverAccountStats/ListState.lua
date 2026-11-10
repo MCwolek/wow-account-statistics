@@ -48,13 +48,13 @@ end
 -- The list with the Category `categoryID` expanded when it was collapsed and collapsed when it was expanded.
 -- A search keeps the whole tree's expanded Categories for when it is cleared.
 function ListState.toggled(state, categoryID)
-  local function toggledView(view)
-    return { tree = view.tree, expanded = toggledCopy(view.expanded, categoryID) }
+  local function toggledTree(shown)
+    return { tree = shown.tree, expanded = toggledCopy(shown.expanded, categoryID) }
   end
   if state.search then
-    return { whole = state.whole, search = toggledView(state.search) }
+    return { whole = state.whole, search = toggledTree(state.search) }
   end
-  return { whole = toggledView(state.whole) }
+  return { whole = toggledTree(state.whole) }
 end
 
 -- The list for the search box's `text`: the search results of the text without the spaces around it, every Category
