@@ -58,14 +58,14 @@ local enUS = {
 -- arguments. The German client's own words where it has one; slash commands stay English. The add-on's names, which
 -- stay English too, and text with no words in it are left out and come from English.
 local deDE = {
-  ACCOUNT_TOTAL_COLUMN = "Account gesamt",
-  ACCOUNT_TOTAL_LINE = "  Account gesamt: %s",
+  ACCOUNT_TOTAL_COLUMN = "Account-Gesamtwert",
+  ACCOUNT_TOTAL_LINE = "  Account-Gesamtwert: %s",
   BREAKDOWN_MORE = "und %d weitere",
   CHARACTER_COLUMN = "Charakter",
   DAYS_AGO = "vor %d Tg.",
   EXACT_DATE_TIME = "%d.%m.%Y %H:%M",
-  FORGET_CONFIRM = "%s vergessen?\n\nSeine Statistiken zählen dann nicht mehr zu den Gesamtwerten des Accounts. "
-    .. "Erneutes Einloggen erfasst ihn wieder.",
+  FORGET_CONFIRM = "%s vergessen?\n\nDie Statistiken dieses Charakters zählen dann nicht mehr zu den "
+    .. "Account-Gesamtwerten. Nach erneutem Einloggen wird er wieder erfasst.",
   FORGET_ACCEPT = "Vergessen",
   FORGET_CANCEL = "Abbrechen",
   FORGET_TOOLTIP = "Diesen Charakter vergessen",
