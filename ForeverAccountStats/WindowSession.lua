@@ -80,20 +80,20 @@ function WindowSession.chosenCharacter(session, db, currentGUID)
   return currentGUID
 end
 
--- Every Tracked Character's values in `db`, the logged-in one's (`currentGUID`) its Live Values.
-local function accountStatistics(session, db, currentGUID)
-  return ns.AccountStatistics.new(db, currentGUID, session.liveValues)
+-- Every Tracked Character's values in `db` at the time `now`, the logged-in one's (`currentGUID`) its Live Values.
+local function accountStatistics(session, db, currentGUID, now)
+  return ns.AccountStatistics.new(db, currentGUID, now, session.liveValues)
 end
 
--- The rows the window shows (see Rows.build), from `db`, the SavedVariables, with `currentGUID` the logged-in
--- Character.
-function WindowSession.rows(session, db, currentGUID)
-  local statistics = accountStatistics(session, db, currentGUID)
+-- The rows the window shows (see Rows.build), from `db`, the SavedVariables, at the time `now`, with `currentGUID`
+-- the logged-in Character.
+function WindowSession.rows(session, db, currentGUID, now)
+  local statistics = accountStatistics(session, db, currentGUID, now)
   local chosen = WindowSession.chosenCharacter(session, db, currentGUID)
   return ns.Rows.build(ns.ListState.visibleRows(session.list), statistics, chosen)
 end
 
 -- The Breakdown of the Statistic `statisticID` (see AccountStatistics:breakdown), counting the Live Values.
-function WindowSession.breakdown(session, db, currentGUID, statisticID)
-  return accountStatistics(session, db, currentGUID):breakdown(statisticID)
+function WindowSession.breakdown(session, db, currentGUID, now, statisticID)
+  return accountStatistics(session, db, currentGUID, now):breakdown(statisticID)
 end

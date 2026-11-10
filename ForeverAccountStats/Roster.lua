@@ -37,16 +37,19 @@ end
 --   lastSynced: its Last Synced; `now` for the logged-in Character, which Synced on login, Syncs again on logout and
 --     whose values the Statistics window reads live
 --   relativeLastSynced: lastSynced relative to `now`, such as "5 d ago" or "now"
--- Without `now` the entries have no lastSynced nor relativeLastSynced: Statistic values need neither.
 function Roster.of(db, currentGUID, now)
   local roster = {}
   for guid, character in pairs(db.characters) do
-    local entry = { guid = guid, label = labelOf(character), class = character.class, isCurrent = guid == currentGUID }
-    if now then
-      entry.lastSynced = entry.isCurrent and now or character.lastSynced
-      entry.relativeLastSynced = relativeLastSynced(entry.lastSynced, now)
-    end
-    roster[#roster + 1] = entry
+    local isCurrent = guid == currentGUID
+    local lastSynced = isCurrent and now or character.lastSynced
+    roster[#roster + 1] = {
+      guid = guid,
+      label = labelOf(character),
+      class = character.class,
+      isCurrent = isCurrent,
+      lastSynced = lastSynced,
+      relativeLastSynced = relativeLastSynced(lastSynced, now),
+    }
   end
   table.sort(roster, function(a, b)
     return a.label < b.label

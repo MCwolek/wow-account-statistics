@@ -93,21 +93,6 @@ describe("Roster.of", function()
   end)
 end)
 
-describe("Roster.of without a time", function()
-  local Roster = loadRoster()
-
-  it("still labels and marks every Tracked Character, but gives no Last Synced", function()
-    local db = {
-      characters = {
-        ["Player-1-0000AAAA"] = { fullName = "Calgan Blackbeard", class = "WARRIOR", lastSynced = NOW },
-      },
-    }
-    assert.are.same({
-      { guid = "Player-1-0000AAAA", label = "Calgan Blackbeard", class = "WARRIOR", isCurrent = true },
-    }, Roster.of(db, "Player-1-0000AAAA"))
-  end)
-end)
-
 describe("a forgotten Character", function()
   local ns = addon.loadFile("Sync.lua", addon.loadFile("Values.lua", addon.loadFile("Locale.lua", {})))
   local Roster = addon.loadFile("Roster.lua", ns).Roster

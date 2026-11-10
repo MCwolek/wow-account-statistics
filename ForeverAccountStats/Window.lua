@@ -71,14 +71,15 @@ local function chosenCharacter()
 end
 
 local function redraw(keepScroll)
-  local rows = WindowSession.rows(session, ForeverAccountStatsDB, GameAPI.playerGUID())
+  local rows = WindowSession.rows(session, ForeverAccountStatsDB, GameAPI.playerGUID(), GameAPI.now())
   frame.ScrollBox:SetDataProvider(CreateDataProvider(rows), keepScroll and ScrollBoxConstants.RetainScrollPosition)
 end
 
 -- Fills GameTooltip with the Breakdown of the Statistic `data` under its full name: each Character class-coloured
 -- with its value on the right. False when the Statistic has no Account Total, so no Breakdown.
 local function showBreakdown(data)
-  local breakdown = WindowSession.breakdown(session, ForeverAccountStatsDB, GameAPI.playerGUID(), data.id)
+  local breakdown =
+    WindowSession.breakdown(session, ForeverAccountStatsDB, GameAPI.playerGUID(), GameAPI.now(), data.id)
   if not breakdown then
     return false
   end

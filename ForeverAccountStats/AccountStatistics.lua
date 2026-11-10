@@ -94,10 +94,11 @@ local function computeTotal(statisticID, valuesByGUID)
   return { kind = kind, amount = total }
 end
 
--- The Statistic values of every Tracked Character in `db`: its saved Snapshot, except that the logged-in Character
--- (`currentGUID`) counts with its Live Values (`liveValues`) when they are given. Without Live Values every Character
--- reads its saved Snapshot; /stats dump omits them. A Character without a Snapshot has no values.
-function AccountStatistics.new(db, currentGUID, liveValues)
+-- The Statistic values of every Tracked Character in `db` at the time `now`: its saved Snapshot, except that the
+-- logged-in Character (`currentGUID`) counts with its Live Values (`liveValues`) when they are given. Without Live
+-- Values every Character reads its saved Snapshot; /stats dump omits them. A Character without a Snapshot has no
+-- values.
+function AccountStatistics.new(db, currentGUID, now, liveValues)
   local valuesByGUID = {}
   for guid, character in pairs(db.characters) do
     if guid == currentGUID and liveValues then
@@ -106,7 +107,7 @@ function AccountStatistics.new(db, currentGUID, liveValues)
       valuesByGUID[guid] = character.snapshot or {}
     end
   end
-  return setmetatable({ db = db, valuesByGUID = valuesByGUID }, AccountStatistics)
+  return setmetatable({ roster = ns.Roster.of(db, currentGUID, now), valuesByGUID = valuesByGUID }, AccountStatistics)
 end
 
 -- Display string of the Tracked Character `guid`'s value of the Statistic (see Values.display): the game's own
@@ -130,7 +131,7 @@ end
 -- place in the Roster.
 local function characterEntries(self, statisticID)
   local entries = {}
-  for position, character in ipairs(ns.Roster.of(self.db)) do
+  for position, character in ipairs(self.roster) do
     local raw = self.valuesByGUID[character.guid][statisticID]
     entries[position] = {
       label = character.label,
