@@ -7,6 +7,11 @@ describe("ForeverAccountStats.toc", function()
     assert.are.equal("16001", metadata.Interface)
   end)
 
+  it("describes the add-on in German for a German client", function()
+    assert.is_string(metadata["Notes-deDE"])
+    assert.are_not.equal(metadata.Notes, metadata["Notes-deDE"])
+  end)
+
   it("lists only files that exist", function()
     assert.is_true(#files > 0)
     for _, path in ipairs(files) do
