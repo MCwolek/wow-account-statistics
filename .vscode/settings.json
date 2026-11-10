@@ -16,7 +16,6 @@
     ],
     "Lua.diagnostics.globals": [
         "SlashCmdList",
-        "ButtonFrameTemplate_HidePortrait",
         "ButtonFrameTemplate_HideButtonBar",
         "AchievementFrameStats",
         "GameTooltip_Hide",
@@ -32,6 +31,7 @@
         "MenuTemplates",
         "MenuVariants",
         "StaticPopup_Show",
-        "StaticPopupDialogs"
+        "StaticPopupDialogs",
+        "ButtonFrameTemplate_ShowPortrait"
     ]
 }
