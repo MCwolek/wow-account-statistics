@@ -96,7 +96,7 @@ end
 -- the window falls back to the logged-in Character (see WindowSession.chosenCharacter).
 local function forget(guid)
   ForeverAccountStatsDB = Sync.forget(ForeverAccountStatsDB, guid, GameAPI.playerGUID())
-  if frame:IsShown() then
+  if WindowSession.isOpen(session) then
     redraw(true)
     frame.Dropdown:GenerateMenu()
   end
