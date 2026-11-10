@@ -26,7 +26,7 @@ describe("Listing.lines", function()
 
   it("counts the Tracked Characters, then gives each one's Full Name, Ruleset and relative Last Synced", function()
     assert.are.same({
-      "Forever Account Stats: Tracked Characters (2)",
+      "Account Statistics: Tracked Characters (2)",
       "  Calgan Blackbeard (PvP) - now",
       "  Mira Stonehand (PvP) - 5 d ago",
     }, Listing.lines(db, "Player-1-0000AAAA", NOW))
@@ -54,7 +54,7 @@ describe("Listing.statisticLines", function()
 
   it("shows each Tracked Character's value as saved in its Snapshot, then the Account Total", function()
     assert.are.same({
-      "Forever Account Stats: Total deaths (60)",
+      "Account Statistics: Total deaths (60)",
       "  Arlen (PvE) - 12",
       "  Calgan Blackbeard (PvE) - --",
       "  Mira Stonehand (PvP) - 3",
@@ -64,7 +64,7 @@ describe("Listing.statisticLines", function()
 
   it("marks a Statistic missing from a Snapshot and sums money with coin icons", function()
     assert.are.same({
-      "Forever Account Stats: Total gold acquired (328)",
+      "Account Statistics: Total gold acquired (328)",
       "  Arlen (PvE) - ?",
       "  Calgan Blackbeard (PvE) - " .. coins.gold(1) .. " " .. coins.silver(64) .. " " .. coins.copper(39),
       "  Mira Stonehand (PvP) - " .. coins.silver(14) .. " " .. coins.copper(56),
@@ -78,7 +78,7 @@ describe("Listing.statisticLines", function()
   end)
 
   it("names a Statistic the game does not know as unknown", function()
-    assert.are.equal("Forever Account Stats: Unknown Statistic (99999)",
+    assert.are.equal("Account Statistics: Unknown Statistic (99999)",
       Listing.statisticLines(db, CURRENT, NOW, 99999, nil)[1])
   end)
 end)

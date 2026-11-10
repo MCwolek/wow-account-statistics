@@ -7,7 +7,7 @@ ns.Locale = Locale
 local enUS = {
   ACCOUNT_TOTAL_COLUMN = "Account Total",
   ACCOUNT_TOTAL_LINE = "  Account Total: %s",
-  ADDON_TITLE = "Forever Account Stats",
+  ADDON_TITLE = "Account Statistics",
   -- Last line of an Account Total's Breakdown tooltip, counting the Tracked Characters it does not list.
   BREAKDOWN_MORE = "and %d more",
   CHARACTER_COLUMN = "Character",

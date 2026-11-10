@@ -1,5 +1,5 @@
 ## Interface: 16001
-## Title: Forever Account Stats
+## Title: Account Statistics
 ## Notes: Statistics of every character on your account side by side, plus account totals.
 ## Author: MCwolek
 ## Version: 0.1.0-dev
