@@ -28,7 +28,6 @@
         "ScrollBoxConstants",
         "GetClassAtlas",
         "GameTooltip_SetTitle",
-        "GameFontHighlight_NoShadow",
-        "RANK"
+        "GameFontHighlight_NoShadow"
     ]
 }
