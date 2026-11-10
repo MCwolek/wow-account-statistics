@@ -52,3 +52,34 @@ function Listing.statisticLines(db, statisticID, statisticName)
   lines[#lines + 1] = string.format(L.ACCOUNT_TOTAL_LINE, ns.AccountTotals.display(statisticID, snapshots))
   return lines
 end
+
+-- Temporary probe for #7: chat lines for /stats probe. Each entry of the game's character list in game order, marked
+-- tracked or not by GUID, then the Tracked Characters whose GUID the list lacks.
+function Listing.probeLines(db, characterInfos, ownerListIndex)
+  local listed = {}
+  local lines = { string.format(L.PROBE_HEADER, L.ADDON_TITLE, #characterInfos, tostring(ownerListIndex)) }
+  for _, info in ipairs(characterInfos) do
+    local guid = info.playerGUID
+    if guid ~= nil then
+      listed[guid] = true
+    end
+    local tracked = guid ~= nil and db.characters[guid] ~= nil
+    lines[#lines + 1] = string.format(L.PROBE_ENTRY, tostring(info.characterName), tostring(info.classID),
+      tostring(info.error), tostring(guid), tracked and L.PROBE_TRACKED or L.PROBE_NOT_TRACKED)
+  end
+
+  local missing = {}
+  for guid, character in pairs(db.characters) do
+    if not listed[guid] then
+      missing[#missing + 1] = { name = Characters.displayName(character), guid = guid }
+    end
+  end
+  table.sort(missing, function(a, b)
+    return a.name < b.name
+  end)
+  lines[#lines + 1] = string.format(L.PROBE_MISSING_HEADER, #missing)
+  for _, entry in ipairs(missing) do
+    lines[#lines + 1] = string.format(L.PROBE_MISSING_LINE, entry.name, entry.guid)
+  end
+  return lines
+end

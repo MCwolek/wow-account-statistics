@@ -31,6 +31,16 @@ ns.L = {
   NO_ACCOUNT_TOTAL = "—",
   NOW = "now",
   -- Placeholder in the window's search box, which narrows the list to Statistics by name.
+  -- Temporary probe for #7 (/stats probe): the game's character list from C_Housing.RequestPlayerCharacterList.
+  PROBE_ENTRY = "  %s - class %s, error %s, %s - %s",
+  PROBE_FAILED = "%s: character list request failed: %s",
+  PROBE_HEADER = "%s: character list probe (%d entries, owner index %s)",
+  PROBE_MISSING_HEADER = "  Tracked Characters missing from the list (%d):",
+  PROBE_MISSING_LINE = "  %s - %s",
+  PROBE_NOT_TRACKED = "not tracked",
+  PROBE_NO_ANSWER = "%s: no PLAYER_CHARACTER_LIST_UPDATED within %d seconds.",
+  PROBE_REQUESTED = "%s: character list requested, waiting for PLAYER_CHARACTER_LIST_UPDATED...",
+  PROBE_TRACKED = "tracked",
   SEARCH_PLACEHOLDER = "Search Statistics",
   STATISTIC_COLUMN = "Statistic",
   STATISTIC_HEADER = "%s: %s (%d)",

@@ -5,8 +5,8 @@ local Command = {}
 ns.Command = Command
 
 -- What the /stats arguments ask for, ignoring case and extra spaces: { action = "toggle" } with none (the
--- Statistics window), { action = "list" }, { action = "dump", statisticID = n }, or { action = "usage" } for
--- anything else.
+-- Statistics window), { action = "list" }, { action = "dump", statisticID = n }, { action = "probe" } (temporary,
+-- see #7), or { action = "usage" } for anything else.
 function Command.parse(message)
   local words = {}
   for word in message:lower():gmatch("%S+") do
@@ -16,6 +16,8 @@ function Command.parse(message)
     return { action = "toggle" }
   elseif words[1] == "list" and #words == 1 then
     return { action = "list" }
+  elseif words[1] == "probe" and #words == 1 then
+    return { action = "probe" }
   end
   local statisticID = words[1] == "dump" and #words == 2 and tonumber(words[2]:match("^%d+$"))
   if statisticID then

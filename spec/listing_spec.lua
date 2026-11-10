@@ -91,3 +91,41 @@ describe("Listing.statisticLines", function()
     assert.are.equal("Forever Account Stats: Unknown Statistic (99999)", Listing.statisticLines(db, 99999, nil)[1])
   end)
 end)
+
+describe("Listing.probeLines", function()
+  local Listing = loadListing()
+
+  local db = {
+    characters = {
+      ["Player-1-0000AAAA"] = { fullName = "Calgan Blackbeard", ruleset = "PvP" },
+      ["Player-1-0000BBBB"] = { fullName = "Mira Stonehand", ruleset = "PvP" },
+      ["Player-2-0000CCCC"] = { fullName = "Arlen", ruleset = "PvE" },
+    },
+  }
+
+  it("lists each entry in game order, marks the tracked ones, then the Tracked Characters missing", function()
+    local characterInfos = {
+      { characterName = "Calgan", classID = 1, error = 0, playerGUID = "Player-1-0000AAAA" },
+      { characterName = "Newbie", classID = 8, error = 0, playerGUID = "Player-1-0000EEEE" },
+    }
+    assert.are.same({
+      "Forever Account Stats: character list probe (2 entries, owner index 0)",
+      "  Calgan - class 1, error 0, Player-1-0000AAAA - tracked",
+      "  Newbie - class 8, error 0, Player-1-0000EEEE - not tracked",
+      "  Tracked Characters missing from the list (2):",
+      "  Arlen (PvE) - Player-2-0000CCCC",
+      "  Mira Stonehand (PvP) - Player-1-0000BBBB",
+    }, Listing.probeLines(db, characterInfos, 0))
+  end)
+
+  it("shows a field the game leaves out as nil", function()
+    assert.are.same({
+      "Forever Account Stats: character list probe (1 entries, owner index nil)",
+      "  nil - class nil, error nil, nil - not tracked",
+      "  Tracked Characters missing from the list (3):",
+      "  Arlen (PvE) - Player-2-0000CCCC",
+      "  Calgan Blackbeard (PvP) - Player-1-0000AAAA",
+      "  Mira Stonehand (PvP) - Player-1-0000BBBB",
+    }, Listing.probeLines(db, { {} }, nil))
+  end)
+end)
