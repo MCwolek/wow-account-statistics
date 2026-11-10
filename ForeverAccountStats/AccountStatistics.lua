@@ -44,7 +44,7 @@ local PEAK_STATISTICS = {
 }
 
 -- Statistics without an Account Total, hand-picked by Statistic ID.
-local NO_ACCOUNT_TOTAL = {
+local STATISTICS_WITHOUT_ACCOUNT_TOTAL = {
   -- Average Statistics: each is a per-Character average per day, so a sum overstates (a new Character's first day
   -- counts in full) and a highest value means little.
   [95] = true, -- Average quests completed per day
@@ -64,16 +64,16 @@ local NO_ACCOUNT_TOTAL = {
 -- Statistic also reads "--"), so any number or money value decides it.
 local KIND_RANK = { never = 1, number = 2, money = 3 }
 
--- Account Total of the Statistic over every Tracked Character's values, as a parsed value (see Values.parse): the
--- sum, or the highest value for a Peak Statistic. "--" counts as 0; values without the Statistic are left out, and
--- the total is "missing" when none has it. nil when the Statistic has no Account Total: a Text or Average Statistic,
--- or any value is shaped like text.
-local function computeTotal(statisticID, allValues)
-  if NO_ACCOUNT_TOTAL[statisticID] then
+-- Account Total of the Statistic over every Tracked Character's values (`valuesByGUID`), as a parsed value (see
+-- Values.parse): the sum, or the highest value for a Peak Statistic. "--" counts as 0; values without the Statistic
+-- are left out, and the total is "missing" when none has it. nil when the Statistic has no Account Total: one of
+-- STATISTICS_WITHOUT_ACCOUNT_TOTAL, or any value is shaped like text.
+local function computeTotal(statisticID, valuesByGUID)
+  if STATISTICS_WITHOUT_ACCOUNT_TOTAL[statisticID] then
     return nil
   end
   local kind, total = nil, 0
-  for _, values in ipairs(allValues) do
+  for _, values in pairs(valuesByGUID) do
     local value = ns.Values.parse(values[statisticID])
     if value.kind == "text" then
       return nil -- a text value no hand-picked ID covers still has no total
@@ -94,39 +94,70 @@ local function computeTotal(statisticID, allValues)
   return { kind = kind, amount = total }
 end
 
--- The Statistic values of every Tracked Character in `db`: its saved Snapshot, or for the logged-in Character
--- (`currentGUID`) its Live Values (`liveValues`) when given. The Statistics window passes both. /stats dump passes
--- neither, so it shows every Character's saved Snapshot: it reports what the add-on has saved.
--- A Character without a Snapshot has no values.
+-- The Statistic values of every Tracked Character in `db`: its saved Snapshot, except that the logged-in Character
+-- (`currentGUID`) counts with its Live Values (`liveValues`) when they are given. Without Live Values every Character
+-- reads its saved Snapshot; /stats dump omits them. A Character without a Snapshot has no values.
 function AccountStatistics.new(db, currentGUID, liveValues)
-  local byGUID, all = {}, {}
+  local valuesByGUID = {}
   for guid, character in pairs(db.characters) do
-    local values
     if guid == currentGUID and liveValues then
-      values = liveValues
+      valuesByGUID[guid] = liveValues
     else
-      values = character.snapshot or {}
+      valuesByGUID[guid] = character.snapshot or {}
     end
-    byGUID[guid] = values
-    all[#all + 1] = values
   end
-  return setmetatable({ db = db, byGUID = byGUID, all = all }, AccountStatistics)
+  return setmetatable({ db = db, valuesByGUID = valuesByGUID }, AccountStatistics)
 end
 
 -- Display string of the Tracked Character `guid`'s value of the Statistic (see Values.display): the game's own
--- string, or MISSING_VALUE when its values lack the Statistic or `guid` is no Tracked Character.
+-- string, or L.MISSING_VALUE when its values lack the Statistic or `guid` is no Tracked Character.
 function AccountStatistics:value(guid, statisticID)
-  local values = guid and self.byGUID[guid] or {}
+  local values = guid and self.valuesByGUID[guid] or {}
   return ns.Values.display(values[statisticID])
 end
 
--- Display string of the Statistic's Account Total (see Values.format), or NO_ACCOUNT_TOTAL when it has none.
+-- Display string of the Statistic's Account Total (see Values.format), or L.NO_ACCOUNT_TOTAL when it has none.
 function AccountStatistics:accountTotal(statisticID)
-  local total = computeTotal(statisticID, self.all)
+  local total = computeTotal(statisticID, self.valuesByGUID)
   if total == nil then
     return ns.L.NO_ACCOUNT_TOTAL
   end
   return ns.Values.format(total)
+end
+
+-- Every Tracked Character's value of the Statistic, in no particular order: { label, class, value, parsed }, with
+-- `value` its display string and `parsed` the same value parsed (see Values.parse).
+local function characterEntries(self, statisticID)
+  local entries = {}
+  for guid, character in pairs(self.db.characters) do
+    local raw = self.valuesByGUID[guid][statisticID]
+    entries[#entries + 1] = {
+      label = ns.Characters.displayName(character),
+      class = character.class,
+      value = ns.Values.display(raw),
+      parsed = ns.Values.parse(raw),
+    }
+  end
+  return entries
+end
+
+-- The line a Character entry shows: { label, class, value }.
+local function lineOf(entry)
+  return { label = entry.label, class = entry.class, value = entry.value }
+end
+
+-- Every Tracked Character's value of the Statistic as { label, class, value }, by label: the Character's Full Name
+-- and Ruleset (see Characters.displayName), its class, and its value's display string (see value).
+function AccountStatistics:characterValues(statisticID)
+  local entries = characterEntries(self, statisticID)
+  table.sort(entries, function(a, b)
+    return a.label < b.label
+  end)
+  local lines = {}
+  for i, entry in ipairs(entries) do
+    lines[i] = lineOf(entry)
+  end
+  return lines
 end
 
 -- Sort order of the parsed value kinds in a Breakdown (see Values.parse): amounts first, then a Statistic that never
@@ -144,20 +175,11 @@ local BREAKDOWN_LINES = 5
 -- BREAKDOWN_LINES Tracked Characters, highest value first, "--" and then "?" last, equal values by name; `more` the
 -- count of the others. nil when the Statistic has no Account Total, or no Character's values have it.
 function AccountStatistics:breakdown(statisticID)
-  local total = computeTotal(statisticID, self.all)
+  local total = computeTotal(statisticID, self.valuesByGUID)
   if total == nil or total.kind == "missing" then
     return nil
   end
-  local entries = {}
-  for guid, character in pairs(self.db.characters) do
-    local raw = self.byGUID[guid][statisticID]
-    entries[#entries + 1] = {
-      label = ns.Characters.displayName(character),
-      class = character.class,
-      value = ns.Values.display(raw),
-      parsed = ns.Values.parse(raw),
-    }
-  end
+  local entries = characterEntries(self, statisticID)
   table.sort(entries, function(a, b)
     local orderA, orderB = BREAKDOWN_ORDER[a.parsed.kind], BREAKDOWN_ORDER[b.parsed.kind]
     if orderA ~= orderB then
@@ -169,8 +191,7 @@ function AccountStatistics:breakdown(statisticID)
   end)
   local lines = {}
   for i = 1, math.min(#entries, BREAKDOWN_LINES) do
-    local entry = entries[i]
-    lines[i] = { label = entry.label, class = entry.class, value = entry.value }
+    lines[i] = lineOf(entries[i])
   end
   return { lines = lines, more = #entries - #lines }
 end

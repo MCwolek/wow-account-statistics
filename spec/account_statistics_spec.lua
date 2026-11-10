@@ -28,15 +28,16 @@ describe("AccountStatistics:value", function()
     assert.are.equal("--", statistics:value(OTHER, 98))
   end)
 
-  it("reads the logged-in Character's live values in place of its saved Snapshot", function()
+  it("reads the logged-in Character's Live Values in place of its saved Snapshot", function()
     local statistics = AccountStatistics.new(db, CURRENT, { [60] = "5" })
     assert.are.equal("5", statistics:value(CURRENT, 60))
   end)
 
-  it("reads every Character's saved Snapshot when no Character is logged in, as /stats dump does", function()
-    local statistics = AccountStatistics.new(db)
-    assert.are.equal("2", statistics:value(CURRENT, 60))
-    assert.are.equal("3", statistics:value(OTHER, 60))
+  it("reads every Character's saved Snapshot when given no Live Values, as /stats dump does", function()
+    for _, statistics in ipairs({ AccountStatistics.new(db), AccountStatistics.new(db, CURRENT) }) do
+      assert.are.equal("2", statistics:value(CURRENT, 60))
+      assert.are.equal("3", statistics:value(OTHER, 60))
+    end
   end)
 
   it("marks a value missing from the Snapshot, or of a Character not tracked, with ?", function()
@@ -45,6 +46,25 @@ describe("AccountStatistics:value", function()
     assert.are.equal("?", statistics:value(NEW, 60))
     assert.are.equal("?", statistics:value("Player-1-0000FFFF", 60))
     assert.are.equal("?", statistics:value(nil, 60))
+  end)
+end)
+
+describe("AccountStatistics:characterValues", function()
+  local AccountStatistics = loadAccountStatistics()
+
+  it("lists every Tracked Character's value by name, with its Ruleset and class", function()
+    local db = {
+      characters = {
+        [CURRENT] = { fullName = "Mira Stonehand", ruleset = "PvP", class = "ROGUE", snapshot = { [60] = "2" } },
+        [OTHER] = { fullName = "Calgan Blackbeard", ruleset = "PvE", class = "MAGE", snapshot = { [60] = "--" } },
+        [NEW] = { fullName = "Arlen", class = "WARRIOR" },
+      },
+    }
+    assert.are.same({
+      { label = "Arlen", class = "WARRIOR", value = "?" },
+      { label = "Calgan Blackbeard (PvE)", class = "MAGE", value = "--" },
+      { label = "Mira Stonehand (PvP)", class = "ROGUE", value = "5" },
+    }, AccountStatistics.new(db, CURRENT, { [60] = "5" }):characterValues(60))
   end)
 end)
 
@@ -65,7 +85,7 @@ local keram = {
 describe("AccountStatistics:accountTotal", function()
   local AccountStatistics = loadAccountStatistics()
 
-  -- The Account Total of `statisticID` over one Tracked Character per Snapshot given, none of them logged in.
+  -- The Account Total of `statisticID` over one Tracked Character per Snapshot given, with no Live Values.
   local function total(statisticID, snapshots)
     local characters = {}
     for i, snapshot in ipairs(snapshots) do
@@ -194,15 +214,22 @@ describe("AccountStatistics:accountTotal", function()
     end
   end)
 
-  it("counts the logged-in Character with its live values in place of its saved Snapshot", function()
+  describe("with the logged-in Character", function()
     local db = {
       characters = {
         [CURRENT] = { fullName = "Calgan Blackbeard", snapshot = { [60] = "2" } },
         [OTHER] = { fullName = "Mira Stonehand", snapshot = { [60] = "3" } },
       },
     }
-    assert.are.equal("8", AccountStatistics.new(db, CURRENT, { [60] = "5" }):accountTotal(60))
-    assert.are.equal("5", AccountStatistics.new(db):accountTotal(60))
+
+    it("counts its Live Values in place of its saved Snapshot", function()
+      assert.are.equal("8", AccountStatistics.new(db, CURRENT, { [60] = "5" }):accountTotal(60))
+    end)
+
+    it("counts its saved Snapshot when given no Live Values, as /stats dump does", function()
+      assert.are.equal("5", AccountStatistics.new(db, CURRENT):accountTotal(60))
+      assert.are.equal("5", AccountStatistics.new(db):accountTotal(60))
+    end)
   end)
 end)
 
@@ -223,7 +250,7 @@ end)
 describe("AccountStatistics:breakdown", function()
   local AccountStatistics = loadAccountStatistics()
 
-  -- One Tracked Character per name, each with `snapshot` as its saved Snapshot, none of them logged in.
+  -- One Tracked Character per name, each with `snapshot` as its saved Snapshot, with no Live Values.
   local function statisticsOf(snapshots)
     local characters = {}
     for name, snapshot in pairs(snapshots) do
@@ -291,7 +318,7 @@ describe("AccountStatistics:breakdown", function()
     assert.is_nil(statisticsOf({ Ana = {}, Bron = { [60] = "3" } }):breakdown(926))
   end)
 
-  it("names each Character with its Ruleset and class, and reads the logged-in Character's live values", function()
+  it("names each Character with its Ruleset and class, and reads the logged-in Character's Live Values", function()
     local db = {
       characters = {
         [CURRENT] = { fullName = "Calgan Blackbeard", ruleset = "PvE", class = "MAGE", snapshot = { [60] = "2" } },
