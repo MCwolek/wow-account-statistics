@@ -64,8 +64,12 @@ A Statistic that is one Character's daily average (e.g. "Average quests complete
 _Avoid_: Rate, per-day stat
 
 **Statistics window**:
-The add-on's own window, opened with /stats or the button on the default UI's Statistics tab: every Statistic by Category, with the value of the Character chosen in its dropdown and the Account Total. Its search box narrows the list to the Statistics and Categories whose name matches.
+The add-on's own window, opened with /stats, the Minimap button or the button on the default UI's Statistics tab: every Statistic by Category, with the value of the Character chosen in its dropdown and the Account Total. Its search box narrows the list to the Statistics and Categories whose name matches.
 _Avoid_: Main window, frame, Statistics panel (that is the game's own)
+
+**Minimap button**:
+The add-on's round button on the edge of the Minimap, showing the Statistics window's icon: clicking it opens or closes the Statistics window, and dragging it moves it around the edge. Shown until hidden with /stats minimap, which also shows it again.
+_Avoid_: Minimap icon, launcher, LDB button
 
 **Window Session**:
 What the Statistics window remembers from opening to closing: the expanded Categories, the search, the Character chosen in its dropdown and the Live Values. Each open starts a new one, with every Category expanded, on the logged-in Character and with no search; closing forgets it.

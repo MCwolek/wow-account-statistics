@@ -1,0 +1,73 @@
+local addon = require("addon")
+
+describe("MinimapButtonSettings", function()
+  local MinimapButtonSettings = addon.loadFile("MinimapButtonSettings.lua", {}).MinimapButtonSettings
+
+  describe("shown", function()
+    it("is shown when nothing is saved yet", function()
+      assert.is_true(MinimapButtonSettings.isShown(nil))
+      assert.is_true(MinimapButtonSettings.isShown({}))
+    end)
+
+    it("hides a shown button and shows a hidden one", function()
+      local hidden = MinimapButtonSettings.shownToggled(nil)
+      assert.is_false(MinimapButtonSettings.isShown(hidden))
+      assert.is_true(MinimapButtonSettings.isShown(MinimapButtonSettings.shownToggled(hidden)))
+    end)
+  end)
+
+  describe("angle", function()
+    it("sits at the Minimap's lower left when no angle is saved yet", function()
+      assert.are.equal(225, MinimapButtonSettings.angle(nil))
+      assert.are.equal(225, MinimapButtonSettings.angle({ hidden = true }))
+      assert.are.equal(225, MinimapButtonSettings.angle({ angle = "north" }))
+    end)
+
+    it("restores the angle it was moved to, keeping it hidden or shown", function()
+      local moved = MinimapButtonSettings.moved(MinimapButtonSettings.shownToggled(nil), 90)
+      assert.are.equal(90, MinimapButtonSettings.angle(moved))
+      assert.is_false(MinimapButtonSettings.isShown(moved))
+    end)
+
+    it("keeps the angle it was moved to when hidden or shown", function()
+      local hidden = MinimapButtonSettings.shownToggled(MinimapButtonSettings.moved(nil, 10))
+      assert.are.equal(10, MinimapButtonSettings.angle(hidden))
+    end)
+
+    it("saves an angle within one turn", function()
+      assert.are.equal(40, MinimapButtonSettings.angle(MinimapButtonSettings.moved(nil, 400)))
+      assert.are.equal(270, MinimapButtonSettings.angle(MinimapButtonSettings.moved(nil, -90)))
+    end)
+  end)
+
+  describe("angleTowards", function()
+    it("is the angle of a point around the Minimap's centre", function()
+      assert.are.equal(0, MinimapButtonSettings.angleTowards(30, 0))
+      assert.are.equal(90, MinimapButtonSettings.angleTowards(0, 30))
+      assert.are.equal(180, MinimapButtonSettings.angleTowards(-30, 0))
+      assert.are.equal(270, MinimapButtonSettings.angleTowards(0, -30))
+      assert.are.equal(225, MinimapButtonSettings.angleTowards(-30, -30))
+    end)
+  end)
+
+  describe("offset", function()
+    local function assertOffset(expectedX, expectedY, angle)
+      local x, y = MinimapButtonSettings.offset(angle, 100)
+      assert.is_near(expectedX, x, 1e-9)
+      assert.is_near(expectedY, y, 1e-9)
+    end
+
+    it("puts the button on the circle around the Minimap's centre at its angle", function()
+      assertOffset(100, 0, 0)
+      assertOffset(0, 100, 90)
+      assertOffset(-100, 0, 180)
+      assertOffset(0, -100, 270)
+      assertOffset(-50 * math.sqrt(2), -50 * math.sqrt(2), 225)
+    end)
+
+    it("puts a dragged button where the cursor points", function()
+      local angle = MinimapButtonSettings.angleTowards(-3, 4)
+      assertOffset(-60, 80, angle)
+    end)
+  end)
+end)
