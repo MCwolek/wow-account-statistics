@@ -5,43 +5,43 @@ local gold, silver, copper = coins.gold, coins.silver, coins.copper
 local function loadAccountStatistics()
   local ns = addon.loadFile("Locale.lua", {})
   addon.loadFile("Values.lua", ns)
-  addon.loadFile("Characters.lua", ns)
+  addon.loadFile("Roster.lua", ns)
   return addon.loadFile("AccountStatistics.lua", ns).AccountStatistics
 end
 
 local CURRENT, OTHER, NEW = "Player-1-0000AAAA", "Player-1-0000BBBB", "Player-1-0000CCCC"
+local NOW = 1700000000
 
 describe("AccountStatistics:value", function()
   local AccountStatistics = loadAccountStatistics()
 
   local db = {
     characters = {
-      [CURRENT] = { fullName = "Calgan Blackbeard", snapshot = { [60] = "2" } },
-      [OTHER] = { fullName = "Mira Stonehand", snapshot = { [60] = "3", [98] = "--" } },
-      [NEW] = { fullName = "Arlen" },
+      [CURRENT] = { fullName = "Calgan Blackbeard", lastSynced = NOW, snapshot = { [60] = "2" } },
+      [OTHER] = { fullName = "Mira Stonehand", lastSynced = NOW, snapshot = { [60] = "3", [98] = "--" } },
+      [NEW] = { fullName = "Arlen", lastSynced = NOW },
     },
   }
 
   it("reads another Character's value from its saved Snapshot, as the game shows it", function()
-    local statistics = AccountStatistics.new(db, CURRENT, { [60] = "5" })
+    local statistics = AccountStatistics.new(db, CURRENT, NOW, { [60] = "5" })
     assert.are.equal("3", statistics:value(OTHER, 60))
     assert.are.equal("--", statistics:value(OTHER, 98))
   end)
 
   it("reads the logged-in Character's Live Values in place of its saved Snapshot", function()
-    local statistics = AccountStatistics.new(db, CURRENT, { [60] = "5" })
+    local statistics = AccountStatistics.new(db, CURRENT, NOW, { [60] = "5" })
     assert.are.equal("5", statistics:value(CURRENT, 60))
   end)
 
   it("reads every Character's saved Snapshot when given no Live Values, as /stats dump does", function()
-    for _, statistics in ipairs({ AccountStatistics.new(db), AccountStatistics.new(db, CURRENT) }) do
-      assert.are.equal("2", statistics:value(CURRENT, 60))
-      assert.are.equal("3", statistics:value(OTHER, 60))
-    end
+    local statistics = AccountStatistics.new(db, CURRENT, NOW)
+    assert.are.equal("2", statistics:value(CURRENT, 60))
+    assert.are.equal("3", statistics:value(OTHER, 60))
   end)
 
   it("marks a value missing from the Snapshot, or of a Character not tracked, with ?", function()
-    local statistics = AccountStatistics.new(db, CURRENT, { [60] = "5" })
+    local statistics = AccountStatistics.new(db, CURRENT, NOW, { [60] = "5" })
     assert.are.equal("?", statistics:value(OTHER, 1336))
     assert.are.equal("?", statistics:value(NEW, 60))
     assert.are.equal("?", statistics:value("Player-1-0000FFFF", 60))
@@ -52,19 +52,21 @@ end)
 describe("AccountStatistics:characterValues", function()
   local AccountStatistics = loadAccountStatistics()
 
-  it("lists every Tracked Character's value by name, with its Ruleset and class", function()
+  it("gives every Tracked Character's value with its Full Name, Ruleset and class, in Roster order", function()
     local db = {
       characters = {
-        [CURRENT] = { fullName = "Mira Stonehand", ruleset = "PvP", class = "ROGUE", snapshot = { [60] = "2" } },
-        [OTHER] = { fullName = "Calgan Blackbeard", ruleset = "PvE", class = "MAGE", snapshot = { [60] = "--" } },
-        [NEW] = { fullName = "Arlen", class = "WARRIOR" },
+        [CURRENT] = {
+          fullName = "Calgan Blackbeard", lastSynced = NOW, ruleset = "PvE", class = "MAGE", snapshot = { [60] = "2" },
+        },
+        [OTHER] = {
+          fullName = "Mira Stonehand", lastSynced = NOW, ruleset = "PvP", class = "ROGUE", snapshot = { [60] = "--" },
+        },
       },
     }
     assert.are.same({
-      { label = "Arlen", class = "WARRIOR", value = "?" },
-      { label = "Calgan Blackbeard (PvE)", class = "MAGE", value = "--" },
-      { label = "Mira Stonehand (PvP)", class = "ROGUE", value = "5" },
-    }, AccountStatistics.new(db, CURRENT, { [60] = "5" }):characterValues(60))
+      { label = "Calgan Blackbeard (PvE)", class = "MAGE", value = "5" },
+      { label = "Mira Stonehand (PvP)", class = "ROGUE", value = "--" },
+    }, AccountStatistics.new(db, CURRENT, NOW, { [60] = "5" }):characterValues(60))
   end)
 end)
 
@@ -89,9 +91,9 @@ describe("AccountStatistics:accountTotal", function()
   local function total(statisticID, snapshots)
     local characters = {}
     for i, snapshot in ipairs(snapshots) do
-      characters["Player-1-" .. i] = { fullName = "Character " .. i, snapshot = snapshot }
+      characters["Player-1-" .. i] = { fullName = "Character " .. i, lastSynced = NOW, snapshot = snapshot }
     end
-    return AccountStatistics.new({ characters = characters }):accountTotal(statisticID)
+    return AccountStatistics.new({ characters = characters }, CURRENT, NOW):accountTotal(statisticID)
   end
 
   it("sums a Statistic across Tracked Characters as plain digits", function()
@@ -217,33 +219,32 @@ describe("AccountStatistics:accountTotal", function()
   describe("with the logged-in Character", function()
     local db = {
       characters = {
-        [CURRENT] = { fullName = "Calgan Blackbeard", snapshot = { [60] = "2" } },
-        [OTHER] = { fullName = "Mira Stonehand", snapshot = { [60] = "3" } },
+        [CURRENT] = { fullName = "Calgan Blackbeard", lastSynced = NOW, snapshot = { [60] = "2" } },
+        [OTHER] = { fullName = "Mira Stonehand", lastSynced = NOW, snapshot = { [60] = "3" } },
       },
     }
 
     it("counts its Live Values in place of its saved Snapshot", function()
-      assert.are.equal("8", AccountStatistics.new(db, CURRENT, { [60] = "5" }):accountTotal(60))
+      assert.are.equal("8", AccountStatistics.new(db, CURRENT, NOW, { [60] = "5" }):accountTotal(60))
     end)
 
     it("counts its saved Snapshot when given no Live Values, as /stats dump does", function()
-      assert.are.equal("5", AccountStatistics.new(db, CURRENT):accountTotal(60))
-      assert.are.equal("5", AccountStatistics.new(db):accountTotal(60))
+      assert.are.equal("5", AccountStatistics.new(db, CURRENT, NOW):accountTotal(60))
     end)
   end)
 end)
 
 describe("a forgotten Character", function()
   local ns = addon.loadFile("Sync.lua", addon.loadFile("Values.lua", addon.loadFile("Locale.lua", {})))
-  addon.loadFile("Characters.lua", ns)
+  addon.loadFile("Roster.lua", ns)
   local AccountStatistics = addon.loadFile("AccountStatistics.lua", ns).AccountStatistics
   local Sync = ns.Sync
 
   it("no longer counts in the Account Totals", function()
-    local db = Sync.record(nil, { guid = CURRENT, fullName = "Calgan Blackbeard" }, { [60] = "250" }, 1700000000)
-    db = Sync.record(db, { guid = OTHER, fullName = "Mira Stonehand" }, { [60] = "3" }, 1700000000)
+    local db = Sync.record(nil, { guid = CURRENT, fullName = "Calgan Blackbeard" }, { [60] = "250" }, NOW)
+    db = Sync.record(db, { guid = OTHER, fullName = "Mira Stonehand" }, { [60] = "3" }, NOW)
     db = Sync.forget(db, OTHER, CURRENT)
-    assert.are.equal("250", AccountStatistics.new(db, CURRENT):accountTotal(60))
+    assert.are.equal("250", AccountStatistics.new(db, CURRENT, NOW):accountTotal(60))
   end)
 end)
 
@@ -254,9 +255,9 @@ describe("AccountStatistics:breakdown", function()
   local function statisticsOf(snapshots)
     local characters = {}
     for name, snapshot in pairs(snapshots) do
-      characters["Player-1-" .. name] = { fullName = name, class = "WARRIOR", snapshot = snapshot }
+      characters["Player-1-" .. name] = { fullName = name, lastSynced = NOW, class = "WARRIOR", snapshot = snapshot }
     end
-    return AccountStatistics.new({ characters = characters })
+    return AccountStatistics.new({ characters = characters }, CURRENT, NOW)
   end
 
   local function labelsAndValues(breakdown)
@@ -318,11 +319,15 @@ describe("AccountStatistics:breakdown", function()
     assert.is_nil(statisticsOf({ Ana = {}, Bron = { [60] = "3" } }):breakdown(926))
   end)
 
-  it("names each Character with its Ruleset and class, and reads the logged-in Character's Live Values", function()
+  it("names each Character by Full Name and Ruleset with its class, counting the Live Values", function()
     local db = {
       characters = {
-        [CURRENT] = { fullName = "Calgan Blackbeard", ruleset = "PvE", class = "MAGE", snapshot = { [60] = "2" } },
-        [OTHER] = { fullName = "Mira Stonehand", ruleset = "PvP", class = "ROGUE", snapshot = { [60] = "3" } },
+        [CURRENT] = {
+          fullName = "Calgan Blackbeard", lastSynced = NOW, ruleset = "PvE", class = "MAGE", snapshot = { [60] = "2" },
+        },
+        [OTHER] = {
+          fullName = "Mira Stonehand", lastSynced = NOW, ruleset = "PvP", class = "ROGUE", snapshot = { [60] = "3" },
+        },
       },
     }
     assert.are.same({
@@ -331,10 +336,10 @@ describe("AccountStatistics:breakdown", function()
         { label = "Mira Stonehand (PvP)", class = "ROGUE", value = "3" },
       },
       more = 0,
-    }, AccountStatistics.new(db, CURRENT, { [60] = "5" }):breakdown(60))
+    }, AccountStatistics.new(db, CURRENT, NOW, { [60] = "5" }):breakdown(60))
   end)
 
-  it("lists equal values by name", function()
+  it("lists equal values in Roster order", function()
     local statistics = statisticsOf({ Dara = { [60] = "4" }, Bron = { [60] = "4" }, Calgan = { [60] = "9" } })
     assert.are.same({ "Calgan 9", "Bron 4", "Dara 4" }, labelsAndValues(statistics:breakdown(60)))
   end)

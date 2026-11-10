@@ -1,10 +1,10 @@
 -- Thin adapter: the Statistics window and its button on the default Statistics tab. It forwards the window's actions
 -- to its Window Session (see WindowSession), draws what the pure modules (WindowSession, CategoryTree, RowLayout,
--- Characters, WindowPosition) compute and reads the game through GameAPI.
+-- Roster, CharacterDropdown, WindowPosition) compute and reads the game through GameAPI.
 local _, ns = ...
 local L, GameAPI, Sync = ns.L, ns.GameAPI, ns.Sync
 local CategoryTree, RowLayout, WindowSession = ns.CategoryTree, ns.RowLayout, ns.WindowSession
-local Characters, WindowPosition = ns.Characters, ns.WindowPosition
+local Roster, CharacterDropdown, WindowPosition = ns.Roster, ns.CharacterDropdown, ns.WindowPosition
 
 local Window = {}
 ns.Window = Window
@@ -42,7 +42,7 @@ local rereadPending = false
 local statisticsTabButton
 
 local function dropdownEntries()
-  return Characters.dropdownEntries(ForeverAccountStatsDB, GameAPI.playerGUID(), GameAPI.now())
+  return CharacterDropdown.entries(Roster.of(ForeverAccountStatsDB, GameAPI.playerGUID(), GameAPI.now()))
 end
 
 -- Full Name and Ruleset in the class colour; a class the game does not colour stays white.
@@ -71,14 +71,15 @@ local function chosenCharacter()
 end
 
 local function redraw(keepScroll)
-  local rows = WindowSession.rows(session, ForeverAccountStatsDB, GameAPI.playerGUID())
+  local rows = WindowSession.rows(session, ForeverAccountStatsDB, GameAPI.playerGUID(), GameAPI.now())
   frame.ScrollBox:SetDataProvider(CreateDataProvider(rows), keepScroll and ScrollBoxConstants.RetainScrollPosition)
 end
 
 -- Fills GameTooltip with the Breakdown of the Statistic `data` under its full name: each Character class-coloured
 -- with its value on the right. False when the Statistic has no Account Total, so no Breakdown.
 local function showBreakdown(data)
-  local breakdown = WindowSession.breakdown(session, ForeverAccountStatsDB, GameAPI.playerGUID(), data.id)
+  local breakdown =
+    WindowSession.breakdown(session, ForeverAccountStatsDB, GameAPI.playerGUID(), GameAPI.now(), data.id)
   if not breakdown then
     return false
   end
@@ -438,7 +439,7 @@ local function createDropdown(parent)
       end, entry)
       -- Hovering an entry shows its exact Last Synced; the menu already reads it relative to now.
       radio:SetTooltip(function(tooltip, description)
-        local text = Characters.lastSyncedTooltip(description:GetData(), GameAPI.now(), GameAPI.formatDate)
+        local text = CharacterDropdown.lastSyncedTooltip(description:GetData(), GameAPI.formatDate)
         GameTooltip_SetTitle(tooltip, text)
       end)
       -- The class icon is its own texture between the radio button and the label, and the label keeps the width
@@ -461,7 +462,7 @@ local function createDropdown(parent)
         relative:SetPoint("RIGHT", -FORGET_BUTTON_SPACE, 0)
         relative:SetJustifyH("RIGHT")
         relative:SetFontObject("GameFontDisableSmall")
-        relative:SetText(data.relative)
+        relative:SetText(data.relativeLastSynced)
         -- Every Character but the logged-in one can be Forgotten through an X shown while its entry is hovered, as
         -- the Edit Mode layout dropdown deletes a layout. Clicking it does not choose the Character.
         if not data.isCurrent then

@@ -3,7 +3,7 @@ local addon = require("addon")
 local function loadWindowSession()
   local ns = {}
   for _, path in ipairs({
-    "Locale.lua", "Values.lua", "Characters.lua", "AccountStatistics.lua", "CategoryTree.lua", "ListState.lua",
+    "Locale.lua", "Values.lua", "Roster.lua", "AccountStatistics.lua", "CategoryTree.lua", "ListState.lua",
     "RowLayout.lua", "Rows.lua", "WindowSession.lua",
   }) do
     addon.loadFile(path, ns)
@@ -12,6 +12,7 @@ local function loadWindowSession()
 end
 
 local CURRENT, OTHER = "Player-1-0000AAAA", "Player-1-0000BBBB"
+local NOW = 1700000000
 
 -- The rows the window shows, one line each: a Category with its +/- ("-" expanded), a Statistic with the chosen
 -- Character's value and the Account Total.
@@ -42,8 +43,10 @@ describe("WindowSession", function()
 
   local db = {
     characters = {
-      [CURRENT] = { fullName = "Calgan Blackbeard", snapshot = { [60] = "2", [328] = "10", [193] = "40" } },
-      [OTHER] = { fullName = "Mira Stonehand", snapshot = { [60] = "3", [328] = "5", [193] = "90" } },
+      [CURRENT] = {
+        fullName = "Calgan Blackbeard", lastSynced = NOW, snapshot = { [60] = "2", [328] = "10", [193] = "40" },
+      },
+      [OTHER] = { fullName = "Mira Stonehand", lastSynced = NOW, snapshot = { [60] = "3", [328] = "5", [193] = "90" } },
     },
   }
   local liveValues = { [60] = "4", [328] = "12", [193] = "50" }
@@ -61,7 +64,7 @@ describe("WindowSession", function()
       "Total gold acquired: 12 / 17",
       "- Combat",
       "Largest hit dealt: 50 / 90",
-    }, shown(WindowSession.rows(session, db, CURRENT)))
+    }, shown(WindowSession.rows(session, db, CURRENT, NOW)))
     assert.are.equal(CURRENT, WindowSession.chosenCharacter(session, db, CURRENT))
   end)
 
@@ -74,7 +77,7 @@ describe("WindowSession", function()
       "Total gold acquired: 5 / 17",
       "- Combat",
       "Largest hit dealt: 90 / 90",
-    }, shown(WindowSession.rows(session, db, CURRENT)))
+    }, shown(WindowSession.rows(session, db, CURRENT, NOW)))
     assert.are.equal(OTHER, WindowSession.chosenCharacter(session, db, CURRENT))
   end)
 
@@ -88,7 +91,7 @@ describe("WindowSession", function()
       "Total gold acquired: 12 / 12",
       "- Combat",
       "Largest hit dealt: 50 / 50",
-    }, shown(WindowSession.rows(session, forgotten, CURRENT)))
+    }, shown(WindowSession.rows(session, forgotten, CURRENT, NOW)))
     assert.are.equal(CURRENT, WindowSession.chosenCharacter(session, forgotten, CURRENT))
   end)
 
@@ -99,10 +102,10 @@ describe("WindowSession", function()
       "- Character",
       "- Wealth",
       "Total gold acquired: 12 / 17",
-    }, shown(WindowSession.rows(session, db, CURRENT)))
+    }, shown(WindowSession.rows(session, db, CURRENT, NOW)))
 
     session = WindowSession.categoryToggled(session, 130)
-    assert.are.same({ "+ Character" }, shown(WindowSession.rows(session, db, CURRENT)))
+    assert.are.same({ "+ Character" }, shown(WindowSession.rows(session, db, CURRENT, NOW)))
 
     session = WindowSession.searched(session, "")
     assert.are.same({
@@ -111,7 +114,7 @@ describe("WindowSession", function()
       "- Wealth",
       "Total gold acquired: 12 / 17",
       "+ Combat",
-    }, shown(WindowSession.rows(session, db, CURRENT)))
+    }, shown(WindowSession.rows(session, db, CURRENT, NOW)))
   end)
 
   it("shows the logged-in Character's Live Values read since opening", function()
@@ -121,7 +124,7 @@ describe("WindowSession", function()
       "+ Character",
       "- Combat",
       "Largest hit dealt: 75 / 90",
-    }, shown(WindowSession.rows(session, db, CURRENT)))
+    }, shown(WindowSession.rows(session, db, CURRENT, NOW)))
   end)
 
   it("forgets the expanded Categories, the chosen Character and the search on closing", function()
@@ -133,7 +136,8 @@ describe("WindowSession", function()
 
     session = WindowSession.opened(session, liveValues)
     assert.is_true(WindowSession.isOpen(session))
-    assert.are.same(shown(WindowSession.rows(opened(), db, CURRENT)), shown(WindowSession.rows(session, db, CURRENT)))
+    assert.are.same(shown(WindowSession.rows(opened(), db, CURRENT, NOW)),
+      shown(WindowSession.rows(session, db, CURRENT, NOW)))
     assert.are.equal(CURRENT, WindowSession.chosenCharacter(session, db, CURRENT))
   end)
 
@@ -149,6 +153,6 @@ describe("WindowSession", function()
         { label = "Mira Stonehand", value = "3" },
       },
       more = 0,
-    }, WindowSession.breakdown(opened(), db, CURRENT, 60))
+    }, WindowSession.breakdown(opened(), db, CURRENT, NOW, 60))
   end)
 end)

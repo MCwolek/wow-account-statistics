@@ -43,7 +43,8 @@ SlashCmdList.FOREVERACCOUNTSTATS = function(message)
     lines = Listing.lines(ForeverAccountStatsDB, GameAPI.playerGUID(), GameAPI.now())
   elseif command.action == "dump" then
     local name = GameAPI.statisticName(command.statisticID)
-    lines = Listing.statisticLines(ForeverAccountStatsDB, command.statisticID, name)
+    lines = Listing.statisticLines(
+      ForeverAccountStatsDB, GameAPI.playerGUID(), GameAPI.now(), command.statisticID, name)
   else
     lines = { string.format(ns.L.USAGE, ns.L.ADDON_TITLE) }
   end

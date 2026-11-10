@@ -29,6 +29,10 @@ _Avoid_: Realm, server
 **Tracked Character**:
 A Character that has been logged in at least once with the add-on enabled. Only Tracked Characters appear in the add-on.
 
+**Roster**:
+Every Tracked Character in order of Full Name and Ruleset, the logged-in one marked, each with its Last Synced ("now" for the logged-in Character). The Character dropdown, /stats list, /stats dump and the Breakdown all take their Characters from it.
+_Avoid_: Character list
+
 ### Statistics
 
 **Statistic**:

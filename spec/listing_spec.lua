@@ -5,12 +5,13 @@ local coins = require("coins")
 local function loadListing()
   local ns = addon.loadFile("Locale.lua", {})
   addon.loadFile("Values.lua", ns)
-  addon.loadFile("Characters.lua", ns)
+  addon.loadFile("Roster.lua", ns)
   addon.loadFile("AccountStatistics.lua", ns)
   return addon.loadFile("Listing.lua", ns).Listing
 end
 
-local MINUTE, HOUR, DAY = 60, 3600, 86400
+local HOUR, DAY = 3600, 86400
+local CURRENT = "Player-1-0000AAAA"
 local NOW = 1700000000
 
 describe("Listing.lines", function()
@@ -18,47 +19,36 @@ describe("Listing.lines", function()
 
   local db = {
     characters = {
-      ["Player-1-0000BBBB"] = { fullName = "Mira Stonehand", ruleset = "PvP", lastSynced = NOW - 5 * DAY },
       ["Player-1-0000AAAA"] = { fullName = "Calgan Blackbeard", ruleset = "PvP", lastSynced = NOW - 2 * HOUR },
-      ["Player-2-0000DDDD"] = { fullName = "Calgan Blackbeard", ruleset = "PvE", lastSynced = NOW - 2 * DAY },
-      ["Player-1-0000CCCC"] = { fullName = "Arlen", ruleset = "PvE", lastSynced = NOW - 3 * MINUTE },
+      ["Player-1-0000BBBB"] = { fullName = "Mira Stonehand", ruleset = "PvP", lastSynced = NOW - 5 * DAY },
     },
   }
 
-  it("lists every Tracked Character by Full Name and Ruleset, the logged-in one as now", function()
+  it("counts the Tracked Characters, then gives each one's Full Name, Ruleset and relative Last Synced", function()
     assert.are.same({
-      "Forever Account Stats: Tracked Characters (4)",
-      "  Arlen (PvE) - 3 min ago",
-      "  Calgan Blackbeard (PvE) - 2 d ago",
+      "Forever Account Stats: Tracked Characters (2)",
       "  Calgan Blackbeard (PvP) - now",
       "  Mira Stonehand (PvP) - 5 d ago",
     }, Listing.lines(db, "Player-1-0000AAAA", NOW))
-  end)
-
-  it("leaves out the Ruleset for a Character synced before Rulesets were saved", function()
-    local old = { characters = { ["Player-1-0000AAAA"] = { fullName = "Calgan Blackbeard", lastSynced = NOW } } }
-    assert.are.same({
-      "Forever Account Stats: Tracked Characters (1)",
-      "  Calgan Blackbeard - now",
-    }, Listing.lines(old, "Player-1-0000AAAA", NOW))
   end)
 end)
 
 describe("Listing.statisticLines", function()
   local Listing = loadListing()
 
+  -- Written in Roster order, which the dump follows.
   local db = {
     characters = {
-      ["Player-1-0000BBBB"] = {
-        fullName = "Mira Stonehand", ruleset = "PvP",
-        snapshot = { [60] = "3", [328] = coins.silver(14) .. " " .. coins.copper(56), [1336] = "62 (Beasts)" },
-      },
+      ["Player-1-0000CCCC"] = { fullName = "Arlen", lastSynced = NOW, ruleset = "PvE", snapshot = { [60] = "12" } },
       ["Player-1-0000AAAA"] = {
-        fullName = "Calgan Blackbeard", ruleset = "PvE",
+        fullName = "Calgan Blackbeard", lastSynced = NOW, ruleset = "PvE",
         snapshot = { [60] = "--", [328] = coins.gold(1) .. " " .. coins.silver(64) .. " " .. coins.copper(39),
           [1336] = "281 (Humanoid)" },
       },
-      ["Player-1-0000CCCC"] = { fullName = "Arlen", ruleset = "PvE", snapshot = { [60] = "12" } },
+      ["Player-1-0000BBBB"] = {
+        fullName = "Mira Stonehand", lastSynced = NOW, ruleset = "PvP",
+        snapshot = { [60] = "3", [328] = coins.silver(14) .. " " .. coins.copper(56), [1336] = "62 (Beasts)" },
+      },
     },
   }
 
@@ -69,7 +59,7 @@ describe("Listing.statisticLines", function()
       "  Calgan Blackbeard (PvE) - --",
       "  Mira Stonehand (PvP) - 3",
       "  Account Total: 15",
-    }, Listing.statisticLines(db, 60, "Total deaths"))
+    }, Listing.statisticLines(db, CURRENT, NOW, 60, "Total deaths"))
   end)
 
   it("marks a Statistic missing from a Snapshot and sums money with coin icons", function()
@@ -79,15 +69,16 @@ describe("Listing.statisticLines", function()
       "  Calgan Blackbeard (PvE) - " .. coins.gold(1) .. " " .. coins.silver(64) .. " " .. coins.copper(39),
       "  Mira Stonehand (PvP) - " .. coins.silver(14) .. " " .. coins.copper(56),
       "  Account Total: " .. coins.gold(1) .. " " .. coins.silver(78) .. " " .. coins.copper(95),
-    }, Listing.statisticLines(db, 328, "Total gold acquired"))
+    }, Listing.statisticLines(db, CURRENT, NOW, 328, "Total gold acquired"))
   end)
 
   it("shows no Account Total for a Text Statistic", function()
-    local lines = Listing.statisticLines(db, 1336, "Creature type killed the most")
+    local lines = Listing.statisticLines(db, CURRENT, NOW, 1336, "Creature type killed the most")
     assert.are.equal("  Account Total: —", lines[#lines])
   end)
 
   it("names a Statistic the game does not know as unknown", function()
-    assert.are.equal("Forever Account Stats: Unknown Statistic (99999)", Listing.statisticLines(db, 99999, nil)[1])
+    assert.are.equal("Forever Account Stats: Unknown Statistic (99999)",
+      Listing.statisticLines(db, CURRENT, NOW, 99999, nil)[1])
   end)
 end)
