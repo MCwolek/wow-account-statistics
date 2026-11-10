@@ -559,7 +559,7 @@ local function create()
     redraw(false)
     self.Dropdown:GenerateMenu()
   end)
-  -- Closing forgets the collapsed Categories, the chosen Character and the search (see WindowSession.closed); the
+  -- Closing forgets the expanded Categories, the chosen Character and the search (see WindowSession.closed); the
   -- search box is emptied to match.
   frame:SetScript("OnHide", function(self)
     self:UnregisterEvent("CRITERIA_UPDATE")
