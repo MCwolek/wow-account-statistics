@@ -162,3 +162,27 @@ describe("Characters.statisticValues", function()
     assertListsEach(byGUID, all)
   end)
 end)
+
+describe("a forgotten Character", function()
+  local ns = addon.loadFile("Sync.lua", addon.loadFile("Values.lua", addon.loadFile("Locale.lua", {})))
+  local Characters = addon.loadFile("Characters.lua", ns).Characters
+  local Sync = ns.Sync
+
+  local CURRENT, FORGOTTEN = "Player-1-0000AAAA", "Player-1-0000BBBB"
+  local function forgotten()
+    local db = Sync.record(nil, { guid = CURRENT, fullName = "Calgan Blackbeard" }, { [60] = "250" }, NOW)
+    db = Sync.record(db, { guid = FORGOTTEN, fullName = "Mira Stonehand" }, { [60] = "3" }, NOW)
+    return Sync.forget(db, FORGOTTEN, CURRENT)
+  end
+
+  it("is gone from the dropdown", function()
+    local entries = Characters.dropdownEntries(forgotten(), CURRENT, NOW)
+    assert.are.equal(1, #entries)
+    assert.are.equal(CURRENT, entries[1].guid)
+  end)
+
+  it("no longer counts in the Account Totals", function()
+    local _, all = Characters.statisticValues(forgotten(), CURRENT)
+    assert.are.same({ { [60] = "250" } }, all)
+  end)
+end)

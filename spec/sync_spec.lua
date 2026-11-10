@@ -176,17 +176,4 @@ describe("Sync.forget", function()
       snapshot = { [60] = "4" },
     }, db.characters[mira.guid])
   end)
-
-  it("drops the forgotten Character from the dropdown and the Account Totals", function()
-    local ns = addon.loadFile("Locale.lua", { Sync = Sync })
-    local Characters = addon.loadFile("Characters.lua", ns).Characters
-    local AccountTotals = addon.loadFile("AccountTotals.lua", addon.loadFile("Values.lua", ns)).AccountTotals
-    local db = Sync.forget(trackBoth(), mira.guid, calgan.guid)
-
-    local entries = Characters.dropdownEntries(db, calgan.guid, 1700010000)
-    assert.are.equal(1, #entries)
-    assert.are.equal(calgan.guid, entries[1].guid)
-    local _, all = Characters.statisticValues(db, calgan.guid)
-    assert.are.equal("250", AccountTotals.display(60, all))
-  end)
 end)

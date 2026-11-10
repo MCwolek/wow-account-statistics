@@ -1,4 +1,5 @@
--- Pure Sync logic: turns plain data read from the game into Snapshots and Tracked Characters.
+-- Pure logic of the Tracked Characters in the SavedVariables: a Sync turns plain data read from the game into
+-- Snapshots and Tracked Characters, and Forget removes one.
 local _, ns = ...
 
 local Sync = {}
@@ -83,6 +84,7 @@ end
 
 -- Forgets the Tracked Character `guid`: removes it and its Snapshot, so it no longer counts in Account Totals.
 -- The logged-in Character (`currentGUID`) is never forgotten: it would be tracked again at its next Sync anyway.
+-- The window offers no Forget for it either; this is the backstop for that check.
 -- Returns the db.
 function Sync.forget(db, guid, currentGUID)
   db = Sync.ensureDB(db)

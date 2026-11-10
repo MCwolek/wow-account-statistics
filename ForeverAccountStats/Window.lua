@@ -30,7 +30,9 @@ local SEARCH_WIDTH = WIDTH - DROPDOWN_LEFT - DROPDOWN_WIDTH - SEARCH_GAP - 20
 local ICON_SIZE = 16
 -- Room at the right end of every dropdown entry for the X that Forgets its Character, so the Last Synced times line
 -- up whether an entry has one or not.
-local FORGET_BUTTON_SPACE = 16 + 4
+local FORGET_BUTTON_SIZE = 16   -- the size MenuTemplates gives its utility buttons
+local FORGET_BUTTON_GAP = 4
+local FORGET_BUTTON_SPACE = FORGET_BUTTON_SIZE + FORGET_BUTTON_GAP
 local FORGET_DIALOG = "FOREVER_ACCOUNT_STATS_FORGET"
 -- The default Statistics panel re-reads on every CRITERIA_UPDATE; that event comes in bursts, so wait a little.
 local REREAD_DELAY = 0.5
@@ -333,6 +335,7 @@ local function createDropdown(parent)
         if not data.isCurrent then
           local forgetButton = MenuTemplates.AttachAutoHideCancelButton(button)
           MenuTemplates.SetUtilityButtonTooltipText(forgetButton, L.FORGET_TOOLTIP)
+          -- There is no gear button here: its anchor is simply the entry's right edge, where the X goes.
           MenuTemplates.SetUtilityButtonAnchor(forgetButton, MenuVariants.GearButtonAnchor, button)
           MenuTemplates.SetUtilityButtonClickHandler(forgetButton, function()
             menu:Close()
