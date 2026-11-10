@@ -18,7 +18,7 @@ end
 
 -- A copy of `expanded`, the set { [categoryID] = true }, with the Category `categoryID` expanded when it was
 -- collapsed and collapsed when it was expanded.
-local function toggledIn(expanded, categoryID)
+local function toggledCopy(expanded, categoryID)
   local result = {}
   for id in pairs(expanded) do
     result[id] = true
@@ -49,7 +49,7 @@ end
 -- A search keeps the whole tree's expanded Categories for when it is cleared.
 function ListState.toggled(state, categoryID)
   local function toggledView(view)
-    return { tree = view.tree, expanded = toggledIn(view.expanded, categoryID) }
+    return { tree = view.tree, expanded = toggledCopy(view.expanded, categoryID) }
   end
   if state.search then
     return { whole = state.whole, search = toggledView(state.search) }
