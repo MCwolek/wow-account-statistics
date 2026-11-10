@@ -38,26 +38,6 @@ SlashCmdList.FOREVERACCOUNTSTATS = function(message)
     Window.toggle()
     return
   end
-  if command.action == "probe" then
-    -- Temporary probe for #7.
-    local function printLines(lines)
-      for _, line in ipairs(lines) do
-        print(line)
-      end
-    end
-    local timeoutSeconds = 10
-    -- Printed first: the event may fire during the request itself.
-    print(string.format(ns.L.PROBE_REQUESTED, ns.L.ADDON_TITLE))
-    local ok, err = GameAPI.requestCharacterList(timeoutSeconds, function(characterInfos, ownerListIndex)
-      printLines(Listing.probeLines(ForeverAccountStatsDB, characterInfos, ownerListIndex))
-    end, function()
-      print(string.format(ns.L.PROBE_NO_ANSWER, ns.L.ADDON_TITLE, timeoutSeconds))
-    end)
-    if not ok then
-      print(string.format(ns.L.PROBE_FAILED, ns.L.ADDON_TITLE, tostring(err)))
-    end
-    return
-  end
   local lines
   if command.action == "list" then
     lines = Listing.lines(ForeverAccountStatsDB, GameAPI.playerGUID(), GameAPI.now())

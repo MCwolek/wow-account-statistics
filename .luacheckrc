@@ -18,7 +18,6 @@ read_globals = {
   "ButtonFrameTemplate_HidePortrait",
   "C_AddOns",
   "C_ClassColor",
-  "C_Housing",
   "C_Timer",
   "CreateAtlasMarkup",
   "CreateDataProvider",
