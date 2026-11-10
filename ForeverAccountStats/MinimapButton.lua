@@ -1,7 +1,7 @@
 -- Thin adapter: the Minimap button, which opens or closes the Statistics window. Where it sits and whether it is shown
 -- come from MinimapButtonSettings, saved in ForeverAccountStatsDB.minimapButton.
 local _, ns = ...
-local L, Window, MinimapButtonSettings = ns.L, ns.Window, ns.MinimapButtonSettings
+local L, Window, MinimapButtonSettings, MinimapRing = ns.L, ns.Window, ns.MinimapButtonSettings, ns.MinimapRing
 
 local MinimapButton = {}
 ns.MinimapButton = MinimapButton
@@ -20,7 +20,7 @@ local OUTSIDE_EDGE = 5
 local button
 
 local function place(angle)
-  local x, y = MinimapButtonSettings.offset(angle, Minimap:GetWidth() / 2 + OUTSIDE_EDGE)
+  local x, y = MinimapRing.offset(angle, Minimap:GetWidth() / 2 + OUTSIDE_EDGE)
   button:ClearAllPoints()
   button:SetPoint("CENTER", Minimap, "CENTER", x, y)
 end
@@ -30,7 +30,7 @@ local function cursorAngle()
   local cursorX, cursorY = GetCursorPosition()
   local scale = Minimap:GetEffectiveScale()
   local centerX, centerY = Minimap:GetCenter()
-  return MinimapButtonSettings.angleTowards(cursorX / scale - centerX, cursorY / scale - centerY)
+  return MinimapRing.angleTowards(cursorX / scale - centerX, cursorY / scale - centerY)
 end
 
 local function followCursor()
