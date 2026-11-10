@@ -62,7 +62,7 @@ local deDE = {
   ACCOUNT_TOTAL_LINE = "  Account-Gesamtwert: %s",
   BREAKDOWN_MORE = "und %d weitere",
   CHARACTER_COLUMN = "Charakter",
-  DAYS_AGO = "vor %d Tg.",
+  DAYS_AGO = "vor %d Tag(en)",
   EXACT_DATE_TIME = "%d.%m.%Y %H:%M",
   FORGET_CONFIRM = "%s vergessen?\n\nDie Statistiken dieses Charakters zählen dann nicht mehr zu den "
     .. "Account-Gesamtwerten. Nach erneutem Einloggen wird er wieder erfasst.",
