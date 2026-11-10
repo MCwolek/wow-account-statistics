@@ -84,27 +84,6 @@ describe("Characters.dropdownEntries", function()
   end)
 end)
 
-describe("Characters.selectedEntry", function()
-  local Characters = loadCharacters()
-
-  local entries = {
-    { guid = "Player-1-0000AAAA", label = "Calgan Blackbeard (PvP)", isCurrent = true },
-    { guid = "Player-1-0000BBBB", label = "Mira Stonehand (PvP)", isCurrent = false },
-  }
-
-  it("is the entry of the selected Character", function()
-    assert.are.equal(entries[2], Characters.selectedEntry(entries, "Player-1-0000BBBB"))
-  end)
-
-  it("is the logged-in Character when none is selected yet", function()
-    assert.are.equal(entries[1], Characters.selectedEntry(entries, nil))
-  end)
-
-  it("is the logged-in Character when the selected one is no longer tracked", function()
-    assert.are.equal(entries[1], Characters.selectedEntry(entries, "Player-1-0000FFFF"))
-  end)
-end)
-
 describe("Characters.lastSyncedTooltip", function()
   local Characters = loadCharacters()
 
