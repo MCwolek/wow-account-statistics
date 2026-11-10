@@ -18,7 +18,7 @@ local function labelOf(character)
 end
 
 -- Last Synced `syncedAt` relative to `now`, such as "5 d ago", or "now" under a minute.
-local function relative(syncedAt, now)
+local function relativeLastSynced(syncedAt, now)
   local elapsed = now - syncedAt
   if elapsed >= DAY then
     return string.format(L.DAYS_AGO, math.floor(elapsed / DAY))
@@ -44,7 +44,7 @@ function Roster.of(db, currentGUID, now)
     local entry = { guid = guid, label = labelOf(character), class = character.class, isCurrent = guid == currentGUID }
     if now then
       entry.lastSynced = entry.isCurrent and now or character.lastSynced
-      entry.relativeLastSynced = relative(entry.lastSynced, now)
+      entry.relativeLastSynced = relativeLastSynced(entry.lastSynced, now)
     end
     roster[#roster + 1] = entry
   end
