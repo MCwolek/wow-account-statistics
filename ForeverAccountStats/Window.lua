@@ -35,6 +35,10 @@ local SEARCH_WIDTH = WIDTH - DROPDOWN_LEFT - DROPDOWN_WIDTH - SEARCH_GAP - 20
 -- Faction's colour, as the grey logo alone hardly shows. Atlas names ignore case: the game's own code spells this one
 -- both "characterselect" and "characterSelect".
 local FACTION_LOGO = "glues-characterselect-icon-faction-%s"
+-- The default dropdown menu's background (see MenuStyle1Mixin). The Character dropdown's menu and the window's
+-- tooltip both show it fully opaque, so the Faction logos stand out against it.
+local MENU_BACKGROUND = "common-dropdown-bg"
+local TOOLTIP_NAME = "ForeverAccountStatsTooltip"
 -- Empty space the size of the Faction logo or the class icon, in place of a missing one.
 local ICON_SPACE = "|TInterface\\Common\\spacer:" .. ICON_SIZE .. ":" .. ICON_SIZE .. "|t"
 -- Room at the right end of every dropdown entry for the X that Forgets its Character, so the Last Synced times line
@@ -128,21 +132,50 @@ local function redraw(keepScroll)
   frame.ScrollBox:SetDataProvider(CreateDataProvider(rows), keepScroll and ScrollBoxConstants.RetainScrollPosition)
 end
 
--- Fills GameTooltip with the Breakdown of the Statistic `data` under its full name: each Character with its Faction
--- logo, class icon and class-coloured name, its value on the right. False when the Statistic has no Account Total,
--- so no Breakdown.
-local function showBreakdown(data)
+-- Puts the dropdown menu's background on the texture `background`, reaching past its parent's edges as the default
+-- menu's does: the atlas has a margin and a shadow of its own.
+local function placeMenuBackground(background)
+  background:SetAtlas(MENU_BACKGROUND)
+  background:SetPoint("TOPLEFT", -10, 3)
+  background:SetPoint("BOTTOMRIGHT", 10, -3)
+end
+
+-- The default dropdown menu style, but with its background fully opaque rather than letting the window show through.
+local OPAQUE_MENU_STYLE = CreateFromMixins(MenuStyle1Mixin)
+
+function OPAQUE_MENU_STYLE:Generate()
+  placeMenuBackground(self:AttachTexture())
+end
+
+local ownTooltip
+
+-- The window's own tooltip, on the dropdown menu's opaque background in place of a tooltip's see-through blue one.
+-- Being IsEmbedded keeps the game from bringing back that blue backdrop each time the tooltip is cleared.
+local function windowTooltip()
+  if not ownTooltip then
+    ownTooltip = CreateFrame("GameTooltip", TOOLTIP_NAME, UIParent, "GameTooltipTemplate")
+    ownTooltip.IsEmbedded = true
+    ownTooltip.NineSlice:Hide()
+    placeMenuBackground(ownTooltip:CreateTexture(nil, "BACKGROUND"))
+  end
+  return ownTooltip
+end
+
+-- Fills `tip` with the Breakdown of the Statistic `data` under its full name: each Character with its Faction logo,
+-- class icon and class-coloured name, its value on the right. False when the Statistic has no Account Total, so no
+-- Breakdown.
+local function showBreakdown(tip, data)
   local breakdown =
     WindowSession.breakdown(session, ForeverAccountStatsDB, GameAPI.playerGUID(), GameAPI.now(), data.id)
   if not breakdown then
     return false
   end
-  GameTooltip_SetTitle(GameTooltip, data.name)
+  GameTooltip_SetTitle(tip, data.name)
   for _, line in ipairs(breakdown.lines) do
-    GameTooltip:AddDoubleLine(breakdownLabel(line), line.value, 1, 1, 1, 1, 1, 1)
+    tip:AddDoubleLine(breakdownLabel(line), line.value, 1, 1, 1, 1, 1, 1)
   end
   if breakdown.more > 0 then
-    GameTooltip:AddLine(L.BREAKDOWN_MORE:format(breakdown.more), GRAY_FONT_COLOR:GetRGB())
+    tip:AddLine(L.BREAKDOWN_MORE:format(breakdown.more), GRAY_FONT_COLOR:GetRGB())
   end
   return true
 end
@@ -405,19 +438,20 @@ local function createRegions(row)
     if not self.look.showsTooltip then
       return
     end
-    GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-    if showBreakdown(self.data) then
-      GameTooltip:Show()
+    local tip = windowTooltip()
+    tip:SetOwner(self, "ANCHOR_RIGHT")
+    if showBreakdown(tip, self.data) then
+      tip:Show()
     elseif self.Name:IsTruncated() then
-      GameTooltip:SetText(self.data.name, 1, 1, 1, 1, true)
-      GameTooltip:Show()
+      tip:SetText(self.data.name, 1, 1, 1, 1, true)
+      tip:Show()
     else
-      GameTooltip:Hide()
+      tip:Hide()
     end
   end)
   row:SetScript("OnLeave", function(self)
     refreshHoverLine(self)
-    GameTooltip_Hide()
+    windowTooltip():Hide()
   end)
 end
 
@@ -496,6 +530,7 @@ local function createDropdown(parent)
   local dropdown = CreateFrame("DropdownButton", nil, parent, "WowStyle1DropdownTemplate")
   dropdown:SetPoint("TOPLEFT", parent, "TOPLEFT", DROPDOWN_LEFT, -30)
   dropdown:SetWidth(DROPDOWN_WIDTH)
+  dropdown.menuMixin = OPAQUE_MENU_STYLE
   dropdown:SetSelectionTranslator(function(selection)
     return selectionLabel(selection.data)
   end)
