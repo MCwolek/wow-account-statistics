@@ -1,10 +1,10 @@
 -- Thin adapter: the Statistics window and its button on the default Statistics tab. It draws what the pure modules
--- (CategoryTree, ListState, Rows, RowLayout, Breakdown, Characters, WindowPosition) compute and reads the game through
--- GameAPI.
+-- (CategoryTree, ListState, Rows, RowLayout, AccountStatistics, Characters, WindowPosition) compute and reads the
+-- game through GameAPI.
 local _, ns = ...
 local L, GameAPI, Sync = ns.L, ns.GameAPI, ns.Sync
 local CategoryTree, ListState, Rows, RowLayout = ns.CategoryTree, ns.ListState, ns.Rows, ns.RowLayout
-local Breakdown, Characters, WindowPosition = ns.Breakdown, ns.Characters, ns.WindowPosition
+local AccountStatistics, Characters, WindowPosition = ns.AccountStatistics, ns.Characters, ns.WindowPosition
 
 local Window = {}
 ns.Window = Window
@@ -40,7 +40,7 @@ local frame          -- created on first open, once SavedVariables are loaded
 local tree           -- the Category tree, read on first open
 local list           -- the ListState: Categories expanded and the search since the window opened
 local selectedGUID   -- Character chosen in the dropdown since the window opened
-local liveValues     -- the logged-in Character's values, read while the window is shown; not saved
+local liveValues     -- the logged-in Character's Live Values, read while the window is shown; not saved
 local rereadPending = false
 local statisticsTabButton
 
@@ -69,28 +69,22 @@ local function readLiveValues()
   liveValues = Sync.buildSnapshot(GameAPI.readStatistics())
 end
 
--- What Rows and Breakdown read: every Tracked Character's values, the logged-in one's read live, and the Character
--- chosen in the dropdown.
-local function valuesView()
-  return {
-    db = ForeverAccountStatsDB,
-    selectedGUID = selectedGUID,
-    currentGUID = GameAPI.playerGUID(),
-    liveValues = liveValues,
-  }
+-- Every Tracked Character's values, the logged-in one's Live Values in place of its Snapshot.
+local function accountStatistics()
+  return AccountStatistics.new(ForeverAccountStatsDB, GameAPI.playerGUID(), liveValues)
 end
 
 local function redraw(keepScroll)
   local entry = Characters.selectedEntry(dropdownEntries(), selectedGUID)
   selectedGUID = entry and entry.guid
-  local rows = Rows.build(ListState.visibleRows(list), valuesView())
+  local rows = Rows.build(ListState.visibleRows(list), accountStatistics(), selectedGUID)
   frame.ScrollBox:SetDataProvider(CreateDataProvider(rows), keepScroll and ScrollBoxConstants.RetainScrollPosition)
 end
 
 -- Fills GameTooltip with the Breakdown of the Statistic `data` under its full name: each Character class-coloured
 -- with its value on the right. False when the Statistic has no Account Total, so no Breakdown.
 local function showBreakdown(data)
-  local breakdown = Breakdown.build(data.id, valuesView())
+  local breakdown = accountStatistics():breakdown(data.id)
   if not breakdown then
     return false
   end

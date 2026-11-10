@@ -122,47 +122,6 @@ describe("Characters.lastSyncedTooltip", function()
   end)
 end)
 
-describe("Characters.statisticValues", function()
-  local Characters = loadCharacters()
-
-  local CURRENT, OTHER, NEW = "Player-1-0000AAAA", "Player-1-0000BBBB", "Player-1-0000CCCC"
-  local db = {
-    characters = {
-      [CURRENT] = { fullName = "Calgan Blackbeard", snapshot = { [60] = "2" } },
-      [OTHER] = { fullName = "Mira Stonehand", snapshot = { [60] = "3" } },
-      [NEW] = { fullName = "Arlen" },
-    },
-  }
-
-  -- `all` lists the same tables as `byGUID`, in no particular order.
-  local function assertListsEach(byGUID, all)
-    local count = 0
-    for _ in pairs(byGUID) do
-      count = count + 1
-    end
-    assert.are.equal(count, #all)
-    for _, values in ipairs(all) do
-      local found = false
-      for _, expected in pairs(byGUID) do
-        found = found or rawequal(values, expected)
-      end
-      assert.is_true(found)
-    end
-  end
-
-  it("gives each Tracked Character its saved Snapshot, by GUID and as a list", function()
-    local byGUID, all = Characters.statisticValues(db)
-    assert.are.same({ [CURRENT] = { [60] = "2" }, [OTHER] = { [60] = "3" }, [NEW] = {} }, byGUID)
-    assertListsEach(byGUID, all)
-  end)
-
-  it("gives the logged-in Character its live values in place of its Snapshot", function()
-    local byGUID, all = Characters.statisticValues(db, CURRENT, { [60] = "5" })
-    assert.are.same({ [CURRENT] = { [60] = "5" }, [OTHER] = { [60] = "3" }, [NEW] = {} }, byGUID)
-    assertListsEach(byGUID, all)
-  end)
-end)
-
 describe("a forgotten Character", function()
   local ns = addon.loadFile("Sync.lua", addon.loadFile("Values.lua", addon.loadFile("Locale.lua", {})))
   local Characters = addon.loadFile("Characters.lua", ns).Characters
@@ -179,10 +138,5 @@ describe("a forgotten Character", function()
     local entries = Characters.dropdownEntries(forgotten(), CURRENT, NOW)
     assert.are.equal(1, #entries)
     assert.are.equal(CURRENT, entries[1].guid)
-  end)
-
-  it("no longer counts in the Account Totals", function()
-    local _, all = Characters.statisticValues(forgotten(), CURRENT)
-    assert.are.same({ { [60] = "250" } }, all)
   end)
 end)

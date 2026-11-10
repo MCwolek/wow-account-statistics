@@ -28,15 +28,16 @@ function Listing.lines(db, currentGUID, now)
   return lines
 end
 
--- Chat lines for /stats dump: the Statistic's name and ID, each Tracked Character's value as stored in its
--- Snapshot, then the Account Total. `statisticName` is nil when the game knows no such Statistic.
+-- Chat lines for /stats dump: the Statistic's name and ID, each Tracked Character's value, then the Account Total.
+-- Every value is the one saved in its Snapshot, the logged-in Character's too (see AccountStatistics.new): the dump
+-- reports what the add-on has saved. `statisticName` is nil when the game knows no such Statistic.
 function Listing.statisticLines(db, statisticID, statisticName)
-  local byGUID, snapshots = Characters.statisticValues(db)
+  local statistics = ns.AccountStatistics.new(db)
   local entries = {}
   for guid, character in pairs(db.characters) do
     entries[#entries + 1] = {
       name = Characters.displayName(character),
-      value = ns.Values.display(byGUID[guid][statisticID]),
+      value = statistics:value(guid, statisticID),
     }
   end
   table.sort(entries, function(a, b)
@@ -49,6 +50,6 @@ function Listing.statisticLines(db, statisticID, statisticName)
   for _, entry in ipairs(entries) do
     lines[#lines + 1] = string.format(L.STATISTIC_LINE, entry.name, entry.value)
   end
-  lines[#lines + 1] = string.format(L.ACCOUNT_TOTAL_LINE, ns.AccountTotals.display(statisticID, snapshots))
+  lines[#lines + 1] = string.format(L.ACCOUNT_TOTAL_LINE, statistics:accountTotal(statisticID))
   return lines
 end

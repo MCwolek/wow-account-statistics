@@ -7,10 +7,9 @@
 
 Locale.lua
 Values.lua
-AccountTotals.lua
 Sync.lua
 Characters.lua
-Breakdown.lua
+AccountStatistics.lua
 CategoryTree.lua
 ListState.lua
 RowLayout.lua
