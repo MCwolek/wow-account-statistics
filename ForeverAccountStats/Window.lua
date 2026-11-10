@@ -1,8 +1,9 @@
 -- Thin adapter: the Statistics window and its button on the default Statistics tab. It draws what the pure modules
--- (CategoryTree, ListState, Rows, Breakdown, Characters, WindowPosition) compute and reads the game through GameAPI.
+-- (CategoryTree, ListState, Rows, RowLayout, Breakdown, Characters, WindowPosition) compute and reads the game through
+-- GameAPI.
 local _, ns = ...
 local L, GameAPI, Sync = ns.L, ns.GameAPI, ns.Sync
-local CategoryTree, ListState, Rows = ns.CategoryTree, ns.ListState, ns.Rows
+local CategoryTree, ListState, Rows, RowLayout = ns.CategoryTree, ns.ListState, ns.Rows, ns.RowLayout
 local Breakdown, Characters, WindowPosition = ns.Breakdown, ns.Characters, ns.WindowPosition
 
 local Window = {}
@@ -10,19 +11,17 @@ ns.Window = Window
 
 local FRAME_NAME = "ForeverAccountStatsFrame"
 local WIDTH, HEIGHT = 620, 540
--- Sizes of the profession window's recipe list.
-local CATEGORY_HEIGHT = 25
-local STATISTIC_HEIGHT = 20
-local ROW_SPACING = 1
-local LIST_PADDING = 5
-local INDENT = 10
--- Statistic names start where recipe names do, clear of their Category's header text.
-local STATISTIC_INSET = 20
+-- The Statistics side tab's icon in the Character frame, shown in the window's portrait circle.
+local PORTRAIT_ICON = "Interface/ICONS/INV_SideTab_Stats_c60"
+-- The Character frame's backdrop behind its Statistics tab, from just under the title bar down.
+local BODY_BACKGROUND = "UI-Character-Info-General-BG"
+local BODY_TOP = -20
 local COLUMN_WIDTH = 120
 local COLUMN_GAP = 10
 -- Wide enough for the longest Full Name and Ruleset with the class icon.
 local DROPDOWN_WIDTH = 320
-local DROPDOWN_LEFT = 16
+-- Right of the portrait circle, which reaches 57 in from the window's left edge.
+local DROPDOWN_LEFT = 62
 -- The search box fills the rest of the dropdown's line: after the dropdown and a gap, up to 20 short of the right
 -- edge.
 local SEARCH_GAP = 14
@@ -145,59 +144,222 @@ local function scheduleReread()
   end)
 end
 
--- Rows look like the profession window's recipe list: Categories on its header bar with the +/- on the right,
--- Statistics as plain white lines with a soft hover glow.
-local function createRegions(row)
-  row.HeaderLeft = row:CreateTexture(nil, "BACKGROUND")
-  row.HeaderLeft:SetAtlas("Professions-recipe-header-left", true)
-  row.HeaderLeft:SetPoint("LEFT", 0, 2)
-  row.HeaderRight = row:CreateTexture(nil, "BACKGROUND")
-  row.HeaderRight:SetAtlas("Professions-recipe-header-right", true)
-  row.HeaderRight:SetPoint("RIGHT", 0, 2)
-  row.HeaderMiddle = row:CreateTexture(nil, "BACKGROUND")
-  row.HeaderMiddle:SetAtlas("Professions-recipe-header-middle", false)
-  row.HeaderMiddle:SetPoint("TOPLEFT", row.HeaderLeft, "TOPRIGHT")
-  row.HeaderMiddle:SetPoint("BOTTOMRIGHT", row.HeaderRight, "BOTTOMLEFT")
+-- Rows look like the game's Statistics tab in the Character frame, in three looks (see RowLayout): a top-level
+-- Category on its bar in gold, with the +/- on the right; a nested Category in white, with the open/closed icon on the
+-- left; a Statistic as a plain white line. A nested Category and a Statistic draw their name, values and a faint white
+-- hover line on a content frame of their own; a top-level Category brightens its bar when hovered instead. Holding the
+-- mouse button down on a row nudges it 1px right and down: a top-level Category's name, or the whole content frame of
+-- the others. A nested Category's name stays beside its open/closed icon, which does not move.
+local CATEGORY_BAR = "common-button-list-collapseExpand"
+local CATEGORY_BAR_HOVER_ALPHA = 0.3
+local HOVER_LINE_SIDE = "charactercreate-customize-dropdown-linemouseover-side"
+local HOVER_LINE_MIDDLE = "charactercreate-customize-dropdown-linemouseover-middle"
+local HOVER_LINE_SIDE_WIDTH = 6
+local HOVER_LINE_ALPHA = 0.10
+local NESTED_TOGGLE_SIZE = 20
+local NESTED_TOGGLE_HIGHLIGHT = "Interface/Buttons/UI-PlusButton-Hilight"
+-- A top-level Category's +/-, in from the bar's right end and a little below its middle.
+local STATE_ICON_RIGHT = -8
+local STATE_ICON_Y = -1
+-- Where the text sits in each look: a top-level Category's name, stopping short of its +/-; a Statistic's name and a
+-- nested Category's open/closed icon at the same spot, with the nested Category's name just right of the icon.
+local CATEGORY_TEXT_LEFT = 10
+local CATEGORY_TEXT_GAP = 5
+local ENTRY_LEFT = 2
+local NESTED_TEXT_GAP = 4
+local NESTED_TEXT_RIGHT = -24
+local TOTAL_RIGHT = -12
+-- How far a row moves while the mouse button is held down on it.
+local PRESSED_X, PRESSED_Y = 1, -1
 
-  row.CollapseIcon = row:CreateTexture(nil, "ARTWORK")
-  row.CollapseIcon:SetPoint("RIGHT", -10, 2)
-  row.CollapseIconGlow = row:CreateTexture(nil, "HIGHLIGHT")
-  row.CollapseIconGlow:SetBlendMode("ADD")
-  row.CollapseIconGlow:SetPoint("CENTER", row.CollapseIcon)
-  row.Title = row:CreateFontString(nil, "OVERLAY", "GameFontNormal_NoShadow")
-  row.Title:SetPoint("LEFT", 10, 2)
-  row.Title:SetPoint("RIGHT", row.CollapseIcon, "LEFT", -5, 0)
-  row.Title:SetJustifyH("LEFT")
+local function toggleCategory(categoryID)
+  list = ListState.toggled(list, categoryID)
+  redraw(true)
+end
+
+-- One rounded end of the hover line, on the `side` ("LEFT" or "RIGHT") of `content`; the right one is the left one
+-- mirrored.
+local function createHoverLineEnd(content, side)
+  local texture = content:CreateTexture(nil, "BACKGROUND")
+  texture:SetAtlas(HOVER_LINE_SIDE)
+  if side == "RIGHT" then
+    local info = C_Texture.GetAtlasInfo(HOVER_LINE_SIDE)
+    if info then
+      texture:SetTexCoord(info.rightTexCoord, info.leftTexCoord, info.topTexCoord, info.bottomTexCoord)
+    end
+  end
+  texture:SetWidth(HOVER_LINE_SIDE_WIDTH)
+  texture:SetPoint("TOP" .. side)
+  texture:SetPoint("BOTTOM" .. side)
+  return texture
+end
+
+-- The faint white line behind a hovered nested Category or Statistic: two rounded ends and a middle.
+local function createHoverLine(content)
+  local left = createHoverLineEnd(content, "LEFT")
+  local right = createHoverLineEnd(content, "RIGHT")
+  local middle = content:CreateTexture(nil, "BACKGROUND")
+  middle:SetAtlas(HOVER_LINE_MIDDLE)
+  middle:SetPoint("TOPLEFT", left, "TOPRIGHT")
+  middle:SetPoint("BOTTOMRIGHT", right, "BOTTOMLEFT")
+  return { left, middle, right }
+end
+
+-- Shown while the mouse is anywhere over the row, its open/closed icon included. A top-level Category hides the
+-- content frame the line is on.
+local function refreshHoverLine(row)
+  local alpha = row:IsMouseOver() and HOVER_LINE_ALPHA or 0
+  for _, texture in ipairs(row.HoverLine) do
+    texture:SetAlpha(alpha)
+  end
+end
+
+-- The row's moving part in its place, PRESSED_X and PRESSED_Y off while the row is pressed.
+local function place(row)
+  local x, y = 0, 0
+  if row.pressed then
+    x, y = PRESSED_X, PRESSED_Y
+  end
+  row.look.place(row, x, y)
+end
+
+local function placeContent(row, x, y)
+  row.Content:ClearAllPoints()
+  row.Content:SetPoint("TOPLEFT", x, y)
+  row.Content:SetPoint("BOTTOMRIGHT", x, y)
+end
+
+-- What each look shows, how it fills and places what it shows, whether clicking it toggles its Category and whether
+-- hovering it shows a tooltip. Pooled rows serve all three looks, so every look sets everything it shows.
+local REGIONS = { "Bar", "BarHover", "StateIcon", "Title", "Content", "Toggle", "Value", "Total" }
+local LOOKS = {
+  category = {
+    shows = { Bar = true, BarHover = true, StateIcon = true, Title = true },
+    togglesCategory = true,
+    fill = function(row, data)
+      row.StateIcon:SetAtlas(data.expanded and "common-button-list-minus" or "common-button-list-plus", true)
+      row.Title:SetText(data.name)
+    end,
+    place = function(row, x, y)
+      row.Title:ClearAllPoints()
+      row.Title:SetPoint("LEFT", CATEGORY_TEXT_LEFT + x, y)
+      row.Title:SetPoint("RIGHT", row.StateIcon, "LEFT", -CATEGORY_TEXT_GAP + x, y)
+    end,
+  },
+  nestedCategory = {
+    shows = { Content = true, Toggle = true },
+    togglesCategory = true,
+    fill = function(row, data)
+      local toggle = row.Toggle
+      toggle.atlas = data.expanded and "campaign_headericon_open" or "campaign_headericon_closed"
+      toggle.pressedAtlas = toggle.atlas .. "pressed"
+      toggle.Icon:SetAtlas(toggle.atlas, true)
+      row.Name:SetText(data.name)
+      row.Name:ClearAllPoints()
+      row.Name:SetPoint("LEFT", toggle, "RIGHT", NESTED_TEXT_GAP, 0)
+      row.Name:SetPoint("RIGHT", NESTED_TEXT_RIGHT, 0)
+    end,
+    place = placeContent,
+  },
+  statistic = {
+    shows = { Content = true, Value = true, Total = true },
+    showsTooltip = true,
+    fill = function(row, data)
+      row.Name:SetText(data.name)
+      row.Name:ClearAllPoints()
+      row.Name:SetPoint("LEFT", ENTRY_LEFT, 0)
+      row.Name:SetPoint("RIGHT", row.Value, "LEFT", -COLUMN_GAP, 0)
+      row.Value:SetText(data.value)
+      row.Total:SetText(data.total)
+    end,
+    place = placeContent,
+  },
+}
+
+-- The open/closed icon of a nested Category, a button of its own over the content frame that stays put while the row
+-- is pressed: it shows the pressed icon while held, and clicking it toggles the Category as clicking the row does.
+local function createNestedToggle(row)
+  local toggle = CreateFrame("Button", nil, row)
+  toggle:SetFrameLevel(row.Content:GetFrameLevel() + 1)
+  toggle:SetSize(NESTED_TOGGLE_SIZE, NESTED_TOGGLE_SIZE)
+  toggle:SetPoint("LEFT", ENTRY_LEFT, 0)
+  toggle:SetHighlightTexture(NESTED_TOGGLE_HIGHLIGHT, "ADD")
+  toggle.Icon = toggle:CreateTexture(nil, "ARTWORK")
+  toggle.Icon:SetPoint("CENTER")
+  toggle:SetScript("OnMouseDown", function(self)
+    self.Icon:SetAtlas(self.pressedAtlas, true)
+  end)
+  toggle:SetScript("OnMouseUp", function(self)
+    self.Icon:SetAtlas(self.atlas, true)
+  end)
+  toggle:SetScript("OnClick", function()
+    toggleCategory(row.data.id)
+  end)
+  toggle:SetScript("OnEnter", function()
+    refreshHoverLine(row)
+  end)
+  toggle:SetScript("OnLeave", function()
+    refreshHoverLine(row)
+  end)
+  return toggle
+end
+
+-- The top-level Category's bar, +/- and name, straight on the row.
+local function createCategoryRegions(row)
+  row.Bar = row:CreateTexture(nil, "BACKGROUND")
+  row.Bar:SetAtlas(CATEGORY_BAR)
+  row.Bar:SetAllPoints()
+  row.BarHover = row:CreateTexture(nil, "HIGHLIGHT")
+  row.BarHover:SetAtlas(CATEGORY_BAR)
+  row.BarHover:SetAllPoints()
+  row.BarHover:SetBlendMode("ADD")
+  row.BarHover:SetAlpha(CATEGORY_BAR_HOVER_ALPHA)
+  row.StateIcon = row:CreateTexture(nil, "BORDER")
+  row.StateIcon:SetPoint("RIGHT", STATE_ICON_RIGHT, STATE_ICON_Y)
+  row.Title = row:CreateFontString(nil, "OVERLAY", "GameFontNormalLeft")
   row.Title:SetWordWrap(false)
+end
 
-  row.HoverGlow = row:CreateTexture(nil, "HIGHLIGHT")
-  row.HoverGlow:SetAtlas("Professions_Recipe_Hover", false)
-  row.HoverGlow:SetAllPoints()
-  row.HoverGlow:SetAlpha(0.5)
-  row.Total = row:CreateFontString(nil, "ARTWORK", "GameFontHighlight_NoShadow")
-  row.Total:SetPoint("RIGHT", -10, 0)
+-- The content frame of a nested Category and a Statistic, with the hover line, name and values on it.
+local function createContent(row)
+  local content = CreateFrame("Frame", nil, row)
+  row.Content = content
+  row.HoverLine = createHoverLine(content)
+  row.Total = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  row.Total:SetPoint("RIGHT", TOTAL_RIGHT, 0)
   row.Total:SetWidth(COLUMN_WIDTH)
   row.Total:SetJustifyH("RIGHT")
-  row.Value = row:CreateFontString(nil, "ARTWORK", "GameFontHighlight_NoShadow")
+  row.Value = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   row.Value:SetPoint("RIGHT", row.Total, "LEFT", -COLUMN_GAP, 0)
   row.Value:SetWidth(COLUMN_WIDTH)
   row.Value:SetJustifyH("RIGHT")
-  row.Name = row:CreateFontString(nil, "ARTWORK", "GameFontHighlight_NoShadow")
-  row.Name:SetPoint("LEFT", STATISTIC_INSET, 0)
-  row.Name:SetPoint("RIGHT", row.Value, "LEFT", -COLUMN_GAP, 0)
+  row.Name = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   row.Name:SetJustifyH("LEFT")
   row.Name:SetWordWrap(false)
+end
+
+local function createRegions(row)
+  createCategoryRegions(row)
+  createContent(row)
+  row.Toggle = createNestedToggle(row)
 
   row:SetScript("OnClick", function(self)
-    if self.data.kind == "category" then
-      list = ListState.toggled(list, self.data.id)
-      redraw(true)
+    if self.look.togglesCategory then
+      toggleCategory(self.data.id)
     end
+  end)
+  row:SetScript("OnMouseDown", function(self)
+    self.pressed = true
+    place(self)
+  end)
+  row:SetScript("OnMouseUp", function(self)
+    self.pressed = false
+    place(self)
   end)
   -- A Statistic row shows its Account Total's Breakdown, or else its full name when cut short.
   row:SetScript("OnEnter", function(self)
-    if self.data.kind == "category" then
-      self.Title:SetFontObject(GameFontHighlight_NoShadow)
+    refreshHoverLine(self)
+    if not self.look.showsTooltip then
       return
     end
     GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
@@ -211,41 +373,27 @@ local function createRegions(row)
     end
   end)
   row:SetScript("OnLeave", function(self)
-    self.Title:SetFontObject(GameFontNormal_NoShadow)
+    refreshHoverLine(self)
     GameTooltip_Hide()
   end)
 end
 
--- Pooled rows serve both kinds, so every region is set every time.
 local function initRow(row, data)
-  if not row.Title then
+  if not row.Bar then
     createRegions(row)
   end
   row.data = data
-  local isCategory = data.kind == "category"
-  row.HeaderLeft:SetShown(isCategory)
-  row.HeaderMiddle:SetShown(isCategory)
-  row.HeaderRight:SetShown(isCategory)
-  row.CollapseIcon:SetShown(isCategory)
-  row.CollapseIconGlow:SetShown(isCategory)
-  row.Title:SetShown(isCategory)
-  row.HoverGlow:SetShown(not isCategory)
-  row.Name:SetShown(not isCategory)
-  row.Value:SetShown(not isCategory)
-  row.Total:SetShown(not isCategory)
-  if isCategory then
-    local atlas = data.expanded and "Professions-recipe-header-collapse" or "Professions-recipe-header-expand"
-    row.CollapseIcon:SetAtlas(atlas, true)
-    row.CollapseIconGlow:SetAtlas(atlas, true)
-    row.Title:SetFontObject(GameFontNormal_NoShadow)
-    row.Title:SetText(data.name)
-  else
-    row.Name:SetText(data.name)
-    row.Value:SetText(data.value)
-    row.Total:SetText(data.total)
+  row.look = LOOKS[data.layout.look]
+  row.pressed = false
+  for _, key in ipairs(REGIONS) do
+    row[key]:SetShown(row.look.shows[key] == true)
   end
+  row.look.fill(row, data)
+  place(row)
+  refreshHoverLine(row)
 end
 
+-- The game's Statistics tab draws a line across the top and the bottom edge of its list, over the rows.
 local function createList(parent)
   local scrollBox = CreateFrame("Frame", nil, parent, "WowScrollBoxList")
   scrollBox:SetPoint("TOPLEFT", 4, -22)
@@ -254,24 +402,20 @@ local function createList(parent)
   scrollBar:SetPoint("TOPLEFT", scrollBox, "TOPRIGHT", 6, -2)
   scrollBar:SetPoint("BOTTOMLEFT", scrollBox, "BOTTOMRIGHT", 6, 2)
 
-  -- The profession list's dark background behind the rows.
-  local background = parent:CreateTexture(nil, "BACKGROUND", nil, 1)
-  background:SetAtlas("Professions-background-summarylist")
-  background:SetAllPoints()
-
-  local view = CreateScrollBoxListLinearView(LIST_PADDING, LIST_PADDING, LIST_PADDING, 0, ROW_SPACING)
+  local padding = RowLayout.PADDING
+  local view = CreateScrollBoxListLinearView(padding, padding, padding, padding, RowLayout.SPACING)
   view:SetElementExtentCalculator(function(_, data)
-    return data.kind == "category" and CATEGORY_HEIGHT or STATISTIC_HEIGHT
+    return data.layout.height
   end)
   view:SetElementInitializer("Button", initRow)
   view:SetElementIndentCalculator(function(data)
-    return data.depth * INDENT
+    return data.layout.indent
   end)
   ScrollUtil.InitScrollBoxListWithScrollBar(scrollBox, scrollBar, view)
 
   -- Column headings, lined up with the rows' cells.
   local totalHeading = parent:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-  totalHeading:SetPoint("BOTTOMRIGHT", scrollBox, "TOPRIGHT", -5, 4)
+  totalHeading:SetPoint("BOTTOMRIGHT", scrollBox, "TOPRIGHT", TOTAL_RIGHT - RowLayout.PADDING, 4)
   totalHeading:SetWidth(COLUMN_WIDTH)
   totalHeading:SetJustifyH("RIGHT")
   totalHeading:SetText(L.ACCOUNT_TOTAL_COLUMN)
@@ -281,7 +425,7 @@ local function createList(parent)
   characterHeading:SetJustifyH("RIGHT")
   characterHeading:SetText(L.CHARACTER_COLUMN)
   local statisticHeading = parent:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-  statisticHeading:SetPoint("BOTTOMLEFT", scrollBox, "TOPLEFT", 5, 4)
+  statisticHeading:SetPoint("BOTTOMLEFT", scrollBox, "TOPLEFT", RowLayout.PADDING, 4)
   statisticHeading:SetText(L.STATISTIC_COLUMN)
 
   return scrollBox
@@ -386,8 +530,18 @@ local function create()
   frame = CreateFrame("Frame", FRAME_NAME, UIParent, "ButtonFrameTemplate")
   frame:SetSize(WIDTH, HEIGHT)
   frame:SetTitle(L.ADDON_TITLE)
-  ButtonFrameTemplate_HidePortrait(frame)
+  ButtonFrameTemplate_ShowPortrait(frame)
+  frame:SetPortraitToAsset(PORTRAIT_ICON)
   ButtonFrameTemplate_HideButtonBar(frame)
+  -- The Character frame's backdrop in place of the template's rock, streaks and marble inset; the inset stays as
+  -- the list's anchor.
+  frame.TopTileStreaks:Hide()
+  frame.Inset.Bg:Hide()
+  frame.Inset.NineSlice:Hide()
+  local body = frame:CreateTexture(nil, "BACKGROUND")
+  body:SetAtlas(BODY_BACKGROUND)
+  body:SetPoint("TOPLEFT", 0, BODY_TOP)
+  body:SetPoint("BOTTOMRIGHT")
   frame:SetFrameStrata("HIGH")
   frame:SetToplevel(true)
   frame:SetClampedToScreen(true)
@@ -418,8 +572,8 @@ local function create()
     redraw(false)
     self.Dropdown:GenerateMenu()
   end)
-  -- Closing forgets the expanded Categories, the chosen Character and the search: the next open starts collapsed,
-  -- on the logged-in Character, with an empty search box.
+  -- Closing forgets the collapsed Categories, the chosen Character and the search: the next open starts with every
+  -- Category expanded, on the logged-in Character, with an empty search box.
   frame:SetScript("OnHide", function(self)
     self:UnregisterEvent("CRITERIA_UPDATE")
     selectedGUID = nil

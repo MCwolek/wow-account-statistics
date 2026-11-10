@@ -5,9 +5,9 @@ local CategoryTree = ns.CategoryTree
 local ListState = {}
 ns.ListState = ListState
 
--- The list of the whole tree, every Category collapsed, with no search.
+-- The list of the whole tree, every Category expanded, nested ones too, with no search.
 function ListState.new(tree)
-  return { whole = { tree = tree, expanded = {} } }
+  return { whole = { tree = tree, expanded = CategoryTree.allExpanded(tree) } }
 end
 
 -- The list with the Category `categoryID` expanded when it was collapsed and collapsed when it was expanded.

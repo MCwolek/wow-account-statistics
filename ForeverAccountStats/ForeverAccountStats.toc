@@ -13,6 +13,7 @@ Characters.lua
 Breakdown.lua
 CategoryTree.lua
 ListState.lua
+RowLayout.lua
 Rows.lua
 Command.lua
 Listing.lua
