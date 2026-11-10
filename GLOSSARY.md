@@ -26,6 +26,10 @@ _Avoid_: Last name, realm
 The rules a Character plays under, such as PvE, PvP or RP. On Forever each Ruleset is one realm per region, and the add-on reads it as the last word of the realm name ("CAMWOW EU4 Realm 5 PvE" is PvE).
 _Avoid_: Realm, server
 
+**Faction**:
+Horde or Alliance, the side a Character belongs to, recorded at Sync. Not the reputation factions some Statistics count (e.g. "Most factions at Exalted").
+_Avoid_: side, team
+
 **Tracked Character**:
 A Character that has been logged in at least once with the add-on enabled. Only Tracked Characters appear in the add-on.
 

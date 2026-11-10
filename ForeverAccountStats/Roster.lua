@@ -34,6 +34,7 @@ end
 -- The Roster of the Tracked Characters in `db`, the SavedVariables, at the time `now`, in order of Full Name and
 -- Ruleset. Each entry:
 --   guid, class
+--   faction: "Horde" or "Alliance", or nil until a Character tracked before Factions were recorded Syncs again
 --   label: Full Name and Ruleset
 --   isCurrent: whether it is the logged-in Character, `currentGUID`
 --   lastSynced: its Last Synced; `now` for the logged-in Character, which Synced on login, Syncs again on logout and
@@ -48,6 +49,7 @@ function Roster.of(db, currentGUID, now)
       guid = guid,
       label = labelOf(character),
       class = character.class,
+      faction = character.faction,
       isCurrent = isCurrent,
       lastSynced = lastSynced,
       relativeLastSynced = relativeLastSynced(lastSynced, now),

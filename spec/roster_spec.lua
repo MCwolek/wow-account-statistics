@@ -67,6 +67,19 @@ describe("Roster.of", function()
     }, Roster.of(db, "Player-1-0000AAAA", NOW))
   end)
 
+  it("gives each Tracked Character its Faction, none to one synced before Factions were recorded", function()
+    local db = {
+      characters = {
+        ["Player-1-0000AAAA"] = { fullName = "Arlen", faction = "Alliance", lastSynced = NOW },
+        ["Player-1-0000BBBB"] = { fullName = "Calgan Blackbeard", faction = "Horde", lastSynced = NOW },
+        ["Player-1-0000CCCC"] = { fullName = "Mira Stonehand", lastSynced = NOW },
+      },
+    }
+    local roster = Roster.of(db, "Player-1-0000AAAA", NOW)
+    assert.are.same({ "Alliance", "Horde" }, { roster[1].faction, roster[2].faction })
+    assert.is_nil(roster[3].faction)
+  end)
+
   describe("relative Last Synced", function()
     -- relativeLastSynced of a Character other than the logged-in one, last Synced at `syncedAt`.
     local function relativeOf(syncedAt)

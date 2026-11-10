@@ -10,8 +10,9 @@ function GameAPI.addOnVersion()
   return C_AddOns.GetAddOnMetadata(addonName, "Version")
 end
 
--- The logged-in Character as read: { guid, firstName, surname, realmName, classFile }.
--- realmName is e.g. "CAMWOW EU4 Realm 5 PvE"; classFile is e.g. "WARRIOR".
+-- The logged-in Character as read: { guid, firstName, surname, realmName, classFile, factionGroup }.
+-- realmName is e.g. "CAMWOW EU4 Realm 5 PvE"; classFile is e.g. "WARRIOR"; factionGroup is e.g. "Horde",
+-- "Alliance" or "Neutral".
 function GameAPI.readPlayer()
   local firstName, surname = UnitName("player")
   local _, classFile = UnitClass("player")
@@ -21,6 +22,7 @@ function GameAPI.readPlayer()
     surname = surname,
     realmName = GetRealmName(),
     classFile = classFile,
+    factionGroup = UnitFactionGroup("player"),
   }
 end
 

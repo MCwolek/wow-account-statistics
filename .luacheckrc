@@ -52,6 +52,7 @@ read_globals = {
   "UIParent",
   "UISpecialFrames",
   "UnitClass",
+  "UnitFactionGroup",
   "UnitGUID",
   "UnitName",
 }
