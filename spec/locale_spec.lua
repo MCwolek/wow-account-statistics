@@ -162,19 +162,30 @@ describe("Locale tables", function()
   end)
 
   describe("German", function()
-    -- Keys German leaves to English: the add-on's name stays "Account Statistics" in every language.
-    local LEFT_IN_ENGLISH = { ADDON_TITLE = true }
+    -- Keys German takes from English rather than repeating them: the add-on's names, which stay English in every
+    -- language, and text with no words in it.
+    local TAKEN_FROM_ENGLISH = {
+      ADDON_TITLE = true,
+      STATISTICS_TAB_BUTTON = true,
+      CHARACTER_WITH_RULESET = true,
+      STATISTIC_HEADER = true,
+      STATISTIC_LINE = true,
+      TRACKED_CHARACTER_LINE = true,
+      MISSING_VALUE = true,
+      NEVER_HAPPENED = true,
+      NO_ACCOUNT_TOTAL = true,
+    }
 
-    it("has its own text for every English key but the add-on's name", function()
+    it("has its own text for every English key but those it takes from English", function()
       local missing = {}
       for key in pairs(tables.enUS) do
-        if not LEFT_IN_ENGLISH[key] and tables.deDE[key] == nil then
+        if not TAKEN_FROM_ENGLISH[key] and tables.deDE[key] == nil then
           missing[#missing + 1] = key
         end
       end
       table.sort(missing)
       assert.are.same({}, missing)
-      for key in pairs(LEFT_IN_ENGLISH) do
+      for key in pairs(TAKEN_FROM_ENGLISH) do
         assert.is_nil(tables.deDE[key], key)
       end
     end)

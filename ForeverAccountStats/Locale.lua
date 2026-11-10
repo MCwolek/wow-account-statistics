@@ -55,13 +55,13 @@ local enUS = {
 }
 
 -- German. Keep every placeholder of the English text, in the same order: Lua 5.1's string.format has no positional
--- arguments. The German client's own words where it has one; the add-on's name and slash commands stay English.
+-- arguments. The German client's own words where it has one; slash commands stay English. The add-on's names, which
+-- stay English too, and text with no words in it are left out and come from English.
 local deDE = {
   ACCOUNT_TOTAL_COLUMN = "Account gesamt",
   ACCOUNT_TOTAL_LINE = "  Account gesamt: %s",
   BREAKDOWN_MORE = "und %d weitere",
   CHARACTER_COLUMN = "Charakter",
-  CHARACTER_WITH_RULESET = "%s (%s)",
   DAYS_AGO = "vor %d Tg.",
   EXACT_DATE_TIME = "%d.%m.%Y %H:%M",
   FORGET_CONFIRM = "%s vergessen?\n\nSeine Statistiken zählen dann nicht mehr zu den Gesamtwerten des Accounts. "
@@ -76,17 +76,10 @@ local deDE = {
   MINIMAP_BUTTON_HIDDEN = "%s: Minikartensymbol ausgeblendet. /stats minimap zeigt es wieder an.",
   MINIMAP_BUTTON_SHOWN = "%s: Minikartensymbol eingeblendet. /stats minimap blendet es aus.",
   MINUTES_AGO = "vor %d Min.",
-  MISSING_VALUE = "?",
-  NEVER_HAPPENED = "--",
-  NO_ACCOUNT_TOTAL = "—",
   NOW = "jetzt",
   SEARCH_PLACEHOLDER = "Statistiken durchsuchen",
   STATISTIC_COLUMN = "Statistik",
-  STATISTIC_HEADER = "%s: %s (%d)",
-  STATISTIC_LINE = "  %s - %s",
-  STATISTICS_TAB_BUTTON = "Account Stats",
   TRACKED_CHARACTERS_HEADER = "%s: Erfasste Charaktere (%d)",
-  TRACKED_CHARACTER_LINE = "  %s - %s",
   UNKNOWN_STATISTIC = "Unbekannte Statistik",
   USAGE = "%s: /stats öffnet das Statistikfenster; /stats list listet die erfassten Charaktere auf; "
     .. "/stats dump <Statistik-ID> zeigt eine Statistik für jeden von ihnen; "
