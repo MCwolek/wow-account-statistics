@@ -104,7 +104,7 @@ local function create()
 end
 
 -- Shows the Minimap button where it was left, or hides it, as ForeverAccountStatsDB.minimapButton says. Call it once
--- SavedVariables are loaded, and again whenever /stats minimap changes them.
+-- SavedVariables are loaded.
 function MinimapButton.applySettings()
   local settings = ForeverAccountStatsDB.minimapButton
   if not MinimapButtonSettings.isShown(settings) then
@@ -118,4 +118,12 @@ function MinimapButton.applySettings()
   end
   place(MinimapButtonSettings.angle(settings))
   button:Show()
+end
+
+-- Hides the Minimap button if it is shown, or shows it if it is hidden, as /stats minimap does, and saves that.
+-- Returns whether it is now shown.
+function MinimapButton.toggleShown()
+  ForeverAccountStatsDB.minimapButton = MinimapButtonSettings.withShownToggled(ForeverAccountStatsDB.minimapButton)
+  MinimapButton.applySettings()
+  return MinimapButtonSettings.isShown(ForeverAccountStatsDB.minimapButton)
 end
