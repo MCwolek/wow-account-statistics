@@ -23,16 +23,20 @@ describe("Locale.pick", function()
 end)
 
 describe("ns.L", function()
-  -- Loads Locale.lua the way a client in the given language does.
+  -- Loads Locale.lua the way a client in the given language does, putting the specs' GetLocale back even when
+  -- loading fails, so one failure does not switch every later spec's language.
   local function loadIn(locale)
     local gameGetLocale = _G.GetLocale
     ---@diagnostic disable-next-line: duplicate-set-field
     _G.GetLocale = function()
       return locale
     end
-    local ns = addon.loadFile("Locale.lua", {})
+    local loaded, result = pcall(addon.loadFile, "Locale.lua", {})
     _G.GetLocale = gameGetLocale
-    return ns
+    if not loaded then
+      error(result, 0)
+    end
+    return result
   end
 
   it("is the German text on a German client, English where it has none", function()
