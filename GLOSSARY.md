@@ -69,6 +69,10 @@ _Avoid_: Main window, frame, Statistics panel (that is the game's own)
 The saved Statistic values of one Tracked Character, taken at one moment.
 _Avoid_: Scan, cache, backup
 
+**Live Values**:
+The logged-in Character's Statistic values read just now, never saved. The Statistics window counts them in place of its Snapshot; /stats dump shows only Snapshots.
+_Avoid_: Current values, live snapshot
+
 **Sync**:
 Taking a new Snapshot of the logged-in Character, on login, logout or UI reload. A Sync that reads no Statistic values (none at all, or every one "--") keeps the earlier Snapshot and Last Synced.
 _Avoid_: Scan, refresh, update
