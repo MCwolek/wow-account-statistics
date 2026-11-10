@@ -5,6 +5,7 @@ local function loadRows()
   addon.loadFile("Values.lua", ns)
   addon.loadFile("AccountTotals.lua", ns)
   addon.loadFile("Characters.lua", ns)
+  addon.loadFile("RowLayout.lua", ns)
   return addon.loadFile("Rows.lua", ns).Rows
 end
 
@@ -30,15 +31,26 @@ describe("Rows.build", function()
   }
 
   it("gives Statistic rows another Character's saved value and the Account Total with the logged-in Character's "
-    .. "live value", function()
+    .. "live value, and every row its layout", function()
     local view = { db = db, selectedGUID = OTHER, currentGUID = CURRENT, liveValues = liveValues }
+    local category = { look = "category", height = 26, indent = 0 }
+    local statistic = { look = "statistic", height = 24, indent = 20 }
     assert.are.same({
-      { kind = "category", id = 130, name = "Character", depth = 0, expanded = true },
-      { kind = "statistic", id = 60, name = "Total deaths", depth = 1, value = "3", total = "8" },
-      { kind = "statistic", id = 98, name = "Quests completed", depth = 1, value = "84", total = "114" },
-      { kind = "category", id = 131, name = "Wealth", depth = 1, expanded = true },
-      { kind = "statistic", id = 328, name = "Total gold acquired", depth = 2, value = "5", total = "17" },
+      { kind = "category", id = 130, name = "Character", depth = 0, expanded = true, layout = category },
+      { kind = "statistic", id = 60, name = "Total deaths", depth = 1, value = "3", total = "8", layout = statistic },
+      { kind = "statistic", id = 98, name = "Quests completed", depth = 1, value = "84", total = "114",
+        layout = statistic },
+      { kind = "category", id = 131, name = "Wealth", depth = 1, expanded = true,
+        layout = { look = "nestedCategory", height = 22, indent = 20 } },
+      { kind = "statistic", id = 328, name = "Total gold acquired", depth = 2, value = "5", total = "17",
+        layout = { look = "statistic", height = 24, indent = 40 } },
     }, Rows.build(visible, view))
+  end)
+
+  it("leaves the rows it is given unchanged", function()
+    local view = { db = db, selectedGUID = OTHER, currentGUID = CURRENT, liveValues = liveValues }
+    Rows.build(visible, view)
+    assert.are.same({ kind = "category", id = 130, name = "Character", depth = 0, expanded = true }, visible[1])
   end)
 
   it("shows the logged-in Character's live values", function()
@@ -51,24 +63,5 @@ describe("Rows.build", function()
     local view = { db = { characters = {} }, currentGUID = CURRENT, liveValues = liveValues }
     local rows = Rows.build(visible, view)
     assert.are.same({ "?", "?", "?" }, { rows[2].value, rows[3].value, rows[5].value })
-  end)
-end)
-
-describe("Rows.layout", function()
-  local Rows = loadRows()
-
-  it("lays a top-level Category out as the game's Statistics tab does", function()
-    local row = { kind = "category", id = 130, name = "Character", depth = 0, expanded = true }
-    assert.are.same({ look = "category", height = 26, indent = 0 }, Rows.layout(row))
-  end)
-
-  it("indents a Statistic 20 for each Category it sits in", function()
-    local row = { kind = "statistic", id = 328, name = "Total gold acquired", depth = 2, value = "5", total = "17" }
-    assert.are.same({ look = "statistic", height = 24, indent = 40 }, Rows.layout(row))
-  end)
-
-  it("lays a nested Category out smaller, without the bar, indented like a Statistic", function()
-    local row = { kind = "category", id = 131, name = "Wealth", depth = 1, expanded = false }
-    assert.are.same({ look = "nestedCategory", height = 22, indent = 20 }, Rows.layout(row))
   end)
 end)
