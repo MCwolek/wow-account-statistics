@@ -1,7 +1,7 @@
 -- Thin adapter: the Minimap button, which opens or closes the Statistics window. Where it sits and whether it is shown
 -- come from MinimapButtonSettings, saved in ForeverAccountStatsDB.minimapButton.
 local _, ns = ...
-local L, Window, MinimapButtonSettings = ns.L, ns.Window, ns.MinimapButtonSettings
+local L, Window, MinimapButtonSettings, MinimapRing = ns.L, ns.Window, ns.MinimapButtonSettings, ns.MinimapRing
 
 local MinimapButton = {}
 ns.MinimapButton = MinimapButton
@@ -20,7 +20,7 @@ local OUTSIDE_EDGE = 5
 local button
 
 local function place(angle)
-  local x, y = MinimapButtonSettings.offset(angle, Minimap:GetWidth() / 2 + OUTSIDE_EDGE)
+  local x, y = MinimapRing.offset(angle, Minimap:GetWidth() / 2 + OUTSIDE_EDGE)
   button:ClearAllPoints()
   button:SetPoint("CENTER", Minimap, "CENTER", x, y)
 end
@@ -30,11 +30,23 @@ local function cursorAngle()
   local cursorX, cursorY = GetCursorPosition()
   local scale = Minimap:GetEffectiveScale()
   local centerX, centerY = Minimap:GetCenter()
-  return MinimapButtonSettings.angleTowards(cursorX / scale - centerX, cursorY / scale - centerY)
+  return MinimapRing.angleTowards(cursorX / scale - centerX, cursorY / scale - centerY)
 end
 
 local function followCursor()
   place(cursorAngle())
+end
+
+-- Holding the left mouse button down, which clicks or drags the button, nudges the icon 1px right and down, as the
+-- default UI's Minimap buttons do.
+local function setIconPressed(self, pressed)
+  local nudge = pressed and 1 or 0
+  self.Icon:SetPoint("TOPLEFT", ICON_LEFT + nudge, ICON_TOP - nudge)
+end
+
+-- Puts the button at its saved angle, on the ring as wide as the Minimap is now.
+local function placeAtSavedAngle()
+  place(MinimapButtonSettings.angle(ForeverAccountStatsDB.minimapButton))
 end
 
 local function startDrag(self)
@@ -44,8 +56,9 @@ end
 
 local function stopDrag(self)
   self:SetScript("OnUpdate", nil)
+  setIconPressed(self, false)
   ForeverAccountStatsDB.minimapButton = MinimapButtonSettings.moved(ForeverAccountStatsDB.minimapButton, cursorAngle())
-  place(MinimapButtonSettings.angle(ForeverAccountStatsDB.minimapButton))
+  placeAtSavedAngle()
 end
 
 local function showTooltip(self)
@@ -53,12 +66,6 @@ local function showTooltip(self)
   GameTooltip_SetTitle(GameTooltip, L.ADDON_TITLE)
   GameTooltip_AddInstructionLine(GameTooltip, L.MINIMAP_BUTTON_HINT)
   GameTooltip:Show()
-end
-
--- Holding the mouse button down nudges the icon 1px right and down, as the default UI's Minimap buttons do.
-local function setIconPressed(self, pressed)
-  local nudge = pressed and 1 or 0
-  self.Icon:SetPoint("TOPLEFT", ICON_LEFT + nudge, ICON_TOP - nudge)
 end
 
 local function create()
@@ -92,20 +99,27 @@ local function create()
   button:SetScript("OnDragStop", stopDrag)
   button:SetScript("OnEnter", showTooltip)
   button:SetScript("OnLeave", GameTooltip_Hide)
-  button:SetScript("OnMouseDown", function(self)
-    setIconPressed(self, true)
+  button:SetScript("OnMouseDown", function(self, mouseButton)
+    if mouseButton == "LeftButton" then
+      setIconPressed(self, true)
+    end
   end)
-  button:SetScript("OnMouseUp", function(self)
-    setIconPressed(self, false)
+  button:SetScript("OnMouseUp", function(self, mouseButton)
+    if mouseButton == "LeftButton" then
+      setIconPressed(self, false)
+    end
   end)
   button:SetScript("OnHide", function(self)
     setIconPressed(self, false)
   end)
+  -- Edit Mode's Minimap size scales the Minimap, which the button follows as its child. Whatever resizes the Minimap
+  -- itself, such as another add-on, changes the ring's radius, so the button is placed on the new ring.
+  Minimap:HookScript("OnSizeChanged", placeAtSavedAngle)
 end
 
 -- Shows the Minimap button where it was left, or hides it, as ForeverAccountStatsDB.minimapButton says. Call it once
--- SavedVariables are loaded, and again whenever /stats minimap changes them.
-function MinimapButton.update()
+-- SavedVariables are loaded.
+function MinimapButton.applySettings()
   local settings = ForeverAccountStatsDB.minimapButton
   if not MinimapButtonSettings.isShown(settings) then
     if button then
@@ -116,6 +130,14 @@ function MinimapButton.update()
   if not button then
     create()
   end
-  place(MinimapButtonSettings.angle(settings))
+  placeAtSavedAngle()
   button:Show()
+end
+
+-- Hides the Minimap button if it is shown, or shows it if it is hidden, as /stats minimap does, and saves that.
+-- Returns whether it is now shown.
+function MinimapButton.toggleShown()
+  ForeverAccountStatsDB.minimapButton = MinimapButtonSettings.withShownToggled(ForeverAccountStatsDB.minimapButton)
+  MinimapButton.applySettings()
+  return MinimapButtonSettings.isShown(ForeverAccountStatsDB.minimapButton)
 end

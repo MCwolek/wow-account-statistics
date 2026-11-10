@@ -19,13 +19,13 @@ function MinimapButtonSettings.isShown(saved)
 end
 
 -- The settings to save once /stats minimap hides a shown button or shows a hidden one.
-function MinimapButtonSettings.shownToggled(saved)
+function MinimapButtonSettings.withShownToggled(saved)
   local settings = copy(saved)
   settings.hidden = MinimapButtonSettings.isShown(saved) or nil
   return settings
 end
 
--- Angles are in degrees, counterclockwise from the Minimap's right edge, as math.atan2 measures them.
+-- Angles are in degrees around the Minimap's centre, as MinimapRing measures them.
 -- The lower left of the Minimap, clear of the default UI's own buttons.
 local DEFAULT_ANGLE = 225
 
@@ -42,15 +42,4 @@ function MinimapButtonSettings.moved(saved, angle)
   local settings = copy(saved)
   settings.angle = angle % 360
   return settings
-end
-
--- The angle of the point `x`, `y` away from the Minimap's centre, such as the cursor while the button is dragged.
-function MinimapButtonSettings.angleTowards(x, y)
-  return math.deg(math.atan2(y, x)) % 360
-end
-
--- x, y from the Minimap's centre to the button's centre at `angle`, `radius` away.
-function MinimapButtonSettings.offset(angle, radius)
-  local radians = math.rad(angle)
-  return math.cos(radians) * radius, math.sin(radians) * radius
 end

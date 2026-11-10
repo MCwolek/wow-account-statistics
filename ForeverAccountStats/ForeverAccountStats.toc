@@ -20,6 +20,7 @@ Command.lua
 Listing.lua
 WindowPosition.lua
 MinimapButtonSettings.lua
+MinimapRing.lua
 GameAPI.lua
 Window.lua
 MinimapButton.lua

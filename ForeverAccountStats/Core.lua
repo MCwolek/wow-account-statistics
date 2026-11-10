@@ -2,7 +2,7 @@
 -- the Statistics window in Window.lua and the Minimap button in MinimapButton.lua.
 local addonName, ns = ...
 local Sync, Command, Listing, GameAPI, Window = ns.Sync, ns.Command, ns.Listing, ns.GameAPI, ns.Window
-local MinimapButton, MinimapButtonSettings = ns.MinimapButton, ns.MinimapButtonSettings
+local MinimapButton = ns.MinimapButton
 
 -- The default UI's Statistics tab lives in this load-on-demand add-on.
 local ACHIEVEMENT_UI = "Blizzard_AchievementUI"
@@ -20,7 +20,7 @@ frame:RegisterEvent("PLAYER_LOGOUT")
 frame:SetScript("OnEvent", function(_, event, arg1)
   if event == "ADDON_LOADED" and arg1 == addonName then
     ForeverAccountStatsDB = Sync.ensureDB(ForeverAccountStatsDB)
-    MinimapButton.update()
+    MinimapButton.applySettings()
     -- Another add-on may have loaded the Achievement UI before this one.
     if GameAPI.isAddOnLoaded(ACHIEVEMENT_UI) then
       Window.addStatisticsTabButton()
@@ -42,10 +42,7 @@ SlashCmdList.FOREVERACCOUNTSTATS = function(message)
   end
   local lines
   if command.action == "minimap" then
-    ForeverAccountStatsDB.minimapButton = MinimapButtonSettings.shownToggled(ForeverAccountStatsDB.minimapButton)
-    MinimapButton.update()
-    local confirmation = MinimapButtonSettings.isShown(ForeverAccountStatsDB.minimapButton)
-      and ns.L.MINIMAP_BUTTON_SHOWN or ns.L.MINIMAP_BUTTON_HIDDEN
+    local confirmation = MinimapButton.toggleShown() and ns.L.MINIMAP_BUTTON_SHOWN or ns.L.MINIMAP_BUTTON_HIDDEN
     lines = { string.format(confirmation, ns.L.ADDON_TITLE) }
   elseif command.action == "list" then
     lines = Listing.lines(ForeverAccountStatsDB, GameAPI.playerGUID(), GameAPI.now())
