@@ -21,6 +21,7 @@ Listing.lua
 WindowPosition.lua
 MinimapButtonSettings.lua
 MinimapRing.lua
+TooltipAnchor.lua
 GameAPI.lua
 Window.lua
 MinimapButton.lua

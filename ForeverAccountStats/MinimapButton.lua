@@ -2,7 +2,7 @@
 -- come from MinimapButtonSettings, saved in ForeverAccountStatsDB.minimapButton.
 local _, ns = ...
 local L, GameAPI, Window = ns.L, ns.GameAPI, ns.Window
-local MinimapButtonSettings, MinimapRing = ns.MinimapButtonSettings, ns.MinimapRing
+local MinimapButtonSettings, MinimapRing, TooltipAnchor = ns.MinimapButtonSettings, ns.MinimapRing, ns.TooltipAnchor
 
 local MinimapButton = {}
 ns.MinimapButton = MinimapButton
@@ -63,9 +63,13 @@ local function stopDrag(self)
 end
 
 -- The add-on's name in gold with its version in green on the right, then the left click in grey and what it does in
--- gold, as other add-ons' Minimap buttons show theirs.
+-- gold, as other add-ons' Minimap buttons show theirs, on the side of the button facing the screen's centre.
 local function showTooltip(self)
-  GameTooltip:SetOwner(self, "ANCHOR_LEFT")
+  GameTooltip:SetOwner(self, "ANCHOR_NONE")
+  local x, y = self:GetCenter()
+  local point, relativePoint = TooltipAnchor.towardScreenCentre(x, y, UIParent:GetWidth(), UIParent:GetHeight())
+  GameTooltip:ClearAllPoints()
+  GameTooltip:SetPoint(point, self, relativePoint)
   local noWrap = false
   GameTooltip_AddColoredDoubleLine(GameTooltip, L.ADDON_TITLE, GameAPI.addOnVersion(), NORMAL_FONT_COLOR,
     GREEN_FONT_COLOR, noWrap)
