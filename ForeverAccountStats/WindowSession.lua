@@ -8,7 +8,7 @@ ns.WindowSession = WindowSession
 -- A copy of the open window with the fields that `change()` returns set. A closed window stays as it is, without
 -- calling `change`: emptying the search box on closing, for one, lands here after the window has closed.
 local function changed(session, change)
-  if not session.list then
+  if not session.open then
     return session
   end
   local copy = {}
@@ -23,13 +23,13 @@ end
 
 -- The closed window over the Category tree `tree`.
 function WindowSession.new(tree)
-  return { tree = tree }
+  return { tree = tree, open = false }
 end
 
 -- The window just opened, counting the logged-in Character's Live Values `liveValues`: every Category expanded, on
 -- the logged-in Character, with no search.
 function WindowSession.opened(session, liveValues)
-  return { tree = session.tree, list = ns.ListState.new(session.tree), liveValues = liveValues }
+  return { tree = session.tree, open = true, list = ns.ListState.new(session.tree), liveValues = liveValues }
 end
 
 -- The window closed: it forgets the expanded Categories, the chosen Character, the search and the Live Values.
@@ -39,7 +39,7 @@ end
 
 -- Whether the window is open.
 function WindowSession.isOpen(session)
-  return session.list ~= nil
+  return session.open
 end
 
 -- The window with the Character `guid` chosen in the dropdown.
