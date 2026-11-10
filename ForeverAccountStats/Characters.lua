@@ -73,4 +73,3 @@ end
 function Characters.lastSyncedTooltip(entry, now, formatDate)
   return string.format(L.LAST_SYNC, formatDate(L.EXACT_DATE_TIME, entry.isCurrent and now or entry.lastSynced))
 end
-
