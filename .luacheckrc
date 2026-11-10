@@ -12,8 +12,6 @@ globals = {
 
 -- WoW API the add-on reads. Add entries as the code starts using them.
 read_globals = {
-  "AchievementFrame",
-  "AchievementFrameStats",
   "ButtonFrameTemplate_HideButtonBar",
   "ButtonFrameTemplate_ShowPortrait",
   "C_AddOns",

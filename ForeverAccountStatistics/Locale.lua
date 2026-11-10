@@ -45,8 +45,6 @@ local enUS = {
   STATISTIC_COLUMN = "Statistic",
   STATISTIC_HEADER = "%s: %s (%d)",
   STATISTIC_LINE = "  %s - %s",
-  -- The button on the default UI's Statistics tab that opens the window.
-  STATISTICS_TAB_BUTTON = "Account Stats",
   TRACKED_CHARACTERS_HEADER = "%s: Tracked Characters (%d)",
   TRACKED_CHARACTER_LINE = "  %s - %s",
   UNKNOWN_STATISTIC = "Unknown Statistic",

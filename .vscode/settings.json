@@ -17,11 +17,9 @@
     "Lua.diagnostics.globals": [
         "SlashCmdList",
         "ButtonFrameTemplate_HideButtonBar",
-        "AchievementFrameStats",
         "GameTooltip_Hide",
         "ScrollUtil",
         "UISpecialFrames",
-        "AchievementFrame",
         "CreateDataProvider",
         "CreateScrollBoxListLinearView",
         "ScrollBoxConstants",
@@ -36,7 +34,9 @@
         "GameTooltip_AddColoredDoubleLine",
         "GameTooltip_AddNormalLine",
         "MenuStyle1Mixin",
-        "STANDARD_TEXT_FONT"
+        "STANDARD_TEXT_FONT",
+        "AchievementFrameStats",
+        "AchievementFrame"
     ],
     "Lua.type.weakUnionCheck": true
 }

@@ -162,11 +162,10 @@ describe("Locale tables", function()
   end)
 
   describe("German", function()
-    -- Keys German takes from English rather than repeating them: the add-on's names, which stay English in every
+    -- Keys German takes from English rather than repeating them: the add-on's name, which stays English in every
     -- language, and text with no words in it.
     local TAKEN_FROM_ENGLISH = {
       ADDON_TITLE = true,
-      STATISTICS_TAB_BUTTON = true,
       CHARACTER_WITH_RULESET = true,
       STATISTIC_HEADER = true,
       STATISTIC_LINE = true,

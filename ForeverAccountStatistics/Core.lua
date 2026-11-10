@@ -4,9 +4,6 @@ local addonName, ns = ...
 local Sync, Command, Listing, GameAPI, Window = ns.Sync, ns.Command, ns.Listing, ns.GameAPI, ns.Window
 local MinimapButton = ns.MinimapButton
 
--- The default UI's Statistics tab lives in this load-on-demand add-on.
-local ACHIEVEMENT_UI = "Blizzard_AchievementUI"
-
 local function sync()
   local character = Sync.character(GameAPI.readPlayer())
   local snapshot = Sync.buildSnapshot(GameAPI.readStatistics())
@@ -21,12 +18,6 @@ frame:SetScript("OnEvent", function(_, event, arg1)
   if event == "ADDON_LOADED" and arg1 == addonName then
     ForeverAccountStatisticsDB = Sync.ensureDB(ForeverAccountStatisticsDB)
     MinimapButton.applySettings()
-    -- Another add-on may have loaded the Achievement UI before this one.
-    if GameAPI.isAddOnLoaded(ACHIEVEMENT_UI) then
-      Window.addStatisticsTabButton()
-    end
-  elseif event == "ADDON_LOADED" and arg1 == ACHIEVEMENT_UI then
-    Window.addStatisticsTabButton()
   elseif event == "PLAYER_LOGIN" or event == "PLAYER_LOGOUT" then
     sync()
   end
