@@ -1,5 +1,5 @@
 -- Thin adapter: the Minimap button, which opens or closes the Statistics window. Where it sits and whether it is shown
--- come from MinimapButtonSettings, saved in ForeverAccountStatsDB.minimapButton.
+-- come from MinimapButtonSettings, saved in ForeverAccountStatisticsDB.minimapButton.
 local _, ns = ...
 local L, GameAPI, Window = ns.L, ns.GameAPI, ns.Window
 local MinimapButtonSettings, MinimapRing, TooltipAnchor = ns.MinimapButtonSettings, ns.MinimapRing, ns.TooltipAnchor
@@ -47,7 +47,7 @@ end
 
 -- Puts the button at its saved angle, on the ring as wide as the Minimap is now.
 local function placeAtSavedAngle()
-  place(MinimapButtonSettings.angle(ForeverAccountStatsDB.minimapButton))
+  place(MinimapButtonSettings.angle(ForeverAccountStatisticsDB.minimapButton))
 end
 
 local function startDrag(self)
@@ -58,7 +58,8 @@ end
 local function stopDrag(self)
   self:SetScript("OnUpdate", nil)
   setIconPressed(self, false)
-  ForeverAccountStatsDB.minimapButton = MinimapButtonSettings.moved(ForeverAccountStatsDB.minimapButton, cursorAngle())
+  local db = ForeverAccountStatisticsDB
+  db.minimapButton = MinimapButtonSettings.moved(db.minimapButton, cursorAngle())
   placeAtSavedAngle()
 end
 
@@ -127,10 +128,10 @@ local function create()
   Minimap:HookScript("OnSizeChanged", placeAtSavedAngle)
 end
 
--- Shows the Minimap button where it was left, or hides it, as ForeverAccountStatsDB.minimapButton says. Call it once
--- SavedVariables are loaded.
+-- Shows the Minimap button where it was left, or hides it, as ForeverAccountStatisticsDB.minimapButton says.
+-- Call it once SavedVariables are loaded.
 function MinimapButton.applySettings()
-  local settings = ForeverAccountStatsDB.minimapButton
+  local settings = ForeverAccountStatisticsDB.minimapButton
   if not MinimapButtonSettings.isShown(settings) then
     if button then
       button:Hide()
@@ -147,7 +148,8 @@ end
 -- Hides the Minimap button if it is shown, or shows it if it is hidden, as /stats minimap does, and saves that.
 -- Returns whether it is now shown.
 function MinimapButton.toggleShown()
-  ForeverAccountStatsDB.minimapButton = MinimapButtonSettings.withShownToggled(ForeverAccountStatsDB.minimapButton)
+  local db = ForeverAccountStatisticsDB
+  db.minimapButton = MinimapButtonSettings.withShownToggled(db.minimapButton)
   MinimapButton.applySettings()
-  return MinimapButtonSettings.isShown(ForeverAccountStatsDB.minimapButton)
+  return MinimapButtonSettings.isShown(db.minimapButton)
 end

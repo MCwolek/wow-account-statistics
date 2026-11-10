@@ -1,4 +1,4 @@
-# Forever Account Stats
+# Account Statistics
 
 A World of Warcraft: Forever add-on that shows the in-game Statistics of all your characters side by side, plus totals across your whole account. Search for a Statistic, for example "death", and see every character's value and the account total on one row.
 
@@ -12,7 +12,7 @@ Terms such as Snapshot, Tracked Character and Account Total are defined in [GLOS
 
 ## Install
 
-Copy the `ForeverAccountStats` folder into `World of Warcraft/_forever_/Interface/AddOns/` and restart the game.
+Copy the `ForeverAccountStatistics` folder into `World of Warcraft/_forever_/Interface/AddOns/` and restart the game.
 
 ## Development
 

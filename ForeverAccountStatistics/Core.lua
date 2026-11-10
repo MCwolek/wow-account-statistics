@@ -10,7 +10,7 @@ local ACHIEVEMENT_UI = "Blizzard_AchievementUI"
 local function sync()
   local character = Sync.character(GameAPI.readPlayer())
   local snapshot = Sync.buildSnapshot(GameAPI.readStatistics())
-  ForeverAccountStatsDB = Sync.record(ForeverAccountStatsDB, character, snapshot, GameAPI.now())
+  ForeverAccountStatisticsDB = Sync.record(ForeverAccountStatisticsDB, character, snapshot, GameAPI.now())
 end
 
 local frame = CreateFrame("Frame")
@@ -19,7 +19,7 @@ frame:RegisterEvent("PLAYER_LOGIN")
 frame:RegisterEvent("PLAYER_LOGOUT")
 frame:SetScript("OnEvent", function(_, event, arg1)
   if event == "ADDON_LOADED" and arg1 == addonName then
-    ForeverAccountStatsDB = Sync.ensureDB(ForeverAccountStatsDB)
+    ForeverAccountStatisticsDB = Sync.ensureDB(ForeverAccountStatisticsDB)
     MinimapButton.applySettings()
     -- Another add-on may have loaded the Achievement UI before this one.
     if GameAPI.isAddOnLoaded(ACHIEVEMENT_UI) then
@@ -32,7 +32,7 @@ frame:SetScript("OnEvent", function(_, event, arg1)
   end
 end)
 
--- ForeverAccountStatsDB exists by now: ADDON_LOADED fires before the player can type a command.
+-- ForeverAccountStatisticsDB exists by now: ADDON_LOADED fires before the player can type a command.
 SLASH_FOREVERACCOUNTSTATS1 = "/stats"
 SlashCmdList.FOREVERACCOUNTSTATS = function(message)
   local command = Command.parse(message or "")
@@ -45,11 +45,11 @@ SlashCmdList.FOREVERACCOUNTSTATS = function(message)
     local confirmation = MinimapButton.toggleShown() and ns.L.MINIMAP_BUTTON_SHOWN or ns.L.MINIMAP_BUTTON_HIDDEN
     lines = { string.format(confirmation, ns.L.ADDON_TITLE) }
   elseif command.action == "list" then
-    lines = Listing.lines(ForeverAccountStatsDB, GameAPI.playerGUID(), GameAPI.now())
+    lines = Listing.lines(ForeverAccountStatisticsDB, GameAPI.playerGUID(), GameAPI.now())
   elseif command.action == "dump" then
     local name = GameAPI.statisticName(command.statisticID)
     lines = Listing.statisticLines(
-      ForeverAccountStatsDB, GameAPI.playerGUID(), GameAPI.now(), command.statisticID, name)
+      ForeverAccountStatisticsDB, GameAPI.playerGUID(), GameAPI.now(), command.statisticID, name)
   else
     lines = { string.format(ns.L.USAGE, ns.L.ADDON_TITLE) }
   end

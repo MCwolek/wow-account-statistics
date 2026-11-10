@@ -1,4 +1,4 @@
-# Forever Account Stats
+# Account Statistics
 
 WoW: Forever add-on: every Character's Statistics side by side, plus Account Totals. Speak the language of [GLOSSARY.md](GLOSSARY.md) in code, issues and commits; when a new domain term settles, add it there. Design decisions with real trade-offs go in [docs/adr/](docs/adr/).
 

@@ -1,4 +1,4 @@
-# Forever Account Stats
+# Account Statistics
 
 A World of Warcraft: Forever add-on that shows the in-game Statistics of every character on one account side by side, plus their combined totals.
 

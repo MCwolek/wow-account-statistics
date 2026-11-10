@@ -1,7 +1,7 @@
 -- Helpers for loading add-on files the way the WoW client does.
 local M = {}
 
-M.DIR = "ForeverAccountStats"
+M.DIR = "ForeverAccountStatistics"
 
 -- Locale.lua asks the game for its text language at load; the specs play an English client.
 ---@diagnostic disable-next-line: duplicate-set-field

@@ -1,6 +1,6 @@
 local addon = require("addon")
 
-describe("ForeverAccountStats.toc", function()
+describe("ForeverAccountStatistics.toc", function()
   local metadata, files = addon.readToc()
 
   it("targets the WoW: Forever client", function()
