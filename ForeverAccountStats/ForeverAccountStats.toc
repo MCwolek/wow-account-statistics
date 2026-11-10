@@ -8,6 +8,7 @@
 Locale.lua
 Values.lua
 Sync.lua
+Roster.lua
 Characters.lua
 AccountStatistics.lua
 CategoryTree.lua
