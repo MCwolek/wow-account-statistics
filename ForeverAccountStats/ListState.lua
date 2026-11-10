@@ -5,22 +5,20 @@ local CategoryTree = ns.CategoryTree
 local ListState = {}
 ns.ListState = ListState
 
-local function expandAll(expanded, nodes)
-  for _, node in ipairs(nodes) do
+-- The set { [categoryID] = true } of every Category in the Category tree `tree`, nested ones too, added to
+-- `expanded` when given.
+local function allExpanded(tree, expanded)
+  expanded = expanded or {}
+  for _, node in ipairs(tree) do
     expanded[node.id] = true
-    expandAll(expanded, node.children)
+    allExpanded(node.children, expanded)
   end
   return expanded
 end
 
--- The set { [categoryID] = true } of every Category in the Category tree `tree`.
-local function allExpanded(tree)
-  return expandAll({}, tree)
-end
-
 -- A copy of `expanded`, the set { [categoryID] = true }, with the Category `categoryID` expanded when it was
 -- collapsed and collapsed when it was expanded.
-local function toggledIn(expanded, categoryID)
+local function toggledCopy(expanded, categoryID)
   local result = {}
   for id in pairs(expanded) do
     result[id] = true
@@ -50,13 +48,13 @@ end
 -- The list with the Category `categoryID` expanded when it was collapsed and collapsed when it was expanded.
 -- A search keeps the whole tree's expanded Categories for when it is cleared.
 function ListState.toggled(state, categoryID)
-  local function toggledView(view)
-    return { tree = view.tree, expanded = toggledIn(view.expanded, categoryID) }
+  local function toggledTree(shown)
+    return { tree = shown.tree, expanded = toggledCopy(shown.expanded, categoryID) }
   end
   if state.search then
-    return { whole = state.whole, search = toggledView(state.search) }
+    return { whole = state.whole, search = toggledTree(state.search) }
   end
-  return { whole = toggledView(state.whole) }
+  return { whole = toggledTree(state.whole) }
 end
 
 -- The list for the search box's `text`: the search results of the text without the spaces around it, every Category
