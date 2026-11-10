@@ -52,7 +52,7 @@ end)
 describe("AccountStatistics:characterValues", function()
   local AccountStatistics = loadAccountStatistics()
 
-  it("lists every Tracked Character's value in Roster order, with its label and class", function()
+  it("lists every Tracked Character's value in Roster order, with its Full Name, Ruleset and class", function()
     local db = {
       characters = {
         [CURRENT] = {
@@ -321,7 +321,7 @@ describe("AccountStatistics:breakdown", function()
     assert.is_nil(statisticsOf({ Ana = {}, Bron = { [60] = "3" } }):breakdown(926))
   end)
 
-  it("names each Character by its Roster label and class, and reads the logged-in Character's Live Values", function()
+  it("names each Character by Full Name and Ruleset with its class, counting the Live Values", function()
     local db = {
       characters = {
         [CURRENT] = {

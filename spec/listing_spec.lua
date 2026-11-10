@@ -24,7 +24,7 @@ describe("Listing.lines", function()
     },
   }
 
-  it("counts the Tracked Characters, then gives each one's label and relative Last Synced", function()
+  it("counts the Tracked Characters, then gives each one's Full Name, Ruleset and relative Last Synced", function()
     assert.are.same({
       "Forever Account Stats: Tracked Characters (2)",
       "  Calgan Blackbeard (PvP) - now",

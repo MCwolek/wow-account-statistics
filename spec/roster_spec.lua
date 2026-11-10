@@ -8,7 +8,7 @@ end
 local MINUTE, HOUR, DAY = 60, 3600, 86400
 local NOW = 1700000000
 
--- The Roster's labels, in its order.
+-- The Roster's Full Names and Rulesets (`label`), in its order.
 local function labels(roster)
   local result = {}
   for i, entry in ipairs(roster) do
@@ -20,7 +20,7 @@ end
 describe("Roster.of", function()
   local Roster = loadRoster()
 
-  it("labels every Tracked Character by Full Name and Ruleset, in label order", function()
+  it("names every Tracked Character by Full Name and Ruleset, in that order", function()
     local db = {
       characters = {
         ["Player-1-0000BBBB"] = { fullName = "Mira Stonehand", ruleset = "PvP", lastSynced = NOW },
@@ -34,7 +34,7 @@ describe("Roster.of", function()
     }, labels(Roster.of(db, "Player-1-0000AAAA", NOW)))
   end)
 
-  it("labels a Character synced before Rulesets were saved by its Full Name alone", function()
+  it("names a Character synced before Rulesets were saved by its Full Name alone", function()
     local db = {
       characters = {
         ["Player-1-0000AAAA"] = { fullName = "Calgan Blackbeard", lastSynced = NOW },

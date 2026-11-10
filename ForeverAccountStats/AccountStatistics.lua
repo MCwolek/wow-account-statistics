@@ -150,7 +150,7 @@ local function lineOf(entry)
 end
 
 -- Every Tracked Character's value of the Statistic as { label, class, value }, in Roster order: the Character's
--- label and class (see Roster.of), and its value's display string (see value).
+-- Full Name and Ruleset, its class (see Roster.of), and its value's display string (see value).
 function AccountStatistics:characterValues(statisticID)
   local lines = {}
   for i, entry in ipairs(characterEntries(self, statisticID)) do

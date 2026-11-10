@@ -5,8 +5,8 @@ local L = ns.L
 local Listing = {}
 ns.Listing = Listing
 
--- Chat lines for /stats: a header, then each Tracked Character of the Roster (see Roster.of) by its label, with its
--- relative Last Synced.
+-- Chat lines for /stats: a header, then each Tracked Character of the Roster (see Roster.of) by Full Name and Ruleset,
+-- with its relative Last Synced.
 function Listing.lines(db, currentGUID, now)
   local roster = ns.Roster.of(db, currentGUID, now)
   local lines = { string.format(L.TRACKED_CHARACTERS_HEADER, L.ADDON_TITLE, #roster) }

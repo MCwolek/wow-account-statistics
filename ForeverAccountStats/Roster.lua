@@ -1,4 +1,5 @@
--- Pure Roster of Tracked Characters: the one place that labels them, orders them and resolves their Last Synced.
+-- Pure Roster of Tracked Characters: the one place that names them by Full Name and Ruleset, orders them and resolves
+-- their Last Synced.
 -- The Character dropdown, /stats list, /stats dump and the Breakdown all take Tracked Characters from it.
 local _, ns = ...
 local L = ns.L
@@ -30,7 +31,8 @@ local function relativeLastSynced(syncedAt, now)
   return L.NOW
 end
 
--- The Roster of the Tracked Characters in `db`, the SavedVariables, at the time `now`, in label order. Each entry:
+-- The Roster of the Tracked Characters in `db`, the SavedVariables, at the time `now`, in order of Full Name and
+-- Ruleset. Each entry:
 --   guid, class
 --   label: Full Name and Ruleset
 --   isCurrent: whether it is the logged-in Character, `currentGUID`
