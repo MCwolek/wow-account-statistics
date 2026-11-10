@@ -36,18 +36,19 @@ end)
 describe("Listing.statisticLines", function()
   local Listing = loadListing()
 
+  -- Written in Roster order, which the dump follows.
   local db = {
     characters = {
-      ["Player-1-0000BBBB"] = {
-        fullName = "Mira Stonehand", lastSynced = NOW, ruleset = "PvP",
-        snapshot = { [60] = "3", [328] = coins.silver(14) .. " " .. coins.copper(56), [1336] = "62 (Beasts)" },
-      },
+      ["Player-1-0000CCCC"] = { fullName = "Arlen", lastSynced = NOW, ruleset = "PvE", snapshot = { [60] = "12" } },
       ["Player-1-0000AAAA"] = {
         fullName = "Calgan Blackbeard", lastSynced = NOW, ruleset = "PvE",
         snapshot = { [60] = "--", [328] = coins.gold(1) .. " " .. coins.silver(64) .. " " .. coins.copper(39),
           [1336] = "281 (Humanoid)" },
       },
-      ["Player-1-0000CCCC"] = { fullName = "Arlen", lastSynced = NOW, ruleset = "PvE", snapshot = { [60] = "12" } },
+      ["Player-1-0000BBBB"] = {
+        fullName = "Mira Stonehand", lastSynced = NOW, ruleset = "PvP",
+        snapshot = { [60] = "3", [328] = coins.silver(14) .. " " .. coins.copper(56), [1336] = "62 (Beasts)" },
+      },
     },
   }
 

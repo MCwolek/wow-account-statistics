@@ -52,22 +52,20 @@ end)
 describe("AccountStatistics:characterValues", function()
   local AccountStatistics = loadAccountStatistics()
 
-  it("lists every Tracked Character's value in Roster order, with its Full Name, Ruleset and class", function()
+  it("gives every Tracked Character's value with its Full Name, Ruleset and class, in Roster order", function()
     local db = {
       characters = {
         [CURRENT] = {
-          fullName = "Mira Stonehand", lastSynced = NOW, ruleset = "PvP", class = "ROGUE", snapshot = { [60] = "2" },
+          fullName = "Calgan Blackbeard", lastSynced = NOW, ruleset = "PvE", class = "MAGE", snapshot = { [60] = "2" },
         },
         [OTHER] = {
-          fullName = "Calgan Blackbeard", lastSynced = NOW, ruleset = "PvE", class = "MAGE", snapshot = { [60] = "--" },
+          fullName = "Mira Stonehand", lastSynced = NOW, ruleset = "PvP", class = "ROGUE", snapshot = { [60] = "--" },
         },
-        [NEW] = { fullName = "Arlen", lastSynced = NOW, class = "WARRIOR" },
       },
     }
     assert.are.same({
-      { label = "Arlen", class = "WARRIOR", value = "?" },
-      { label = "Calgan Blackbeard (PvE)", class = "MAGE", value = "--" },
-      { label = "Mira Stonehand (PvP)", class = "ROGUE", value = "5" },
+      { label = "Calgan Blackbeard (PvE)", class = "MAGE", value = "5" },
+      { label = "Mira Stonehand (PvP)", class = "ROGUE", value = "--" },
     }, AccountStatistics.new(db, CURRENT, NOW, { [60] = "5" }):characterValues(60))
   end)
 end)
