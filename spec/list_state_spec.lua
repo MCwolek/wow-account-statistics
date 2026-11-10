@@ -18,20 +18,23 @@ describe("ListState", function()
     [141] = { { id = 193, name = "Largest hit dealt" } },
   })
 
-  it("starts with the whole tree collapsed", function()
-    assert.are.same({
-      { kind = "category", id = 130, name = "Character", depth = 0, expanded = false },
-      { kind = "category", id = 141, name = "Combat", depth = 0, expanded = false },
-    }, ListState.visibleRows(ListState.new(tree)))
-  end)
-
-  it("expands a Category toggled once and collapses it again when toggled twice", function()
-    local state = ListState.toggled(ListState.new(tree), 130)
+  it("starts with the whole tree expanded, nested Categories too", function()
     assert.are.same({
       { kind = "category", id = 130, name = "Character", depth = 0, expanded = true },
       { kind = "statistic", id = 60, name = "Total deaths", depth = 1 },
-      { kind = "category", id = 131, name = "Wealth", depth = 1, expanded = false },
-      { kind = "category", id = 141, name = "Combat", depth = 0, expanded = false },
+      { kind = "category", id = 131, name = "Wealth", depth = 1, expanded = true },
+      { kind = "statistic", id = 328, name = "Total gold acquired", depth = 2 },
+      { kind = "category", id = 141, name = "Combat", depth = 0, expanded = true },
+      { kind = "statistic", id = 193, name = "Largest hit dealt", depth = 1 },
+    }, ListState.visibleRows(ListState.new(tree)))
+  end)
+
+  it("collapses a Category toggled once and expands it again when toggled twice", function()
+    local state = ListState.toggled(ListState.new(tree), 130)
+    assert.are.same({
+      { kind = "category", id = 130, name = "Character", depth = 0, expanded = false },
+      { kind = "category", id = 141, name = "Combat", depth = 0, expanded = true },
+      { kind = "statistic", id = 193, name = "Largest hit dealt", depth = 1 },
     }, ListState.visibleRows(state))
 
     assert.are.same(ListState.visibleRows(ListState.new(tree)), ListState.visibleRows(ListState.toggled(state, 130)))
@@ -46,7 +49,7 @@ describe("ListState", function()
   end)
 
   it("toggles a Category in the search results without touching the whole tree's expanded Categories", function()
-    local state = ListState.searched(ListState.toggled(ListState.new(tree), 141), "gold")
+    local state = ListState.searched(ListState.toggled(ListState.new(tree), 130), "gold")
     state = ListState.toggled(state, 131)
     assert.are.same({
       { kind = "category", id = 130, name = "Character", depth = 0, expanded = true },
