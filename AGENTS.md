@@ -26,3 +26,17 @@ Game API calls live in thin adapter files. Everything else (parsing values, Acco
 ## Code reference
 
 Reuse code only from permissively licensed sources, with attribution. Baganator, Syndicator and Accountwide Stats (GPLv2) are off-limits as code reference; learn from their user-visible behaviour only.
+
+## Agent skills
+
+### Issue tracker
+
+Issues live in GitHub Issues for MCwolek/forever-account-stats, via the `gh` CLI. See [docs/agents/issue-tracker.md](docs/agents/issue-tracker.md).
+
+### Triage labels
+
+The five default triage labels: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See [docs/agents/triage-labels.md](docs/agents/triage-labels.md).
+
+### Domain docs
+
+Single-context: `GLOSSARY.md` and `docs/adr/` at the repo root. See [docs/agents/domain.md](docs/agents/domain.md).
