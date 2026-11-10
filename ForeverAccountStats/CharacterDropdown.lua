@@ -1,4 +1,4 @@
--- Pure entries of the Statistics window's Character dropdown, taken from the roster of Tracked Characters (see
+-- Pure entries of the Statistics window's Character dropdown, taken from the Roster of Tracked Characters (see
 -- Roster.of).
 local _, ns = ...
 local L = ns.L
@@ -6,7 +6,7 @@ local L = ns.L
 local CharacterDropdown = {}
 ns.CharacterDropdown = CharacterDropdown
 
--- The dropdown's entries: the roster's entries with the logged-in Character first, then the others in roster order.
+-- The dropdown's entries: the Roster's entries with the logged-in Character first, then the others in Roster order.
 function CharacterDropdown.entries(roster)
   local current, others = nil, {}
   for _, entry in ipairs(roster) do

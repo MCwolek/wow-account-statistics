@@ -8,7 +8,7 @@ end
 describe("CharacterDropdown.entries", function()
   local CharacterDropdown = loadCharacterDropdown()
 
-  it("lists the logged-in Character first, then the others in roster order", function()
+  it("lists the logged-in Character first, then the others in Roster order", function()
     local roster = {
       { guid = "A", isCurrent = false },
       { guid = "B", isCurrent = false },

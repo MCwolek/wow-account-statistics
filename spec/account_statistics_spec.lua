@@ -52,7 +52,7 @@ end)
 describe("AccountStatistics:characterValues", function()
   local AccountStatistics = loadAccountStatistics()
 
-  it("lists every Tracked Character's value in roster order, with its label and class", function()
+  it("lists every Tracked Character's value in Roster order, with its label and class", function()
     local db = {
       characters = {
         [CURRENT] = { fullName = "Mira Stonehand", ruleset = "PvP", class = "ROGUE", snapshot = { [60] = "2" } },
@@ -318,7 +318,7 @@ describe("AccountStatistics:breakdown", function()
     assert.is_nil(statisticsOf({ Ana = {}, Bron = { [60] = "3" } }):breakdown(926))
   end)
 
-  it("names each Character by its roster label and class, and reads the logged-in Character's Live Values", function()
+  it("names each Character by its Roster label and class, and reads the logged-in Character's Live Values", function()
     local db = {
       characters = {
         [CURRENT] = { fullName = "Calgan Blackbeard", ruleset = "PvE", class = "MAGE", snapshot = { [60] = "2" } },
@@ -334,7 +334,7 @@ describe("AccountStatistics:breakdown", function()
     }, AccountStatistics.new(db, CURRENT, { [60] = "5" }):breakdown(60))
   end)
 
-  it("lists equal values in roster order", function()
+  it("lists equal values in Roster order", function()
     local statistics = statisticsOf({ Dara = { [60] = "4" }, Bron = { [60] = "4" }, Calgan = { [60] = "9" } })
     assert.are.same({ "Calgan 9", "Bron 4", "Dara 4" }, labelsAndValues(statistics:breakdown(60)))
   end)

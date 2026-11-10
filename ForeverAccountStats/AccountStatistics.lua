@@ -125,9 +125,9 @@ function AccountStatistics:accountTotal(statisticID)
   return ns.Values.format(total)
 end
 
--- Every Tracked Character's value of the Statistic, in roster order (see Roster.of): { label, class, value, parsed,
+-- Every Tracked Character's value of the Statistic, in Roster order (see Roster.of): { label, class, value, parsed,
 -- position }, with `value` its display string, `parsed` the same value parsed (see Values.parse) and `position` its
--- place in the roster.
+-- place in the Roster.
 local function characterEntries(self, statisticID)
   local entries = {}
   for position, character in ipairs(ns.Roster.of(self.db)) do
@@ -148,7 +148,7 @@ local function lineOf(entry)
   return { label = entry.label, class = entry.class, value = entry.value }
 end
 
--- Every Tracked Character's value of the Statistic as { label, class, value }, in roster order: the Character's
+-- Every Tracked Character's value of the Statistic as { label, class, value }, in Roster order: the Character's
 -- label and class (see Roster.of), and its value's display string (see value).
 function AccountStatistics:characterValues(statisticID)
   local lines = {}
@@ -170,7 +170,7 @@ end
 local BREAKDOWN_LINES = 5
 
 -- Breakdown of the Statistic as { lines, more }: each line { label, class, value } for one of the top
--- BREAKDOWN_LINES Tracked Characters, highest value first, "--" and then "?" last, equal values in roster order;
+-- BREAKDOWN_LINES Tracked Characters, highest value first, "--" and then "?" last, equal values in Roster order;
 -- `more` the count of the others. nil when the Statistic has no Account Total, or no Character's values have it.
 function AccountStatistics:breakdown(statisticID)
   local total = computeTotal(statisticID, self.valuesByGUID)

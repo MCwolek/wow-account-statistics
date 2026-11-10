@@ -8,7 +8,7 @@ end
 local MINUTE, HOUR, DAY = 60, 3600, 86400
 local NOW = 1700000000
 
--- The roster's labels, in its order.
+-- The Roster's labels, in its order.
 local function labels(roster)
   local result = {}
   for i, entry in ipairs(roster) do
@@ -115,7 +115,7 @@ describe("a forgotten Character", function()
 
   local CURRENT, FORGOTTEN = "Player-1-0000AAAA", "Player-1-0000BBBB"
 
-  it("is gone from the roster", function()
+  it("is gone from the Roster", function()
     local db = Sync.record(nil, { guid = CURRENT, fullName = "Calgan Blackbeard" }, { [60] = "250" }, NOW)
     db = Sync.record(db, { guid = FORGOTTEN, fullName = "Mira Stonehand" }, { [60] = "3" }, NOW)
     db = Sync.forget(db, FORGOTTEN, CURRENT)
