@@ -13,6 +13,9 @@ local FRAME_NAME = "ForeverAccountStatsFrame"
 local WIDTH, HEIGHT = 620, 540
 -- The Statistics side tab's icon in the Character frame, shown in the window's portrait circle.
 local PORTRAIT_ICON = "Interface/ICONS/INV_SideTab_Stats_c60"
+-- The Character frame's backdrop behind its Statistics tab, from just under the title bar down.
+local BODY_BACKGROUND = "UI-Character-Info-General-BG"
+local BODY_TOP = -20
 local COLUMN_WIDTH = 120
 local COLUMN_GAP = 10
 -- Wide enough for the longest Full Name and Ruleset with the class icon.
@@ -168,9 +171,6 @@ local NESTED_TEXT_RIGHT = -24
 local TOTAL_RIGHT = -12
 -- How far a row moves while the mouse button is held down on it.
 local PRESSED_X, PRESSED_Y = 1, -1
-local SCROLL_LINE = "UI-Character-Info-ScrollLine-Long"
--- Above the rows, which sit a few frame levels over the scroll box.
-local SCROLL_LINE_LEVEL = 10
 
 local function toggleCategory(categoryID)
   list = ListState.toggled(list, categoryID)
@@ -394,16 +394,6 @@ local function initRow(row, data)
 end
 
 -- The game's Statistics tab draws a line across the top and the bottom edge of its list, over the rows.
-local function addScrollLine(scrollBox, point)
-  local holder = CreateFrame("Frame", nil, scrollBox)
-  holder:SetSize(1, 1)
-  holder:SetPoint(point)
-  holder:SetFrameLevel(scrollBox:GetFrameLevel() + SCROLL_LINE_LEVEL)
-  local line = holder:CreateTexture(nil, "OVERLAY")
-  line:SetAtlas(SCROLL_LINE, true)
-  line:SetPoint("CENTER")
-end
-
 local function createList(parent)
   local scrollBox = CreateFrame("Frame", nil, parent, "WowScrollBoxList")
   scrollBox:SetPoint("TOPLEFT", 4, -22)
@@ -411,8 +401,6 @@ local function createList(parent)
   local scrollBar = CreateFrame("EventFrame", nil, parent, "MinimalScrollBar")
   scrollBar:SetPoint("TOPLEFT", scrollBox, "TOPRIGHT", 6, -2)
   scrollBar:SetPoint("BOTTOMLEFT", scrollBox, "BOTTOMRIGHT", 6, 2)
-  addScrollLine(scrollBox, "TOP")
-  addScrollLine(scrollBox, "BOTTOM")
 
   local padding = RowLayout.PADDING
   local view = CreateScrollBoxListLinearView(padding, padding, padding, padding, RowLayout.SPACING)
@@ -545,6 +533,15 @@ local function create()
   ButtonFrameTemplate_ShowPortrait(frame)
   frame:SetPortraitToAsset(PORTRAIT_ICON)
   ButtonFrameTemplate_HideButtonBar(frame)
+  -- The Character frame's backdrop in place of the template's rock, streaks and marble inset; the inset stays as
+  -- the list's anchor.
+  frame.TopTileStreaks:Hide()
+  frame.Inset.Bg:Hide()
+  frame.Inset.NineSlice:Hide()
+  local body = frame:CreateTexture(nil, "BACKGROUND")
+  body:SetAtlas(BODY_BACKGROUND)
+  body:SetPoint("TOPLEFT", 0, BODY_TOP)
+  body:SetPoint("BOTTOMRIGHT")
   frame:SetFrameStrata("HIGH")
   frame:SetToplevel(true)
   frame:SetClampedToScreen(true)
