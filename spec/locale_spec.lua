@@ -126,4 +126,42 @@ describe("Locale tables", function()
       assert.are.same({}, translationProblems(tables.enUS, strings), locale)
     end
   end)
+
+  -- The slash commands a text names, sorted: "/stats" alone or with one of its sub-commands.
+  local SUB_COMMANDS = { list = true, dump = true, minimap = true }
+  local function slashCommands(text)
+    local found = {}
+    for word in text:gmatch("/stats ?(%a*)") do
+      found[#found + 1] = SUB_COMMANDS[word] and "/stats " .. word or "/stats"
+    end
+    table.sort(found)
+    return found
+  end
+
+  it("name the same slash commands as English, untranslated", function()
+    for locale, strings in pairs(tables) do
+      for key, text in pairs(strings) do
+        assert.are.same(slashCommands(tables.enUS[key]), slashCommands(text), locale .. " " .. key)
+      end
+    end
+  end)
+
+  describe("German", function()
+    -- Keys German leaves to English: the add-on's name stays "Account Statistics" in every language.
+    local LEFT_IN_ENGLISH = { ADDON_TITLE = true }
+
+    it("has its own text for every English key but the add-on's name", function()
+      local missing = {}
+      for key in pairs(tables.enUS) do
+        if not LEFT_IN_ENGLISH[key] and tables.deDE[key] == nil then
+          missing[#missing + 1] = key
+        end
+      end
+      table.sort(missing)
+      assert.are.same({}, missing)
+      for key in pairs(LEFT_IN_ENGLISH) do
+        assert.is_nil(tables.deDE[key], key)
+      end
+    end)
+  end)
 end)
