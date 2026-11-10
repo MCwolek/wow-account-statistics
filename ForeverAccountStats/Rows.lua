@@ -5,7 +5,7 @@ local _, ns = ...
 local Rows = {}
 ns.Rows = Rows
 
--- The list's rows from CategoryTree.visibleRows, read from `statistics` (an AccountStatistics). Each Statistic row
+-- The list's rows from ListState.visibleRows, read from `statistics` (an AccountStatistics). Each Statistic row
 -- gets `value`, the value of the Character `chosenGUID`, and `total`, the Account Total. Every row gets `layout`,
 -- its RowLayout. The rows given are left unchanged.
 function Rows.build(visibleRows, statistics, chosenGUID)

@@ -40,6 +40,30 @@ describe("ListState", function()
     assert.are.same(ListState.visibleRows(ListState.new(tree)), ListState.visibleRows(ListState.toggled(state, 130)))
   end)
 
+  it("keeps a nested Category as it was while its parent is collapsed", function()
+    local state = ListState.toggled(ListState.toggled(ListState.new(tree), 131), 130)
+    assert.are.same({
+      { kind = "category", id = 130, name = "Character", depth = 0, expanded = false },
+      { kind = "category", id = 141, name = "Combat", depth = 0, expanded = true },
+      { kind = "statistic", id = 193, name = "Largest hit dealt", depth = 1 },
+    }, ListState.visibleRows(state))
+
+    assert.are.same({
+      { kind = "category", id = 130, name = "Character", depth = 0, expanded = true },
+      { kind = "statistic", id = 60, name = "Total deaths", depth = 1 },
+      { kind = "category", id = 131, name = "Wealth", depth = 1, expanded = false },
+      { kind = "category", id = 141, name = "Combat", depth = 0, expanded = true },
+      { kind = "statistic", id = 193, name = "Largest hit dealt", depth = 1 },
+    }, ListState.visibleRows(ListState.toggled(state, 130)))
+  end)
+
+  it("leaves the list it was given unchanged", function()
+    local state = ListState.new(tree)
+    ListState.toggled(state, 130)
+    ListState.searched(state, "gold")
+    assert.are.same(ListState.visibleRows(ListState.new(tree)), ListState.visibleRows(state))
+  end)
+
   it("shows the search results with every Category expanded", function()
     assert.are.same({
       { kind = "category", id = 130, name = "Character", depth = 0, expanded = true },
