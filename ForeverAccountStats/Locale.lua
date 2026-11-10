@@ -22,6 +22,8 @@ ns.L = {
   HOURS_AGO = "%d h ago",
   -- Tooltip of a Character in the window's dropdown; %s is the exact date and time.
   LAST_SYNC = "Last sync: %s",
+  -- Second line of the Minimap button's tooltip, under the add-on's name.
+  MINIMAP_BUTTON_HINT = "Click to open or close the Statistics window. Drag to move.",
   MINUTES_AGO = "%d min ago",
   -- Marker for a Statistic missing from a Character's Snapshot, e.g. one taken by an older version.
   MISSING_VALUE = "?",

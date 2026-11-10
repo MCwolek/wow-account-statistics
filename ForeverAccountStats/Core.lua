@@ -1,7 +1,8 @@
 -- Wiring: game events and the /stats command (see Command.lua). Logic lives in Sync.lua, Command.lua and Listing.lua;
--- the Statistics window in Window.lua.
+-- the Statistics window in Window.lua and the Minimap button in MinimapButton.lua.
 local addonName, ns = ...
-local Sync, Command, Listing, GameAPI, Window = ns.Sync, ns.Command, ns.Listing, ns.GameAPI, ns.Window
+local Sync, Command, Listing, GameAPI, Window, MinimapButton =
+  ns.Sync, ns.Command, ns.Listing, ns.GameAPI, ns.Window, ns.MinimapButton
 
 -- The default UI's Statistics tab lives in this load-on-demand add-on.
 local ACHIEVEMENT_UI = "Blizzard_AchievementUI"
@@ -19,6 +20,7 @@ frame:RegisterEvent("PLAYER_LOGOUT")
 frame:SetScript("OnEvent", function(_, event, arg1)
   if event == "ADDON_LOADED" and arg1 == addonName then
     ForeverAccountStatsDB = Sync.ensureDB(ForeverAccountStatsDB)
+    MinimapButton.update()
     -- Another add-on may have loaded the Achievement UI before this one.
     if GameAPI.isAddOnLoaded(ACHIEVEMENT_UI) then
       Window.addStatisticsTabButton()

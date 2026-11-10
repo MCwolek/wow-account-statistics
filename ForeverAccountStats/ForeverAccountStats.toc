@@ -22,4 +22,5 @@ WindowPosition.lua
 MinimapButtonSettings.lua
 GameAPI.lua
 Window.lua
+MinimapButton.lua
 Core.lua
