@@ -4,7 +4,7 @@ exclude_files = { ".lua/", ".luarocks/", ".venv/" }
 
 -- Globals the add-on defines or writes into.
 globals = {
-  "ForeverAccountStatsDB",
+  "ForeverAccountStatisticsDB",
   "SLASH_FOREVERACCOUNTSTATS1",
   "SlashCmdList",
   "StaticPopupDialogs",
@@ -12,8 +12,6 @@ globals = {
 
 -- WoW API the add-on reads. Add entries as the code starts using them.
 read_globals = {
-  "AchievementFrame",
-  "AchievementFrameStats",
   "ButtonFrameTemplate_HideButtonBar",
   "ButtonFrameTemplate_ShowPortrait",
   "C_AddOns",
@@ -37,6 +35,7 @@ read_globals = {
   "GetCategoryNumAchievements",
   "GetClassAtlas",
   "GetCursorPosition",
+  "GetLocale",
   "GetRealmName",
   "GetStatistic",
   "GetStatisticsCategoryList",

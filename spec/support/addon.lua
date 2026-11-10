@@ -1,7 +1,13 @@
 -- Helpers for loading add-on files the way the WoW client does.
 local M = {}
 
-M.DIR = "ForeverAccountStats"
+M.DIR = "ForeverAccountStatistics"
+
+-- Locale.lua asks the game for its text language at load; the specs play an English client.
+---@diagnostic disable-next-line: duplicate-set-field
+_G.GetLocale = function()
+  return "enUS"
+end
 
 -- Runs one add-on file with the (addonName, namespace) varargs the client passes.
 function M.loadFile(path, ns)

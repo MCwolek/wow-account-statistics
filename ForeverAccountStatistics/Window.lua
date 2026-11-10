@@ -1,6 +1,6 @@
--- Thin adapter: the Statistics window and its button on the default Statistics tab. It forwards the window's actions
--- to its Window Session (see WindowSession), draws what the pure modules (WindowSession, CategoryTree, RowLayout,
--- Roster, CharacterDropdown, WindowPosition) compute and reads the game through GameAPI.
+-- Thin adapter: the Statistics window. It forwards the window's actions to its Window Session (see WindowSession),
+-- draws what the pure modules (WindowSession, CategoryTree, RowLayout, Roster, CharacterDropdown, WindowPosition)
+-- compute and reads the game through GameAPI.
 local _, ns = ...
 local L, GameAPI, Sync = ns.L, ns.GameAPI, ns.Sync
 local CategoryTree, RowLayout, WindowSession = ns.CategoryTree, ns.RowLayout, ns.WindowSession
@@ -56,10 +56,9 @@ local REREAD_DELAY = 0.5
 local frame          -- created on first open, once SavedVariables are loaded
 local session        -- the Window Session, created with the frame
 local rereadPending = false
-local statisticsTabButton
 
 local function dropdownEntries()
-  return CharacterDropdown.entries(Roster.of(ForeverAccountStatsDB, GameAPI.playerGUID(), GameAPI.now()))
+  return CharacterDropdown.entries(Roster.of(ForeverAccountStatisticsDB, GameAPI.playerGUID(), GameAPI.now()))
 end
 
 -- Full Name and Ruleset in the class colour; a class the game does not colour stays white.
@@ -115,11 +114,11 @@ local function readLiveValues()
 end
 
 local function chosenCharacter()
-  return WindowSession.chosenCharacter(session, ForeverAccountStatsDB, GameAPI.playerGUID())
+  return WindowSession.chosenCharacter(session, ForeverAccountStatisticsDB, GameAPI.playerGUID())
 end
 
 local function redraw(keepScroll)
-  local rows = WindowSession.rows(session, ForeverAccountStatsDB, GameAPI.playerGUID(), GameAPI.now())
+  local rows = WindowSession.rows(session, ForeverAccountStatisticsDB, GameAPI.playerGUID(), GameAPI.now())
   frame.ScrollBox:SetDataProvider(CreateDataProvider(rows), keepScroll and ScrollBoxConstants.RetainScrollPosition)
 end
 
@@ -161,7 +160,7 @@ end
 -- Breakdown.
 local function showBreakdown(tip, data)
   local breakdown =
-    WindowSession.breakdown(session, ForeverAccountStatsDB, GameAPI.playerGUID(), GameAPI.now(), data.id)
+    WindowSession.breakdown(session, ForeverAccountStatisticsDB, GameAPI.playerGUID(), GameAPI.now(), data.id)
   if not breakdown then
     return false
   end
@@ -182,7 +181,7 @@ end
 -- Forgets the Character `guid` once its confirmation dialog is accepted. When it was the one chosen in the dropdown,
 -- the window falls back to the logged-in Character (see WindowSession.chosenCharacter).
 local function forget(guid)
-  ForeverAccountStatsDB = Sync.forget(ForeverAccountStatsDB, guid, GameAPI.playerGUID())
+  ForeverAccountStatisticsDB = Sync.forget(ForeverAccountStatisticsDB, guid, GameAPI.playerGUID())
   if WindowSession.isOpen(session) then
     redraw(true)
     frame.Dropdown:GenerateMenu()
@@ -604,7 +603,7 @@ local function savePosition(self)
   self:StopMovingOrSizing()
   self:SetUserPlaced(false)
   local point, _, relativePoint, x, y = self:GetPoint(1)
-  ForeverAccountStatsDB.window = WindowPosition.save(point, relativePoint, x, y)
+  ForeverAccountStatisticsDB.window = WindowPosition.save(point, relativePoint, x, y)
 end
 
 local function create()
@@ -629,7 +628,7 @@ local function create()
   frame:SetFrameStrata("HIGH")
   frame:SetToplevel(true)
   frame:SetClampedToScreen(true)
-  -- Keep the client's layout cache out of it: the position lives in ForeverAccountStatsDB.window.
+  -- Keep the client's layout cache out of it: the position lives in ForeverAccountStatisticsDB.window.
   frame:SetDontSavePosition(true)
   frame:EnableMouse(true)
   frame:SetMovable(true)
@@ -642,7 +641,7 @@ local function create()
   end)
   table.insert(UISpecialFrames, FRAME_NAME)
   frame:ClearAllPoints()
-  local point, relativePoint, x, y = WindowPosition.anchor(ForeverAccountStatsDB.window)
+  local point, relativePoint, x, y = WindowPosition.anchor(ForeverAccountStatisticsDB.window)
   frame:SetPoint(point, UIParent, relativePoint, x, y)
 
   frame.ScrollBox = createList(frame.Inset)
@@ -673,26 +672,4 @@ function Window.toggle()
     create()
   end
   frame:SetShown(not frame:IsShown())
-end
-
--- Puts a button that opens the window on the default UI's Statistics tab. Call it once Blizzard_AchievementUI has
--- loaded; it is load-on-demand.
-function Window.addStatisticsTabButton()
-  local statisticsPanel = AchievementFrameStats
-  if not statisticsPanel or statisticsTabButton then
-    return
-  end
-  local button = CreateFrame("Button", nil, statisticsPanel, "UIPanelButtonTemplate")
-  button:SetSize(140, 22)
-  button:SetText(L.STATISTICS_TAB_BUTTON)
-  -- On the Statistics tab the header's Back button is hidden, which frees its spot.
-  local header = AchievementFrame and AchievementFrame.HeaderDetails
-  if header then
-    button:SetPoint("TOPLEFT", header, "TOPLEFT", 6, -10)
-  else
-    button:SetPoint("BOTTOMRIGHT", statisticsPanel, "TOPRIGHT", 0, 4)
-  end
-  button:SetFrameLevel(statisticsPanel:GetFrameLevel() + 10)
-  button:SetScript("OnClick", Window.toggle)
-  statisticsTabButton = button
 end
