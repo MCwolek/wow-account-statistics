@@ -19,22 +19,23 @@ local BODY_BACKGROUND = "UI-Character-Info-General-BG"
 local BODY_TOP = -20
 local COLUMN_WIDTH = 120
 local COLUMN_GAP = 10
--- Wide enough for the longest Full Name and Ruleset with the Faction logo and class icon.
-local DROPDOWN_WIDTH = 320
+local ICON_SIZE = 16
+-- In a dropdown entry, the space between the radio button and the first icon, and after each icon.
+local RADIO_ICON_GAP = 2
+local ICON_GAP = 4
+-- Wide enough for the longest Full Name and Ruleset with the class icon (320), plus the Faction logo and its gap.
+local DROPDOWN_WIDTH = 320 + ICON_SIZE + ICON_GAP
 -- Right of the portrait circle, which reaches 57 in from the window's left edge.
 local DROPDOWN_LEFT = 62
 -- The search box fills the rest of the dropdown's line: after the dropdown and a gap, up to 20 short of the right
 -- edge.
 local SEARCH_GAP = 14
 local SEARCH_WIDTH = WIDTH - DROPDOWN_LEFT - DROPDOWN_WIDTH - SEARCH_GAP - 20
-local ICON_SIZE = 16
--- The Faction logo of each Faction (see Sync.character), at the class icon's size.
-local FACTION_LOGOS = {
-  Horde = "glues-characterselect-icon-faction-horde",
-  Alliance = "glues-characterSelect-icon-faction-alliance",
-}
--- Empty space the Faction logo's size, so a Character without a Faction lines up with the others.
-local FACTION_LOGO_SPACE = "|TInterface\\Common\\spacer:" .. ICON_SIZE .. ":" .. ICON_SIZE .. "|t"
+-- The Faction logo's atlas, named by the Faction in lower case, shown at the class icon's size. Atlas names ignore
+-- case: the game's own code spells this one both "characterselect" and "characterSelect".
+local FACTION_LOGO = "glues-characterselect-icon-faction-%s"
+-- Empty space the size of the Faction logo or the class icon, in place of a missing one.
+local ICON_SPACE = "|TInterface\\Common\\spacer:" .. ICON_SIZE .. ":" .. ICON_SIZE .. "|t"
 -- Room at the right end of every dropdown entry for the X that Forgets its Character, so the Last Synced times line
 -- up whether an entry has one or not.
 local FORGET_BUTTON_SIZE = 16   -- the size MenuTemplates gives its utility buttons
@@ -62,33 +63,43 @@ local function coloredLabel(entry)
   return entry.label
 end
 
-local function iconMarkup(atlas)
-  return CreateAtlasMarkup(atlas, ICON_SIZE, ICON_SIZE)
+-- The Faction logo's atlas for a Character's Faction, nil for a Character without one. Sync.character keeps only the
+-- Factions, so the window needs no list of its own.
+local function factionLogo(faction)
+  return faction and FACTION_LOGO:format(faction:lower())
 end
 
--- The coloured label with the class icon in front.
-local function classLabel(entry)
-  if not entry.class then
-    return coloredLabel(entry)
+-- The class icon's atlas for a Character's class, nil for a Character without one.
+local function classIcon(class)
+  return class and GetClassAtlas(class)
+end
+
+-- `text` with the icon `atlas` in front. A nil `atlas` leaves empty space the icon's size when `keepSpace`, and
+-- nothing otherwise.
+local function withIcon(atlas, text, keepSpace)
+  if atlas then
+    return CreateAtlasMarkup(atlas, ICON_SIZE, ICON_SIZE) .. " " .. text
+  elseif keepSpace then
+    return ICON_SPACE .. " " .. text
   end
-  return iconMarkup(GetClassAtlas(entry.class)) .. " " .. coloredLabel(entry)
+  return text
 end
 
--- The class icon and coloured label with the Faction logo in front, for the closed dropdown; no logo for a Character
--- without a Faction.
+-- A Character's Faction logo, class icon and class-coloured Full Name and Ruleset. With `keepSpace`, a missing logo or
+-- icon leaves empty space its size, so the names line up with the others'.
+local function characterLabel(entry, keepSpace)
+  return withIcon(factionLogo(entry.faction), withIcon(classIcon(entry.class), coloredLabel(entry), keepSpace),
+    keepSpace)
+end
+
+-- The closed dropdown's label: it names one Character, so a missing logo or icon leaves no space.
 local function selectionLabel(entry)
-  local logo = FACTION_LOGOS[entry.faction]
-  if not logo then
-    return classLabel(entry)
-  end
-  return iconMarkup(logo) .. " " .. classLabel(entry)
+  return characterLabel(entry, false)
 end
 
--- The class icon and coloured label with the Faction logo in front, for a Breakdown line; empty space the logo's size
--- for a Character without a Faction.
+-- A Breakdown line's label: a missing logo or icon leaves its space, so the names line up.
 local function breakdownLabel(line)
-  local logo = FACTION_LOGOS[line.faction]
-  return (logo and iconMarkup(logo) or FACTION_LOGO_SPACE) .. " " .. classLabel(line)
+  return characterLabel(line, true)
 end
 
 local function readLiveValues()
@@ -450,6 +461,18 @@ local function createList(parent)
   return scrollBox
 end
 
+-- Attaches the icon `atlas` to the dropdown entry `button`, `offset` right of its radio button, and returns the offset
+-- for whatever comes after it. A nil `atlas` attaches nothing but keeps the icon's space.
+local function attachEntryIcon(button, atlas, offset)
+  if atlas then
+    local icon = button:AttachTexture()
+    icon:SetAtlas(atlas)
+    icon:SetSize(ICON_SIZE, ICON_SIZE)
+    icon:SetPoint("LEFT", button.leftTexture1, "RIGHT", offset, 0)
+  end
+  return offset + ICON_SIZE + ICON_GAP
+end
+
 local function createDropdown(parent)
   local dropdown = CreateFrame("DropdownButton", nil, parent, "WowStyle1DropdownTemplate")
   dropdown:SetPoint("TOPLEFT", parent, "TOPLEFT", DROPDOWN_LEFT, -30)
@@ -479,23 +502,10 @@ local function createDropdown(parent)
         local data = description:GetData()
         local label = button.fontString
         label:SetWordWrap(false)
-        -- A Character without a Faction keeps empty space the logo's size, so the names line up.
-        local logo = FACTION_LOGOS[data.faction]
-        if logo then
-          local factionIcon = button:AttachTexture()
-          factionIcon:SetAtlas(logo)
-          factionIcon:SetSize(ICON_SIZE, ICON_SIZE)
-          factionIcon:SetPoint("LEFT", button.leftTexture1, "RIGHT", 2, 0)
-        end
-        local iconWidth = 2 + ICON_SIZE + 4
-        if data.class then
-          local icon = button:AttachTexture()
-          icon:SetAtlas(GetClassAtlas(data.class))
-          icon:SetSize(ICON_SIZE, ICON_SIZE)
-          icon:SetPoint("LEFT", button.leftTexture1, "RIGHT", iconWidth, 0)
-          iconWidth = iconWidth + ICON_SIZE + 4
-        end
-        label:SetPoint("LEFT", button.leftTexture1, "RIGHT", iconWidth, 0)
+        -- A Character without a Faction or a class keeps empty space the logo's or icon's size, so the names line up.
+        local labelOffset = attachEntryIcon(button, factionLogo(data.faction), RADIO_ICON_GAP)
+        labelOffset = attachEntryIcon(button, classIcon(data.class), labelOffset)
+        label:SetPoint("LEFT", button.leftTexture1, "RIGHT", labelOffset, 0)
         local relative = button:AttachFontString()
         relative:SetPoint("RIGHT", -FORGET_BUTTON_SPACE, 0)
         relative:SetJustifyH("RIGHT")
@@ -514,8 +524,8 @@ local function createDropdown(parent)
           end)
         end
         local radioWidth = button.leftTexture1:GetWidth()
-        local width = radioWidth + iconWidth + label:GetUnboundedStringWidth() + 16 + relative:GetUnboundedStringWidth()
-          + FORGET_BUTTON_SPACE
+        local width = radioWidth + labelOffset + label:GetUnboundedStringWidth() + 16
+          + relative:GetUnboundedStringWidth() + FORGET_BUTTON_SPACE
         return width, 20
       end)
     end
