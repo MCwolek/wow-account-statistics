@@ -5,8 +5,8 @@ local coins = require("coins")
 local function loadListing()
   local ns = addon.loadFile("Locale.lua", {})
   addon.loadFile("Values.lua", ns)
-  addon.loadFile("AccountTotals.lua", ns)
   addon.loadFile("Characters.lua", ns)
+  addon.loadFile("AccountStatistics.lua", ns)
   return addon.loadFile("Listing.lua", ns).Listing
 end
 
@@ -62,7 +62,7 @@ describe("Listing.statisticLines", function()
     },
   }
 
-  it("shows each Tracked Character's value as the game shows it, then the Account Total", function()
+  it("shows each Tracked Character's value as saved in its Snapshot, then the Account Total", function()
     assert.are.same({
       "Forever Account Stats: Total deaths (60)",
       "  Arlen (PvE) - 12",

@@ -74,18 +74,6 @@ function Characters.lastSyncedTooltip(entry, now, formatDate)
   return string.format(L.LAST_SYNC, formatDate(L.EXACT_DATE_TIME, entry.isCurrent and now or entry.lastSynced))
 end
 
--- Each Tracked Character's Statistic values, by GUID and as a list for AccountTotals: its saved Snapshot, or
--- `liveValues` for the logged-in Character (`currentGUID`) when given. A Character without a Snapshot has none.
-function Characters.statisticValues(db, currentGUID, liveValues)
-  local byGUID, all = {}, {}
-  for guid, character in pairs(db.characters) do
-    local values = guid == currentGUID and liveValues or character.snapshot or {}
-    byGUID[guid] = values
-    all[#all + 1] = values
-  end
-  return byGUID, all
-end
-
 -- The dropdown entry of the Character selected by `selectedGUID`, or the first entry (the logged-in Character)
 -- when none is selected or the selected one is no longer tracked.
 function Characters.selectedEntry(entries, selectedGUID)

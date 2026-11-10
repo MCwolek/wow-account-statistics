@@ -5,20 +5,16 @@ local _, ns = ...
 local Rows = {}
 ns.Rows = Rows
 
--- The list's rows from CategoryTree.visibleRows for `view`, { db, selectedGUID, currentGUID, liveValues }. Each
--- Statistic row gets `value`, the selected Character's value (Values.display), `total`, the Account Total
--- (AccountTotals.display) over every Tracked Character. The logged-in Character (`currentGUID`) counts with
--- `liveValues`, read just now, in place of its saved Snapshot. Every row gets `layout`, its RowLayout. The rows given
--- are left unchanged.
-function Rows.build(visibleRows, view)
-  local byGUID, all = ns.Characters.statisticValues(view.db, view.currentGUID, view.liveValues)
-  local selected = byGUID[view.selectedGUID] or {}
+-- The list's rows from CategoryTree.visibleRows, read from `statistics` (an AccountStatistics). Each Statistic row
+-- gets `value`, the value of the Character `selectedGUID`, and `total`, the Account Total. Every row gets `layout`,
+-- its RowLayout. The rows given are left unchanged.
+function Rows.build(visibleRows, statistics, selectedGUID)
   local rows = {}
   for _, row in ipairs(visibleRows) do
     local built = { kind = row.kind, id = row.id, name = row.name, depth = row.depth, layout = ns.RowLayout.of(row) }
     if row.kind == "statistic" then
-      built.value = ns.Values.display(selected[row.id])
-      built.total = ns.AccountTotals.display(row.id, all)
+      built.value = statistics:value(selectedGUID, row.id)
+      built.total = statistics:accountTotal(row.id)
     else
       built.expanded = row.expanded
     end

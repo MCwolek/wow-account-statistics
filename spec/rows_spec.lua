@@ -3,16 +3,17 @@ local addon = require("addon")
 local function loadRows()
   local ns = addon.loadFile("Locale.lua", {})
   addon.loadFile("Values.lua", ns)
-  addon.loadFile("AccountTotals.lua", ns)
   addon.loadFile("Characters.lua", ns)
+  addon.loadFile("AccountStatistics.lua", ns)
   addon.loadFile("RowLayout.lua", ns)
-  return addon.loadFile("Rows.lua", ns).Rows
+  return addon.loadFile("Rows.lua", ns)
 end
 
 local CURRENT, OTHER = "Player-1-0000AAAA", "Player-1-0000BBBB"
 
 describe("Rows.build", function()
-  local Rows = loadRows()
+  local ns = loadRows()
+  local Rows, AccountStatistics = ns.Rows, ns.AccountStatistics
 
   local db = {
     characters = {
@@ -30,9 +31,8 @@ describe("Rows.build", function()
     { kind = "statistic", id = 328, name = "Total gold acquired", depth = 2 },
   }
 
-  it("gives Statistic rows another Character's saved value and the Account Total with the logged-in Character's "
-    .. "live value, and every row its layout", function()
-    local view = { db = db, selectedGUID = OTHER, currentGUID = CURRENT, liveValues = liveValues }
+  it("gives Statistic rows the selected Character's value and the Account Total, and every row its layout", function()
+    local statistics = AccountStatistics.new(db, CURRENT, liveValues)
     local category = { look = "category", height = 26, indent = 0 }
     local statistic = { look = "statistic", height = 24, indent = 20 }
     assert.are.same({
@@ -44,24 +44,17 @@ describe("Rows.build", function()
         layout = { look = "nestedCategory", height = 22, indent = 20 } },
       { kind = "statistic", id = 328, name = "Total gold acquired", depth = 2, value = "5", total = "17",
         layout = { look = "statistic", height = 24, indent = 40 } },
-    }, Rows.build(visible, view))
+    }, Rows.build(visible, statistics, OTHER))
   end)
 
   it("leaves the rows it is given unchanged", function()
-    local view = { db = db, selectedGUID = OTHER, currentGUID = CURRENT, liveValues = liveValues }
-    Rows.build(visible, view)
+    local statistics = AccountStatistics.new(db, CURRENT, liveValues)
+    Rows.build(visible, statistics, OTHER)
     assert.are.same({ kind = "category", id = 130, name = "Character", depth = 0, expanded = true }, visible[1])
   end)
 
-  it("shows the logged-in Character's live values", function()
-    local view = { db = db, selectedGUID = CURRENT, currentGUID = CURRENT, liveValues = liveValues }
-    local rows = Rows.build(visible, view)
-    assert.are.same({ "5", "30", "12" }, { rows[2].value, rows[3].value, rows[5].value })
-  end)
-
   it("marks every value missing when no Character is selected", function()
-    local view = { db = { characters = {} }, currentGUID = CURRENT, liveValues = liveValues }
-    local rows = Rows.build(visible, view)
+    local rows = Rows.build(visible, AccountStatistics.new({ characters = {} }, CURRENT, liveValues), nil)
     assert.are.same({ "?", "?", "?" }, { rows[2].value, rows[3].value, rows[5].value })
   end)
 end)
