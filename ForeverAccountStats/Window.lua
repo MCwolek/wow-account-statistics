@@ -28,11 +28,9 @@ local DROPDOWN_LEFT = 62
 local SEARCH_GAP = 14
 local SEARCH_WIDTH = WIDTH - DROPDOWN_LEFT - DROPDOWN_WIDTH - SEARCH_GAP - 20
 local ICON_SIZE = 16
--- The Faction logo of each Faction (see Sync.character), at the class icon's size.
-local FACTION_LOGOS = {
-  Horde = "glues-characterselect-icon-faction-horde",
-  Alliance = "glues-characterSelect-icon-faction-alliance",
-}
+-- The Faction logo's atlas, named by the Faction in lower case, shown at the class icon's size. Atlas names ignore
+-- case: the game's own code spells this one both "characterselect" and "characterSelect".
+local FACTION_LOGO = "glues-characterselect-icon-faction-%s"
 -- Empty space the Faction logo's size, so a Character without a Faction lines up with the others.
 local FACTION_LOGO_SPACE = "|TInterface\\Common\\spacer:" .. ICON_SIZE .. ":" .. ICON_SIZE .. "|t"
 -- Room at the right end of every dropdown entry for the X that Forgets its Character, so the Last Synced times line
@@ -62,6 +60,12 @@ local function coloredLabel(entry)
   return entry.label
 end
 
+-- The Faction logo's atlas for a Character's Faction, nil for a Character without one. Sync.character keeps only the
+-- Factions, so the window needs no list of its own.
+local function factionLogo(faction)
+  return faction and FACTION_LOGO:format(faction:lower())
+end
+
 local function iconMarkup(atlas)
   return CreateAtlasMarkup(atlas, ICON_SIZE, ICON_SIZE)
 end
@@ -77,7 +81,7 @@ end
 -- The class icon and coloured label with the Faction logo in front, for the closed dropdown; no logo for a Character
 -- without a Faction.
 local function selectionLabel(entry)
-  local logo = FACTION_LOGOS[entry.faction]
+  local logo = factionLogo(entry.faction)
   if not logo then
     return classLabel(entry)
   end
@@ -87,7 +91,7 @@ end
 -- The class icon and coloured label with the Faction logo in front, for a Breakdown line; empty space the logo's size
 -- for a Character without a Faction.
 local function breakdownLabel(line)
-  local logo = FACTION_LOGOS[line.faction]
+  local logo = factionLogo(line.faction)
   return (logo and iconMarkup(logo) or FACTION_LOGO_SPACE) .. " " .. classLabel(line)
 end
 
@@ -480,7 +484,7 @@ local function createDropdown(parent)
         local label = button.fontString
         label:SetWordWrap(false)
         -- A Character without a Faction keeps empty space the logo's size, so the names line up.
-        local logo = FACTION_LOGOS[data.faction]
+        local logo = factionLogo(data.faction)
         if logo then
           local factionIcon = button:AttachTexture()
           factionIcon:SetAtlas(logo)
