@@ -31,8 +31,9 @@ local DROPDOWN_LEFT = 62
 -- edge.
 local SEARCH_GAP = 14
 local SEARCH_WIDTH = WIDTH - DROPDOWN_LEFT - DROPDOWN_WIDTH - SEARCH_GAP - 20
--- The Faction logo's atlas, named by the Faction in lower case, shown at the class icon's size. Atlas names ignore
--- case: the game's own code spells this one both "characterselect" and "characterSelect".
+-- The Faction logo's atlas, named by the Faction in lower case, shown at the class icon's size and tinted in the
+-- Faction's colour, as the grey logo alone hardly shows. Atlas names ignore case: the game's own code spells this one
+-- both "characterselect" and "characterSelect".
 local FACTION_LOGO = "glues-characterselect-icon-faction-%s"
 -- Empty space the size of the Faction logo or the class icon, in place of a missing one.
 local ICON_SPACE = "|TInterface\\Common\\spacer:" .. ICON_SIZE .. ":" .. ICON_SIZE .. "|t"
@@ -69,16 +70,28 @@ local function factionLogo(faction)
   return faction and FACTION_LOGO:format(faction:lower())
 end
 
+-- The Faction's colour (Horde red, Alliance blue) to tint its logo with, nil for a Character without a Faction.
+local function factionColor(faction)
+  return faction and GetFactionColor(faction)
+end
+
 -- The class icon's atlas for a Character's class, nil for a Character without one.
 local function classIcon(class)
   return class and GetClassAtlas(class)
 end
 
--- `text` with the icon `atlas` in front. A nil `atlas` leaves empty space the icon's size when `keepSpace`, and
--- nothing otherwise.
-local function withIcon(atlas, text, keepSpace)
+-- `text` with the icon `atlas` in front, tinted in `color` when given. A nil `atlas` leaves empty space the icon's
+-- size when `keepSpace`, and nothing otherwise.
+local function withIcon(atlas, text, keepSpace, color)
   if atlas then
-    return CreateAtlasMarkup(atlas, ICON_SIZE, ICON_SIZE) .. " " .. text
+    local markup
+    if color then
+      local r, g, b = color:GetRGBAsBytes()
+      markup = CreateAtlasMarkup(atlas, ICON_SIZE, ICON_SIZE, 0, 0, r, g, b)
+    else
+      markup = CreateAtlasMarkup(atlas, ICON_SIZE, ICON_SIZE)
+    end
+    return markup .. " " .. text
   elseif keepSpace then
     return ICON_SPACE .. " " .. text
   end
@@ -89,7 +102,7 @@ end
 -- icon leaves empty space its size, so the names line up with the others'.
 local function characterLabel(entry, keepSpace)
   return withIcon(factionLogo(entry.faction), withIcon(classIcon(entry.class), coloredLabel(entry), keepSpace),
-    keepSpace)
+    keepSpace, factionColor(entry.faction))
 end
 
 -- The closed dropdown's label: it names one Character, so a missing logo or icon leaves no space.
@@ -462,11 +475,17 @@ local function createList(parent)
 end
 
 -- Attaches the icon `atlas` to the dropdown entry `button`, `offset` right of its radio button, and returns the offset
--- for whatever comes after it. A nil `atlas` attaches nothing but keeps the icon's space.
-local function attachEntryIcon(button, atlas, offset)
+-- for whatever comes after it, tinted in `color` when given. A nil `atlas` attaches nothing but keeps the icon's space.
+local function attachEntryIcon(button, atlas, offset, color)
   if atlas then
     local icon = button:AttachTexture()
     icon:SetAtlas(atlas)
+    -- Attached textures are reused across entries, so an untinted icon clears any earlier tint.
+    if color then
+      icon:SetVertexColor(color:GetRGB())
+    else
+      icon:SetVertexColor(1, 1, 1)
+    end
     icon:SetSize(ICON_SIZE, ICON_SIZE)
     icon:SetPoint("LEFT", button.leftTexture1, "RIGHT", offset, 0)
   end
@@ -503,7 +522,8 @@ local function createDropdown(parent)
         local label = button.fontString
         label:SetWordWrap(false)
         -- A Character without a Faction or a class keeps empty space the logo's or icon's size, so the names line up.
-        local labelOffset = attachEntryIcon(button, factionLogo(data.faction), RADIO_ICON_GAP)
+        local labelOffset = attachEntryIcon(button, factionLogo(data.faction), RADIO_ICON_GAP,
+          factionColor(data.faction))
         labelOffset = attachEntryIcon(button, classIcon(data.class), labelOffset)
         label:SetPoint("LEFT", button.leftTexture1, "RIGHT", labelOffset, 0)
         local relative = button:AttachFontString()
