@@ -26,7 +26,7 @@ To forget a character, for example after deleting it, hover it in the window's c
 
 ## Install
 
-With the [CurseForge app](https://www.curseforge.com/download/app): choose your WoW: Forever installation and search for "Account Statistics".
+From [CurseForge](https://www.curseforge.com/projects/1798182), or in the [CurseForge app](https://www.curseforge.com/download/app): choose your WoW: Forever installation and search for "Account Statistics".
 
 By hand: download the zip from [Releases](../../releases) and unpack it into `World of Warcraft/_forever_/Interface/AddOns/`.
 
