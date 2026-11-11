@@ -5,6 +5,7 @@
 ## Author: MCwolek
 ## Version: @project-version@
 ## X-License: GPL-3.0-or-later
+## X-Curse-Project-ID: 1798182
 ## SavedVariables: AccountStatisticsDB
 
 Locale.lua
