@@ -12,5 +12,5 @@ if [ ! -d "$addons_dir" ]; then
   exit 1
 fi
 
-rsync -a --delete ForeverAccountStatistics/ "$addons_dir/ForeverAccountStatistics/"
-echo "Deployed to $addons_dir/ForeverAccountStatistics"
+rsync -a --delete AccountStatistics/ "$addons_dir/AccountStatistics/"
+echo "Deployed to $addons_dir/AccountStatistics"

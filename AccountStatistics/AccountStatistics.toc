@@ -4,7 +4,7 @@
 ## Notes-deDE: Statistiken aller Charaktere deines Accounts nebeneinander, dazu die Summen über den ganzen Account.
 ## Author: MCwolek
 ## Version: 0.1.0-dev
-## SavedVariables: ForeverAccountStatisticsDB
+## SavedVariables: AccountStatisticsDB
 
 Locale.lua
 Values.lua

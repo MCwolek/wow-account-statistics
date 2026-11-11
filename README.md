@@ -12,7 +12,7 @@ Terms such as Snapshot, Tracked Character and Account Total are defined in [GLOS
 
 ## Install
 
-Copy the `ForeverAccountStatistics` folder into `World of Warcraft/_forever_/Interface/AddOns/` and restart the game.
+Copy the `AccountStatistics` folder into `World of Warcraft/_forever_/Interface/AddOns/` and restart the game.
 
 ## Development
 
