@@ -1,10 +1,14 @@
 local addon = require("addon")
 
-describe("ForeverAccountStatistics.toc", function()
+describe("AccountStatistics.toc", function()
   local metadata, files = addon.readToc()
 
   it("targets the WoW: Forever client", function()
     assert.are.equal("16001", metadata.Interface)
+  end)
+
+  it("takes its version from the release tag", function()
+    assert.are.equal("@project-version@", metadata.Version)
   end)
 
   it("describes the add-on in German for a German client", function()

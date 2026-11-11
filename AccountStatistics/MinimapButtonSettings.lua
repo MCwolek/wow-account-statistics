@@ -1,4 +1,4 @@
--- Pure saved settings of the Minimap button, kept in ForeverAccountStatisticsDB.minimapButton: whether it is shown and
+-- Pure saved settings of the Minimap button, kept in AccountStatisticsDB.minimapButton: whether it is shown and
 -- where on the Minimap's edge it sits.
 local _, ns = ...
 

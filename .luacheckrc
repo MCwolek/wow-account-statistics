@@ -4,8 +4,8 @@ exclude_files = { ".lua/", ".luarocks/", ".venv/" }
 
 -- Globals the add-on defines or writes into.
 globals = {
-  "ForeverAccountStatisticsDB",
-  "SLASH_FOREVERACCOUNTSTATS1",
+  "AccountStatisticsDB",
+  "SLASH_ACCOUNTSTATISTICS1",
   "SlashCmdList",
   "StaticPopupDialogs",
 }

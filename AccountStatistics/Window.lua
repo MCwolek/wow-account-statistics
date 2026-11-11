@@ -9,7 +9,7 @@ local Roster, CharacterDropdown, WindowPosition = ns.Roster, ns.CharacterDropdow
 local Window = {}
 ns.Window = Window
 
-local FRAME_NAME = "ForeverAccountStatsFrame"
+local FRAME_NAME = "AccountStatisticsFrame"
 local WIDTH, HEIGHT = 620, 540
 -- The Statistics side tab's icon in the Character frame, shown in the window's portrait circle and on the Minimap
 -- button.
@@ -37,7 +37,7 @@ local FACTION_LOGO = "questlog-questtypeicon-%s"
 -- The default dropdown menu's background (see MenuStyle1Mixin). The Character dropdown's menu and the window's
 -- tooltip both show it fully opaque, so the Faction logos stand out against it.
 local MENU_BACKGROUND = "common-dropdown-bg"
-local TOOLTIP_NAME = "ForeverAccountStatsTooltip"
+local TOOLTIP_NAME = "AccountStatisticsTooltip"
 -- Room in the Breakdown under its title and below its last line, so the Faction logos and class icons, taller than the
 -- text, do not touch the title or the tooltip's bottom edge.
 local BREAKDOWN_TITLE_GAP = 4
@@ -49,7 +49,7 @@ local ICON_SPACE = "|TInterface\\Common\\spacer:" .. ICON_SIZE .. ":" .. ICON_SI
 local FORGET_BUTTON_SIZE = 16   -- the size MenuTemplates gives its utility buttons
 local FORGET_BUTTON_GAP = 4
 local FORGET_BUTTON_SPACE = FORGET_BUTTON_SIZE + FORGET_BUTTON_GAP
-local FORGET_DIALOG = "FOREVER_ACCOUNT_STATS_FORGET"
+local FORGET_DIALOG = "ACCOUNT_STATISTICS_FORGET"
 -- The default Statistics panel re-reads on every CRITERIA_UPDATE; that event comes in bursts, so wait a little.
 local REREAD_DELAY = 0.5
 
@@ -58,7 +58,7 @@ local session        -- the Window Session, created with the frame
 local rereadPending = false
 
 local function dropdownEntries()
-  return CharacterDropdown.entries(Roster.of(ForeverAccountStatisticsDB, GameAPI.playerGUID(), GameAPI.now()))
+  return CharacterDropdown.entries(Roster.of(AccountStatisticsDB, GameAPI.playerGUID(), GameAPI.now()))
 end
 
 -- Full Name and Ruleset in the class colour; a class the game does not colour stays white.
@@ -114,11 +114,11 @@ local function readLiveValues()
 end
 
 local function chosenCharacter()
-  return WindowSession.chosenCharacter(session, ForeverAccountStatisticsDB, GameAPI.playerGUID())
+  return WindowSession.chosenCharacter(session, AccountStatisticsDB, GameAPI.playerGUID())
 end
 
 local function redraw(keepScroll)
-  local rows = WindowSession.rows(session, ForeverAccountStatisticsDB, GameAPI.playerGUID(), GameAPI.now())
+  local rows = WindowSession.rows(session, AccountStatisticsDB, GameAPI.playerGUID(), GameAPI.now())
   frame.ScrollBox:SetDataProvider(CreateDataProvider(rows), keepScroll and ScrollBoxConstants.RetainScrollPosition)
 end
 
@@ -149,7 +149,7 @@ local function windowTooltip()
     ownTooltip.IsEmbedded = true
     ownTooltip.NineSlice:Hide()
     placeMenuBackground(ownTooltip:CreateTexture(nil, "BACKGROUND"))
-    titleGapFont = CreateFont("ForeverAccountStatsTitleGapFont")
+    titleGapFont = CreateFont("AccountStatisticsTitleGapFont")
     titleGapFont:SetFont(STANDARD_TEXT_FONT, BREAKDOWN_TITLE_GAP, "")
   end
   return ownTooltip
@@ -160,7 +160,7 @@ end
 -- Breakdown.
 local function showBreakdown(tip, data)
   local breakdown =
-    WindowSession.breakdown(session, ForeverAccountStatisticsDB, GameAPI.playerGUID(), GameAPI.now(), data.id)
+    WindowSession.breakdown(session, AccountStatisticsDB, GameAPI.playerGUID(), GameAPI.now(), data.id)
   if not breakdown then
     return false
   end
@@ -181,7 +181,7 @@ end
 -- Forgets the Character `guid` once its confirmation dialog is accepted. When it was the one chosen in the dropdown,
 -- the window falls back to the logged-in Character (see WindowSession.chosenCharacter).
 local function forget(guid)
-  ForeverAccountStatisticsDB = Sync.forget(ForeverAccountStatisticsDB, guid, GameAPI.playerGUID())
+  AccountStatisticsDB = Sync.forget(AccountStatisticsDB, guid, GameAPI.playerGUID())
   if WindowSession.isOpen(session) then
     redraw(true)
     frame.Dropdown:GenerateMenu()
@@ -603,7 +603,7 @@ local function savePosition(self)
   self:StopMovingOrSizing()
   self:SetUserPlaced(false)
   local point, _, relativePoint, x, y = self:GetPoint(1)
-  ForeverAccountStatisticsDB.window = WindowPosition.save(point, relativePoint, x, y)
+  AccountStatisticsDB.window = WindowPosition.save(point, relativePoint, x, y)
 end
 
 local function create()
@@ -628,7 +628,7 @@ local function create()
   frame:SetFrameStrata("HIGH")
   frame:SetToplevel(true)
   frame:SetClampedToScreen(true)
-  -- Keep the client's layout cache out of it: the position lives in ForeverAccountStatisticsDB.window.
+  -- Keep the client's layout cache out of it: the position lives in AccountStatisticsDB.window.
   frame:SetDontSavePosition(true)
   frame:EnableMouse(true)
   frame:SetMovable(true)
@@ -641,7 +641,7 @@ local function create()
   end)
   table.insert(UISpecialFrames, FRAME_NAME)
   frame:ClearAllPoints()
-  local point, relativePoint, x, y = WindowPosition.anchor(ForeverAccountStatisticsDB.window)
+  local point, relativePoint, x, y = WindowPosition.anchor(AccountStatisticsDB.window)
   frame:SetPoint(point, UIParent, relativePoint, x, y)
 
   frame.ScrollBox = createList(frame.Inset)

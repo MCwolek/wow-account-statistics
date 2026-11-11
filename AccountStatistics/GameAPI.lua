@@ -5,7 +5,7 @@ local addonName, ns = ...
 local GameAPI = {}
 ns.GameAPI = GameAPI
 
--- The add-on's version, as its .toc's Version field reads, e.g. "0.1.0-dev".
+-- The add-on's version, as its .toc's Version field reads: the release tag, e.g. "1.0.0", stamped in by the packager.
 function GameAPI.addOnVersion()
   return C_AddOns.GetAddOnMetadata(addonName, "Version")
 end

@@ -1,4 +1,4 @@
--- Pure saved position of the Statistics window, kept in ForeverAccountStatisticsDB.window.
+-- Pure saved position of the Statistics window, kept in AccountStatisticsDB.window.
 local _, ns = ...
 
 local WindowPosition = {}
