@@ -3,7 +3,8 @@
 ## Notes: Statistics of every character on your account side by side, plus account totals.
 ## Notes-deDE: Statistiken aller Charaktere deines Accounts nebeneinander, dazu die Summen über den ganzen Account.
 ## Author: MCwolek
-## Version: 0.1.0-dev
+## Version: @project-version@
+## X-License: GPL-3.0-or-later
 ## SavedVariables: AccountStatisticsDB
 
 Locale.lua

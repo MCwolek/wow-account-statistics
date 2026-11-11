@@ -7,6 +7,10 @@ describe("AccountStatistics.toc", function()
     assert.are.equal("16001", metadata.Interface)
   end)
 
+  it("takes its version from the release tag", function()
+    assert.are.equal("@project-version@", metadata.Version)
+  end)
+
   it("describes the add-on in German for a German client", function()
     assert.is_string(metadata["Notes-deDE"])
     assert.are_not.equal(metadata.Notes, metadata["Notes-deDE"])

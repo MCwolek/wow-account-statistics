@@ -22,6 +22,7 @@ Game API calls live in thin adapter files. Everything else (parsing values, Acco
 1. `scripts/setup-dev.sh` once per clone.
 2. `scripts/check.sh` before every commit; CI runs the same.
 3. `scripts/deploy.sh`, then the user verifies in game: hand them the exact steps (`/reload` or client restart, what to type, what they should see) and wait for their report.
+4. Releases: tag-driven, see [CONTRIBUTING.md](CONTRIBUTING.md#releasing). Every user-visible change gets a line in `CHANGELOG.md`.
 
 ## Code reference
 
@@ -31,7 +32,7 @@ Reuse code only from permissively licensed sources, with attribution. Baganator,
 
 ### Issue tracker
 
-Issues live in GitHub Issues for MCwolek/forever-account-stats, via the `gh` CLI. See [docs/agents/issue-tracker.md](docs/agents/issue-tracker.md).
+Issues live in GitHub Issues for MCwolek/wow-account-statistics, via the `gh` CLI. See [docs/agents/issue-tracker.md](docs/agents/issue-tracker.md).
 
 ### Triage labels
 

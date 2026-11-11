@@ -1,0 +1,26 @@
+name: Release
+
+# Pushing a tag such as 1.2.0 releases that version: the packager stamps the tag into the .toc,
+# zips the add-on, attaches the zip to the GitHub Release and uploads it to CurseForge.
+# Tags containing "alpha" or "beta" become alpha or beta files on CurseForge.
+on:
+  push:
+    tags: ["*"]
+
+jobs:
+  check:
+    uses: ./.github/workflows/ci.yml
+
+  release:
+    needs: check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: BigWigsMods/packager@v2.7.0
+        env:
+          CF_API_KEY: ${{ secrets.CF_API_KEY }}
+          GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}

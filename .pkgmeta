@@ -1,0 +1,27 @@
+# Packaging for BigWigsMods/packager (.github/workflows/release.yml).
+package-as: AccountStatistics
+
+# The add-on lives in a subfolder; ship that folder as the zip's only top-level folder.
+move-folders:
+  AccountStatistics/AccountStatistics: AccountStatistics
+
+manual-changelog:
+  filename: CHANGELOG.md
+  markup-type: markdown
+
+ignore:
+  - .github
+  - .vscode
+  - .busted
+  - .editorconfig
+  - .luacheckrc
+  - .pkgmeta
+  - AGENTS.md
+  - CLAUDE.md
+  - CONTRIBUTING.md
+  - GLOSSARY.md
+  - README.md
+  - docs
+  - media
+  - scripts
+  - spec

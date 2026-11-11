@@ -1,27 +1,39 @@
+<p align="center"><img src="media/logo.svg" alt="" width="128"></p>
+
 # Account Statistics
 
 A World of Warcraft: Forever add-on that shows the in-game Statistics of all your characters side by side, plus totals across your whole account. Search for a Statistic, for example "death", and see every character's value and the account total on one row.
 
-> **Status:** early development. Each character saves a Snapshot of its Statistics. `/stats` or the Minimap button opens the Statistics window: every Statistic with the chosen character's value and the Account Total. Drag the Minimap button to move it around the Minimap; `/stats minimap` hides it, and shows it again. `/stats list` lists the Tracked Characters with when each last synced, and `/stats dump <Statistic ID>` shows one Statistic for each with its Account Total. See the [issues](../../issues) for the roadmap.
+## Features
+
+- **Statistics window**: every Statistic from the game's Statistics panel, by Category, with the value of the character you pick and the Account Total.
+- **Account Totals**: each Statistic summed over all your characters, or the highest value for records such as "Largest hit dealt". Hover a total to see the top 5 characters behind it.
+- **Search**: type part of a name to narrow the list to matching Statistics and Categories.
+- **Character dropdown**: pick any of your characters and see when each one last synced.
+- **Minimap button**: opens the window; drag it to move it around the Minimap.
+- **English and German**, following the game's language.
+
+## Usage
+
+- `/stats`, or a click on the Minimap button, opens and closes the Statistics window.
+- `/stats minimap` hides the Minimap button, and shows it again.
 
 ## How it works
 
-WoW only lets an add-on read the Statistics of the character you are logged in with. So each character saves a Snapshot of its Statistics when you log in, log out, or `/reload`, and the add-on combines those Snapshots. A character shows up after you have logged in with it once while the add-on is enabled. To Forget one, for example after deleting it, hover it in the window's character dropdown and click its X; logging it in again tracks it anew. See [docs/adr/0001-snapshots-only.md](docs/adr/0001-snapshots-only.md) for why.
+WoW only lets an add-on read the Statistics of the character you are logged in with. So each character saves a Snapshot of its Statistics when you log in, log out or `/reload`, and the add-on combines those Snapshots. A character shows up after you have logged in with it once while the add-on is enabled.
 
-Terms such as Snapshot, Tracked Character and Account Total are defined in [GLOSSARY.md](GLOSSARY.md).
+To forget a character, for example after deleting it, hover it in the window's character dropdown and click its X. Logging it in again tracks it anew.
 
 ## Install
 
-Copy the `AccountStatistics` folder into `World of Warcraft/_forever_/Interface/AddOns/` and restart the game.
+With the [CurseForge app](https://www.curseforge.com/download/app): choose your WoW: Forever installation and search for "Account Statistics".
 
-## Development
+By hand: download the zip from [Releases](../../releases) and unpack it into `World of Warcraft/_forever_/Interface/AddOns/`.
 
-Requires Python 3, a C compiler, `make`, `unzip` and `rsync` (WSL or Linux).
+## Feedback
 
-```sh
-scripts/setup-dev.sh   # once: installs Lua 5.1, LuaRocks, busted and luacheck into .lua/
-scripts/check.sh       # lint and run the unit tests
-scripts/deploy.sh      # copy the add-on into the Forever AddOns folder
-```
+Report bugs and ideas in the [issues](../../issues). Want to help? See [CONTRIBUTING.md](CONTRIBUTING.md).
 
-After deploying, type `/reload` in game. New files and `.toc` changes need a full client restart. If your game is not in the default location, set `WOW_FOREVER_DIR` to your `_forever_` folder.
+## License
+
+[GPL-3.0-or-later](LICENSE).
